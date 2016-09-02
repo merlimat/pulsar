@@ -171,6 +171,11 @@ public class ServiceConfiguration {
     // Max time before triggering a rollover on a cursor ledger
     private int managedLedgerCursorRolloverTimeInSeconds = 14400;
 
+    // Number of independent ZK sessions to open. More sessions will speed
+    // up ZK operations by using different threads and connections
+    @FieldContext(minValue = 1)
+    private int managedLedgerZooKeeperSessions = 1;
+
     /*** --- Load balancer --- ****/
     // Enable load balancer
     private boolean loadBalancerEnabled = false;
@@ -659,6 +664,14 @@ public class ServiceConfiguration {
 
     public void setManagedLedgerCursorRolloverTimeInSeconds(int managedLedgerCursorRolloverTimeInSeconds) {
         this.managedLedgerCursorRolloverTimeInSeconds = managedLedgerCursorRolloverTimeInSeconds;
+    }
+
+    public int getManagedLedgerZooKeeperSessions() {
+        return managedLedgerZooKeeperSessions;
+    }
+
+    public void setManagedLedgerZooKeeperSessions(int managedLedgerZooKeeperSessions) {
+        this.managedLedgerZooKeeperSessions = managedLedgerZooKeeperSessions;
     }
 
     public boolean isLoadBalancerEnabled() {

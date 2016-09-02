@@ -28,15 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.bookkeeper.client.BookKeeper.DigestType;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.OpenLedgerCallback;
@@ -44,7 +41,6 @@ import org.apache.bookkeeper.mledger.ManagedLedger;
 import org.apache.bookkeeper.mledger.ManagedLedgerConfig;
 import org.apache.bookkeeper.mledger.ManagedLedgerException;
 import org.apache.bookkeeper.mledger.ManagedLedgerFactory;
-import org.apache.commons.lang.SystemUtils;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +68,6 @@ import com.yahoo.pulsar.client.util.FutureUtil;
 import com.yahoo.pulsar.common.naming.DestinationName;
 import com.yahoo.pulsar.common.naming.NamespaceBundle;
 import com.yahoo.pulsar.common.naming.NamespaceBundleFactory;
-import com.yahoo.pulsar.common.naming.NamespaceBundles;
 import com.yahoo.pulsar.common.naming.NamespaceName;
 import com.yahoo.pulsar.common.naming.ServiceUnitId;
 import com.yahoo.pulsar.common.policies.data.ClusterData;
@@ -94,7 +89,6 @@ import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollMode;
 import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
@@ -153,27 +147,8 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
         this.pulsarStats = new PulsarStats(pulsar);
         this.offlineTopicStatCache = new ConcurrentOpenHashMap<>();
 
-        final DefaultThreadFactory acceptorThreadFactory = new DefaultThreadFactory("pulsar-acceptor");
-        final DefaultThreadFactory workersThreadFactory = new DefaultThreadFactory("pulsar-io");
-        final int numThreads = Runtime.getRuntime().availableProcessors() * 2;
-        log.info("Using {} threads for broker service IO", numThreads);
-
-        EventLoopGroup acceptorEventLoop, workersEventLoop;
-        if (SystemUtils.IS_OS_LINUX) {
-            try {
-                acceptorEventLoop = new EpollEventLoopGroup(1, acceptorThreadFactory);
-                workersEventLoop = new EpollEventLoopGroup(numThreads, workersThreadFactory);
-            } catch (UnsatisfiedLinkError e) {
-                acceptorEventLoop = new NioEventLoopGroup(1, acceptorThreadFactory);
-                workersEventLoop = new NioEventLoopGroup(numThreads, workersThreadFactory);
-            }
-        } else {
-            acceptorEventLoop = new NioEventLoopGroup(1, acceptorThreadFactory);
-            workersEventLoop = new NioEventLoopGroup(numThreads, workersThreadFactory);
-        }
-
-        this.acceptorGroup = acceptorEventLoop;
-        this.workerGroup = workersEventLoop;
+        this.acceptorGroup = pulsar.newEventLoopGroup("pulsar-acceptor", 1);
+        this.workerGroup = pulsar.getIOEventLoopGroup();
         this.statsUpdater = Executors
                 .newSingleThreadScheduledExecutor(new DefaultThreadFactory("pulsar-stats-updater"));
         if (pulsar.getConfiguration().isAuthorizationEnabled()) {
@@ -279,7 +254,7 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
 
         // unloads all namespaces gracefully without disrupting mutually
         unloadNamespaceBundlesGracefully();
-        
+
         // close replication clients
         replicationClients.forEach((cluster, client) -> {
             try {
@@ -307,7 +282,7 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
      * <li>Second it starts unloading namespace bundle one by one without closing the connection in order to avoid
      * disruption for other namespacebundles which are sharing the same connection from the same client.</li>
      * <ul>
-     * 
+     *
      */
     public void unloadNamespaceBundlesGracefully() {
         try {
