@@ -202,8 +202,9 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                     ledgers.put(ls.getLedgerId(), ls);
                 }
 
-                // Last ledger stat may be zeroed, we must update it
-                if (ledgers.size() > 0) {
+                // Last ledger stat may be zeroed, we must update it only if the number of entries wasn't already set in
+                // last graceful shutdown
+                if (ledgers.size() > 0 && ledgers.lastEntry().getValue().getEntries() == 0) {
                     final long id = ledgers.lastKey();
                     OpenCallback opencb = (rc, lh, ctx1) -> {
                         executor.submitOrdered(name, safeRun(() -> {
@@ -854,33 +855,54 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             log.debug("[{}] Closing current writing ledger {}", name, lh.getId());
         }
 
+        List<CompletableFuture<Void>> futures = Lists.newArrayList();
+
+        long lastLedgerEntries = lh.getLastAddConfirmed() + 1;
+        long lastLedgerSize = lh.getLength();
+
+        // Update ledger list by marking the number of entries in last ledger
+        LedgerInfo lastLedgerInfo = LedgerInfo.newBuilder().setLedgerId(lh.getId()).setEntries(lastLedgerEntries)
+                .setSize(lastLedgerSize).setTimestamp(System.currentTimeMillis()).build();
+        ledgers.put(lh.getId(), lastLedgerInfo);
+
+        CompletableFuture<Void> updateLedgersListFuture = new CompletableFuture<>();
+        futures.add(updateLedgersListFuture);
+        updateLedgersListAfterRollover(new MetaStoreCallback<Void>() {
+            @Override
+            public void operationComplete(Void result, Version version) {
+                if (log.isDebugEnabled()) {
+                    log.debug("[{}] Successfully updated ledgers list for closing", name);
+                }
+                updateLedgersListFuture.complete(null);
+            }
+
+            @Override
+            public void operationFailed(MetaStoreException e) {
+                updateLedgersListFuture.completeExceptionally(e);
+            }
+        });
+
+        // Close current ledger without wating for it
         mbean.startDataLedgerCloseOp();
         lh.asyncClose((rc, lh1, ctx1) -> {
             if (log.isDebugEnabled()) {
                 log.debug("[{}] Close complete for ledger {}: rc = {}", name, lh.getId(), rc);
             }
-            mbean.endDataLedgerCloseOp();
-            if (rc != BKException.Code.OK) {
-                callback.closeFailed(new ManagedLedgerException(BKException.getMessage(rc)), ctx);
-                return;
-            }
-
-            // Close all cursors in parallel
-            List<CompletableFuture<Void>> futures = Lists.newArrayList();
-            for (ManagedCursor cursor : cursors) {
-                Futures.CloseFuture closeFuture = new Futures.CloseFuture();
-                cursor.asyncClose(closeFuture, null);
-                futures.add(closeFuture);
-            }
-
-            Futures.waitForAll(futures).thenRun(() -> {
-                callback.closeComplete(ctx);
-            }).exceptionally(exception -> {
-                callback.closeFailed(new ManagedLedgerException(exception), ctx);
-                return null;
-            });
-
         }, null);
+
+        // Close all cursors in parallel
+        for (ManagedCursor cursor : cursors) {
+            Futures.CloseFuture closeFuture = new Futures.CloseFuture();
+            cursor.asyncClose(closeFuture, null);
+            futures.add(closeFuture);
+        }
+
+        Futures.waitForAll(futures).thenRun(() -> {
+            callback.closeComplete(ctx);
+        }).exceptionally(exception -> {
+            callback.closeFailed(new ManagedLedgerException(exception), ctx);
+            return null;
+        });
     }
 
     // //////////////////////////////////////////////////////////////////////

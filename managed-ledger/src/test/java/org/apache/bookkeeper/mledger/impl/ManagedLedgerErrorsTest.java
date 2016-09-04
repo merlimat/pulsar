@@ -90,7 +90,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         ledger.openCursor("c1");
         ledger.addEntry("entry".getBytes());
 
-        bkc.failNow(BKException.Code.NoSuchLedgerExistsException);
+        zkc.failNow(Code.CONNECTIONLOSS);
 
         try {
             ledger.close();
@@ -136,6 +136,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
 
         ledger.close();
 
+        factory.shutdownNow();
         factory = new ManagedLedgerFactoryImpl(bkc, zkc);
 
         bkc.failNow(BKException.Code.LedgerFencedException);
@@ -156,8 +157,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         ManagedLedger ledger = factory.open("my_test_ledger");
         ledger.addEntry("entry".getBytes());
 
-        ledger.close();
-
+        factory.shutdownNow();
         factory = new ManagedLedgerFactoryImpl(bkc, zkc);
 
         bkc.failAfter(1, BKException.Code.LedgerFencedException);
@@ -178,8 +178,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         ManagedLedger ledger = factory.open("my_test_ledger");
         ledger.addEntry("entry".getBytes());
 
-        ledger.close();
-
+        factory.shutdownNow();
         factory = new ManagedLedgerFactoryImpl(bkc, zkc);
 
         bkc.failAfter(1, BKException.Code.LedgerFencedException);
@@ -202,6 +201,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
 
         ledger.close();
 
+        factory.shutdownNow();
         factory = new ManagedLedgerFactoryImpl(bkc, zkc);
 
         zkc.failAfter(1, Code.CONNECTIONLOSS);
@@ -224,6 +224,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
 
         ledger.close();
 
+        factory.shutdownNow();
         factory = new ManagedLedgerFactoryImpl(bkc, zkc);
 
         zkc.failAfter(2, Code.CONNECTIONLOSS);
@@ -247,6 +248,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
 
         ledger.close();
 
+        factory.shutdownNow();
         factory = new ManagedLedgerFactoryImpl(bkc, zkc);
 
         zkc.failAfter(3, Code.CONNECTIONLOSS);
@@ -265,13 +267,15 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
     @Test
     public void passwordError() throws Exception {
         ManagedLedger ledger = factory.open("my_test_ledger", new ManagedLedgerConfig().setPassword("password"));
-        ledger.openCursor("c1");
+        ManagedCursor c1 = ledger.openCursor("c1");
         ledger.addEntry("entry".getBytes());
 
         ledger.close();
 
+        // Reopen
+        ledger = factory.open("my_test_ledger", new ManagedLedgerConfig().setPassword("wrong-password"));
         try {
-            ledger = factory.open("my_test_ledger", new ManagedLedgerConfig().setPassword("wrong-password"));
+            c1.readEntries(1);
             fail("should fail for password error");
         } catch (ManagedLedgerException e) {
             // ok
@@ -282,13 +286,16 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
     public void digestError() throws Exception {
         ManagedLedger ledger = factory.open("my_test_ledger",
                 new ManagedLedgerConfig().setDigestType(DigestType.CRC32));
-        ledger.openCursor("c1");
+        ManagedCursor c1 = ledger.openCursor("c1");
         ledger.addEntry("entry".getBytes());
 
         ledger.close();
 
+        // Re-open
+        ledger = factory.open("my_test_ledger", new ManagedLedgerConfig().setDigestType(DigestType.MAC));
+
         try {
-            ledger = factory.open("my_test_ledger", new ManagedLedgerConfig().setDigestType(DigestType.MAC));
+            c1.readEntries(1);
             fail("should fail for digest error");
         } catch (ManagedLedgerException e) {
             // ok

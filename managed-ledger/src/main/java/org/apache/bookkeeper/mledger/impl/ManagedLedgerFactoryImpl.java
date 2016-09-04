@@ -258,8 +258,6 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
 
     @Override
     public void shutdown() throws InterruptedException, ManagedLedgerException {
-        statsTask.cancel(true);
-
         int numLedgers = ledgers.size();
         final CountDownLatch latch = new CountDownLatch(numLedgers);
         log.info("Closing {} ledgers", numLedgers);
@@ -286,6 +284,12 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
 
         latch.await();
         log.info("{} ledgers closed", numLedgers);
+
+        shutdownNow();
+    }
+
+    public void shutdownNow() throws InterruptedException, ManagedLedgerException {
+        statsTask.cancel(true);
 
         if (zookeeperClients != null) {
             for (ZooKeeper zk : zookeeperClients) {
