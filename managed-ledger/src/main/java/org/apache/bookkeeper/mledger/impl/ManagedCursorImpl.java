@@ -90,9 +90,9 @@ public class ManagedCursorImpl implements ManagedCursor {
     private volatile long messagesConsumedCounter;
 
     // Current ledger used to append the mark-delete position
-    private volatile LedgerHandle cursorLedger;
+    volatile LedgerHandle cursorLedger;
     // Version of the cursor z-node
-    private volatile Version cursorLedgerVersion;
+    volatile Version cursorLedgerVersion;
 
     private final RangeSet<PositionImpl> individualDeletedMessages = TreeRangeSet.create();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -245,7 +245,7 @@ public class ManagedCursorImpl implements ManagedCursor {
         }, null);
     }
 
-    private void recoveredCursor(PositionImpl position) {
+    void recoveredCursor(PositionImpl position) {
         // if the position was at a ledger that didn't exist (since it will be deleted if it was previously empty),
         // we need to move to the next existing ledger
         if (!ledger.ledgerExists(position.getLedgerId())) {

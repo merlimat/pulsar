@@ -56,7 +56,7 @@ class MetaStoreImplZookeeper implements MetaStore {
     private final ZooKeeper zk;
     private final OrderedSafeExecutor executor;
 
-    private static class ZKVersion implements Version {
+    static class ZKVersion implements Version {
         final int version;
 
         ZKVersion(int version) {
@@ -94,6 +94,7 @@ class MetaStoreImplZookeeper implements MetaStore {
         }
         ManagedLedgerInfo.Builder mlInfo = ManagedLedgerInfo.newBuilder();
         mlInfo.addAllLedgerInfo(infoList);
+        mlInfo.addAllCursor(info.getCursorList());
         return mlInfo.build();
     }
 

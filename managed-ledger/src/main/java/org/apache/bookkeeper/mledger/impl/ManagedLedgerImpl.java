@@ -58,10 +58,11 @@ import org.apache.bookkeeper.mledger.Position;
 import org.apache.bookkeeper.mledger.impl.ManagedCursorImpl.VoidCallback;
 import org.apache.bookkeeper.mledger.impl.MetaStore.MetaStoreCallback;
 import org.apache.bookkeeper.mledger.impl.MetaStore.Version;
+import org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo;
+import org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo;
 import org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo;
 import org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.LedgerInfo;
 import org.apache.bookkeeper.mledger.util.CallbackMutex;
-import org.apache.bookkeeper.mledger.util.Futures;
 import org.apache.bookkeeper.mledger.util.Pair;
 import org.apache.bookkeeper.util.OrderedSafeExecutor;
 import org.apache.bookkeeper.util.UnboundArrayBlockingQueue;
@@ -217,11 +218,11 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                                         .setEntries(lh.getLastAddConfirmed() + 1).setSize(lh.getLength())
                                         .setTimestamp(System.currentTimeMillis()).build();
                                 ledgers.put(id, info);
-                                initializeBookKeeper(callback);
+                                initializeBookKeeper(mlInfo, callback);
                             } else if (rc == BKException.Code.NoSuchLedgerExistsException) {
                                 log.warn("[{}] Ledger not found: {}", name, ledgers.lastKey());
                                 ledgers.remove(ledgers.lastKey());
-                                initializeBookKeeper(callback);
+                                initializeBookKeeper(mlInfo, callback);
                             } else {
                                 log.error("[{}] Failed to open ledger {}: {}", name, id, BKException.getMessage(rc));
                                 callback.initializeFailed(new ManagedLedgerException(BKException.getMessage(rc)));
@@ -236,7 +237,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                     mbean.startDataLedgerOpenOp();
                     bookKeeper.asyncOpenLedger(id, config.getDigestType(), config.getPassword(), opencb, null);
                 } else {
-                    initializeBookKeeper(callback);
+                    initializeBookKeeper(mlInfo, callback);
                 }
             }
 
@@ -247,7 +248,8 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
         });
     }
 
-    private synchronized void initializeBookKeeper(final ManagedLedgerInitializeLedgerCallback callback) {
+    private synchronized void initializeBookKeeper(ManagedLedgerInfo mlInfo,
+            final ManagedLedgerInitializeLedgerCallback callback) {
         if (log.isDebugEnabled()) {
             log.debug("[{}] initializing bookkeeper; ledgers {}", name, ledgers);
         }
@@ -273,7 +275,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             @Override
             public void operationComplete(Void v, Version version) {
                 ledgersVersion = version;
-                initializeCursors(callback);
+                initializeCursors(mlInfo, callback);
             }
 
             @Override
@@ -303,17 +305,41 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                         ledgers.put(lh.getId(), info);
                         // Save it back to ensure all nodes exist
 
-                        ManagedLedgerInfo mlInfo = ManagedLedgerInfo.newBuilder().addAllLedgerInfo(ledgers.values())
+                        ManagedLedgerInfo newMlInfo = ManagedLedgerInfo.newBuilder().addAllLedgerInfo(ledgers.values())
                                 .build();
-                        store.asyncUpdateLedgerIds(name, mlInfo, ledgersVersion, storeLedgersCb);
+                        store.asyncUpdateLedgerIds(name, newMlInfo, ledgersVersion, storeLedgersCb);
                     }));
                 }, null);
     }
 
-    private void initializeCursors(final ManagedLedgerInitializeLedgerCallback callback) {
+    private void initializeCursors(ManagedLedgerInfo mlInfo, final ManagedLedgerInitializeLedgerCallback callback) {
         if (log.isDebugEnabled()) {
             log.debug("[{}] initializing cursors", name);
         }
+
+        if (mlInfo.getCursorCount() > 0) {
+            // The ML node contained a snapshot of the mark-delete positions of the cursors. We can recover the cursors
+            // to these position without having to read all the z-nodes
+            for (int i = 0; i < mlInfo.getCursorCount(); i++) {
+                ManagedCursorNameInfo cursorInfo = mlInfo.getCursor(i);
+                PositionImpl markDeletePosition = new PositionImpl(cursorInfo.getInfo().getMarkDeleteLedgerId(),
+                        cursorInfo.getInfo().getMarkDeleteEntryId());
+                ManagedCursorImpl cursor = new ManagedCursorImpl(bookKeeper, config, ManagedLedgerImpl.this,
+                        cursorInfo.getCursorName());
+                // Since we don't read the cursor z-node, next write will be unconditional
+                cursor.cursorLedgerVersion = new MetaStoreImplZookeeper.ZKVersion(-1);
+                cursor.recoveredCursor(markDeletePosition);
+                cursor.setActive();
+                cursors.add(cursor);
+
+                log.info("[{}] Recovered cursor {} from snapshot at position {} with backlog {}", name,
+                        cursor.getName(), markDeletePosition, cursor.getNumberOfEntriesInBacklog());
+            }
+
+            callback.initializeComplete();
+            return;
+        }
+
         store.getCursors(name, new MetaStoreCallback<List<String>>() {
             @Override
             public void operationComplete(List<String> consumers, Version v) {
@@ -867,22 +893,35 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
 
         CompletableFuture<Void> updateLedgersListFuture = new CompletableFuture<>();
         futures.add(updateLedgersListFuture);
-        updateLedgersListAfterRollover(new MetaStoreCallback<Void>() {
+        ManagedLedgerInfo.Builder mlInfoBuilder = ManagedLedgerInfo.newBuilder().addAllLedgerInfo(ledgers.values());
+        // Add all cursors with their mark-delete position into the ML snapshot to speed up recovery
+        cursors.forEach(cursor -> {
+            PositionImpl markDeletePosition = (PositionImpl) cursor.getMarkDeletedPosition();
+            ManagedCursorInfo cursorInfo = ManagedCursorInfo.newBuilder()
+                    .setMarkDeleteLedgerId(markDeletePosition.getLedgerId())
+                    .setMarkDeleteEntryId(markDeletePosition.getEntryId()).build();
+            ManagedCursorNameInfo cursorNameInfo = ManagedCursorNameInfo.newBuilder().setCursorName(cursor.getName())
+                    .setInfo(cursorInfo).build();
+            mlInfoBuilder.addCursor(cursorNameInfo);
+        });
+
+        ManagedLedgerInfo mlInfo = mlInfoBuilder.build();
+        store.asyncUpdateLedgerIds(name, mlInfo, ledgersVersion, new MetaStoreCallback<Void>() {
             @Override
             public void operationComplete(Void result, Version version) {
                 if (log.isDebugEnabled()) {
                     log.debug("[{}] Successfully updated ledgers list for closing", name);
                 }
-                updateLedgersListFuture.complete(null);
+                callback.closeComplete(ctx);
             }
 
             @Override
             public void operationFailed(MetaStoreException e) {
-                updateLedgersListFuture.completeExceptionally(e);
+                callback.closeFailed(new ManagedLedgerException(e), ctx);
             }
         });
 
-        // Close current ledger without wating for it
+        // Close current ledger without waiting for it
         mbean.startDataLedgerCloseOp();
         lh.asyncClose((rc, lh1, ctx1) -> {
             if (log.isDebugEnabled()) {
@@ -890,18 +929,15 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             }
         }, null);
 
-        // Close all cursors in parallel
-        for (ManagedCursor cursor : cursors) {
-            Futures.CloseFuture closeFuture = new Futures.CloseFuture();
-            cursor.asyncClose(closeFuture, null);
-            futures.add(closeFuture);
-        }
+        // Since we have already snapshotted the cursor position into the z-node, we can now safely delete all cursor
+        // ledgers without waiting
+        cursors.forEach(cursor -> {
+            LedgerHandle cursorLedger = ((ManagedCursorImpl) cursor).cursorLedger;
+            if (cursorLedger != null) {
+                bookKeeper.asyncDeleteLedger(cursorLedger.getId(), (rc1, ctx1) -> {
 
-        Futures.waitForAll(futures).thenRun(() -> {
-            callback.closeComplete(ctx);
-        }).exceptionally(exception -> {
-            callback.closeFailed(new ManagedLedgerException(exception), ctx);
-            return null;
+                }, null);
+            }
         });
     }
 

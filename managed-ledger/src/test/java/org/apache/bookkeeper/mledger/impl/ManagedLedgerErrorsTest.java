@@ -113,7 +113,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         ManagedLedger ledger = factory.open("my_test_ledger");
         ledger.openCursor("c1");
 
-        bkc.failNow(BKException.Code.NoSuchLedgerExistsException);
+        zkc.failNow(Code.CONNECTIONLOSS);
 
         final CountDownLatch latch = new CountDownLatch(1);
         ledger.asyncClose(new CloseCallback() {
@@ -228,30 +228,6 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         factory = new ManagedLedgerFactoryImpl(bkc, zkc);
 
         zkc.failAfter(2, Code.CONNECTIONLOSS);
-
-        try {
-            ledger = factory.open("my_test_ledger");
-            fail("should fail");
-        } catch (ManagedLedgerException e) {
-            // ok
-        }
-
-        // It should be fine now
-        ledger = factory.open("my_test_ledger");
-    }
-
-    @Test
-    public void errorInRecovering6() throws Exception {
-        ManagedLedger ledger = factory.open("my_test_ledger");
-        ledger.openCursor("c1");
-        ledger.addEntry("entry".getBytes());
-
-        ledger.close();
-
-        factory.shutdownNow();
-        factory = new ManagedLedgerFactoryImpl(bkc, zkc);
-
-        zkc.failAfter(3, Code.CONNECTIONLOSS);
 
         try {
             ledger = factory.open("my_test_ledger");

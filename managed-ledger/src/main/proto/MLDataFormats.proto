@@ -25,6 +25,13 @@ message ManagedLedgerInfo {
     }
     
     repeated LedgerInfo ledgerInfo = 1;
+
+	repeated ManagedCursorNameInfo cursor = 2;
+}
+
+message ManagedCursorNameInfo {
+	required string cursorName      = 1;
+	required ManagedCursorInfo info = 2;
 }
 
 message PositionInfo {
@@ -35,7 +42,7 @@ message PositionInfo {
 message ManagedCursorInfo {
 	// If the ledger id is -1, then the mark-delete position is
 	// the one from the (ledgerId, entryId) snapshot below
-	required int64 cursorsLedgerId = 1;
+	optional int64 cursorsLedgerId = 1;
 
 	// Last snapshot of the mark-delete position
 	optional int64 markDeleteLedgerId = 2;

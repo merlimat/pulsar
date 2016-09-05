@@ -20,6 +20,16 @@ public final class MLDataFormats {
         getLedgerInfoOrBuilderList();
     org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.LedgerInfoOrBuilder getLedgerInfoOrBuilder(
         int index);
+    
+    // repeated .ManagedCursorNameInfo cursor = 2;
+    java.util.List<org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo> 
+        getCursorList();
+    org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo getCursor(int index);
+    int getCursorCount();
+    java.util.List<? extends org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder> 
+        getCursorOrBuilderList();
+    org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder getCursorOrBuilder(
+        int index);
   }
   public static final class ManagedLedgerInfo extends
       com.google.protobuf.GeneratedMessage
@@ -587,8 +597,30 @@ public final class MLDataFormats {
       return ledgerInfo_.get(index);
     }
     
+    // repeated .ManagedCursorNameInfo cursor = 2;
+    public static final int CURSOR_FIELD_NUMBER = 2;
+    private java.util.List<org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo> cursor_;
+    public java.util.List<org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo> getCursorList() {
+      return cursor_;
+    }
+    public java.util.List<? extends org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder> 
+        getCursorOrBuilderList() {
+      return cursor_;
+    }
+    public int getCursorCount() {
+      return cursor_.size();
+    }
+    public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo getCursor(int index) {
+      return cursor_.get(index);
+    }
+    public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder getCursorOrBuilder(
+        int index) {
+      return cursor_.get(index);
+    }
+    
     private void initFields() {
       ledgerInfo_ = java.util.Collections.emptyList();
+      cursor_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -597,6 +629,12 @@ public final class MLDataFormats {
       
       for (int i = 0; i < getLedgerInfoCount(); i++) {
         if (!getLedgerInfo(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      for (int i = 0; i < getCursorCount(); i++) {
+        if (!getCursor(i).isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -611,6 +649,9 @@ public final class MLDataFormats {
       for (int i = 0; i < ledgerInfo_.size(); i++) {
         output.writeMessage(1, ledgerInfo_.get(i));
       }
+      for (int i = 0; i < cursor_.size(); i++) {
+        output.writeMessage(2, cursor_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
     
@@ -623,6 +664,10 @@ public final class MLDataFormats {
       for (int i = 0; i < ledgerInfo_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, ledgerInfo_.get(i));
+      }
+      for (int i = 0; i < cursor_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, cursor_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -741,6 +786,7 @@ public final class MLDataFormats {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getLedgerInfoFieldBuilder();
+          getCursorFieldBuilder();
         }
       }
       private static Builder create() {
@@ -754,6 +800,12 @@ public final class MLDataFormats {
           bitField0_ = (bitField0_ & ~0x00000001);
         } else {
           ledgerInfoBuilder_.clear();
+        }
+        if (cursorBuilder_ == null) {
+          cursor_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          cursorBuilder_.clear();
         }
         return this;
       }
@@ -801,6 +853,15 @@ public final class MLDataFormats {
         } else {
           result.ledgerInfo_ = ledgerInfoBuilder_.build();
         }
+        if (cursorBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            cursor_ = java.util.Collections.unmodifiableList(cursor_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.cursor_ = cursor_;
+        } else {
+          result.cursor_ = cursorBuilder_.build();
+        }
         onBuilt();
         return result;
       }
@@ -842,6 +903,32 @@ public final class MLDataFormats {
             }
           }
         }
+        if (cursorBuilder_ == null) {
+          if (!other.cursor_.isEmpty()) {
+            if (cursor_.isEmpty()) {
+              cursor_ = other.cursor_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureCursorIsMutable();
+              cursor_.addAll(other.cursor_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.cursor_.isEmpty()) {
+            if (cursorBuilder_.isEmpty()) {
+              cursorBuilder_.dispose();
+              cursorBuilder_ = null;
+              cursor_ = other.cursor_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              cursorBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getCursorFieldBuilder() : null;
+            } else {
+              cursorBuilder_.addAllMessages(other.cursor_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -849,6 +936,12 @@ public final class MLDataFormats {
       public final boolean isInitialized() {
         for (int i = 0; i < getLedgerInfoCount(); i++) {
           if (!getLedgerInfo(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        for (int i = 0; i < getCursorCount(); i++) {
+          if (!getCursor(i).isInitialized()) {
             
             return false;
           }
@@ -883,6 +976,12 @@ public final class MLDataFormats {
               org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.LedgerInfo.Builder subBuilder = org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.LedgerInfo.newBuilder();
               input.readMessage(subBuilder, extensionRegistry);
               addLedgerInfo(subBuilder.buildPartial());
+              break;
+            }
+            case 18: {
+              org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder subBuilder = org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.newBuilder();
+              input.readMessage(subBuilder, extensionRegistry);
+              addCursor(subBuilder.buildPartial());
               break;
             }
           }
@@ -1077,6 +1176,192 @@ public final class MLDataFormats {
         return ledgerInfoBuilder_;
       }
       
+      // repeated .ManagedCursorNameInfo cursor = 2;
+      private java.util.List<org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo> cursor_ =
+        java.util.Collections.emptyList();
+      private void ensureCursorIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          cursor_ = new java.util.ArrayList<org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo>(cursor_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder> cursorBuilder_;
+      
+      public java.util.List<org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo> getCursorList() {
+        if (cursorBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(cursor_);
+        } else {
+          return cursorBuilder_.getMessageList();
+        }
+      }
+      public int getCursorCount() {
+        if (cursorBuilder_ == null) {
+          return cursor_.size();
+        } else {
+          return cursorBuilder_.getCount();
+        }
+      }
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo getCursor(int index) {
+        if (cursorBuilder_ == null) {
+          return cursor_.get(index);
+        } else {
+          return cursorBuilder_.getMessage(index);
+        }
+      }
+      public Builder setCursor(
+          int index, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo value) {
+        if (cursorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCursorIsMutable();
+          cursor_.set(index, value);
+          onChanged();
+        } else {
+          cursorBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      public Builder setCursor(
+          int index, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder builderForValue) {
+        if (cursorBuilder_ == null) {
+          ensureCursorIsMutable();
+          cursor_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          cursorBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      public Builder addCursor(org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo value) {
+        if (cursorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCursorIsMutable();
+          cursor_.add(value);
+          onChanged();
+        } else {
+          cursorBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      public Builder addCursor(
+          int index, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo value) {
+        if (cursorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCursorIsMutable();
+          cursor_.add(index, value);
+          onChanged();
+        } else {
+          cursorBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      public Builder addCursor(
+          org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder builderForValue) {
+        if (cursorBuilder_ == null) {
+          ensureCursorIsMutable();
+          cursor_.add(builderForValue.build());
+          onChanged();
+        } else {
+          cursorBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      public Builder addCursor(
+          int index, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder builderForValue) {
+        if (cursorBuilder_ == null) {
+          ensureCursorIsMutable();
+          cursor_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          cursorBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      public Builder addAllCursor(
+          java.lang.Iterable<? extends org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo> values) {
+        if (cursorBuilder_ == null) {
+          ensureCursorIsMutable();
+          super.addAll(values, cursor_);
+          onChanged();
+        } else {
+          cursorBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      public Builder clearCursor() {
+        if (cursorBuilder_ == null) {
+          cursor_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          cursorBuilder_.clear();
+        }
+        return this;
+      }
+      public Builder removeCursor(int index) {
+        if (cursorBuilder_ == null) {
+          ensureCursorIsMutable();
+          cursor_.remove(index);
+          onChanged();
+        } else {
+          cursorBuilder_.remove(index);
+        }
+        return this;
+      }
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder getCursorBuilder(
+          int index) {
+        return getCursorFieldBuilder().getBuilder(index);
+      }
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder getCursorOrBuilder(
+          int index) {
+        if (cursorBuilder_ == null) {
+          return cursor_.get(index);  } else {
+          return cursorBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      public java.util.List<? extends org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder> 
+           getCursorOrBuilderList() {
+        if (cursorBuilder_ != null) {
+          return cursorBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(cursor_);
+        }
+      }
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder addCursorBuilder() {
+        return getCursorFieldBuilder().addBuilder(
+            org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.getDefaultInstance());
+      }
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder addCursorBuilder(
+          int index) {
+        return getCursorFieldBuilder().addBuilder(
+            index, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.getDefaultInstance());
+      }
+      public java.util.List<org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder> 
+           getCursorBuilderList() {
+        return getCursorFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder> 
+          getCursorFieldBuilder() {
+        if (cursorBuilder_ == null) {
+          cursorBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder>(
+                  cursor_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          cursor_ = null;
+        }
+        return cursorBuilder_;
+      }
+      
       // @@protoc_insertion_point(builder_scope:ManagedLedgerInfo)
     }
     
@@ -1086,6 +1371,540 @@ public final class MLDataFormats {
     }
     
     // @@protoc_insertion_point(class_scope:ManagedLedgerInfo)
+  }
+  
+  public interface ManagedCursorNameInfoOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+    
+    // required string cursorName = 1;
+    boolean hasCursorName();
+    String getCursorName();
+    
+    // required .ManagedCursorInfo info = 2;
+    boolean hasInfo();
+    org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo getInfo();
+    org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfoOrBuilder getInfoOrBuilder();
+  }
+  public static final class ManagedCursorNameInfo extends
+      com.google.protobuf.GeneratedMessage
+      implements ManagedCursorNameInfoOrBuilder {
+    // Use ManagedCursorNameInfo.newBuilder() to construct.
+    private ManagedCursorNameInfo(Builder builder) {
+      super(builder);
+    }
+    private ManagedCursorNameInfo(boolean noInit) {}
+    
+    private static final ManagedCursorNameInfo defaultInstance;
+    public static ManagedCursorNameInfo getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public ManagedCursorNameInfo getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.bookkeeper.mledger.proto.MLDataFormats.internal_static_ManagedCursorNameInfo_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.bookkeeper.mledger.proto.MLDataFormats.internal_static_ManagedCursorNameInfo_fieldAccessorTable;
+    }
+    
+    private int bitField0_;
+    // required string cursorName = 1;
+    public static final int CURSORNAME_FIELD_NUMBER = 1;
+    private java.lang.Object cursorName_;
+    public boolean hasCursorName() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    public String getCursorName() {
+      java.lang.Object ref = cursorName_;
+      if (ref instanceof String) {
+        return (String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        String s = bs.toStringUtf8();
+        if (com.google.protobuf.Internal.isValidUtf8(bs)) {
+          cursorName_ = s;
+        }
+        return s;
+      }
+    }
+    private com.google.protobuf.ByteString getCursorNameBytes() {
+      java.lang.Object ref = cursorName_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8((String) ref);
+        cursorName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    
+    // required .ManagedCursorInfo info = 2;
+    public static final int INFO_FIELD_NUMBER = 2;
+    private org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo info_;
+    public boolean hasInfo() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo getInfo() {
+      return info_;
+    }
+    public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfoOrBuilder getInfoOrBuilder() {
+      return info_;
+    }
+    
+    private void initFields() {
+      cursorName_ = "";
+      info_ = org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+      
+      if (!hasCursorName()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasInfo()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getCursorNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, info_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getCursorNameBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, info_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+    
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfoOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.bookkeeper.mledger.proto.MLDataFormats.internal_static_ManagedCursorNameInfo_descriptor;
+      }
+      
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.bookkeeper.mledger.proto.MLDataFormats.internal_static_ManagedCursorNameInfo_fieldAccessorTable;
+      }
+      
+      // Construct using org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+      
+      private Builder(BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getInfoFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+      
+      public Builder clear() {
+        super.clear();
+        cursorName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (infoBuilder_ == null) {
+          info_ = org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.getDefaultInstance();
+        } else {
+          infoBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.getDescriptor();
+      }
+      
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo getDefaultInstanceForType() {
+        return org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.getDefaultInstance();
+      }
+      
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo build() {
+        org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+      
+      private org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return result;
+      }
+      
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo buildPartial() {
+        org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo result = new org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.cursorName_ = cursorName_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (infoBuilder_ == null) {
+          result.info_ = info_;
+        } else {
+          result.info_ = infoBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo) {
+          return mergeFrom((org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo other) {
+        if (other == org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.getDefaultInstance()) return this;
+        if (other.hasCursorName()) {
+          setCursorName(other.getCursorName());
+        }
+        if (other.hasInfo()) {
+          mergeInfo(other.getInfo());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public final boolean isInitialized() {
+        if (!hasCursorName()) {
+          
+          return false;
+        }
+        if (!hasInfo()) {
+          
+          return false;
+        }
+        return true;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              onChanged();
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                onChanged();
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              cursorName_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.Builder subBuilder = org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.newBuilder();
+              if (hasInfo()) {
+                subBuilder.mergeFrom(getInfo());
+              }
+              input.readMessage(subBuilder, extensionRegistry);
+              setInfo(subBuilder.buildPartial());
+              break;
+            }
+          }
+        }
+      }
+      
+      private int bitField0_;
+      
+      // required string cursorName = 1;
+      private java.lang.Object cursorName_ = "";
+      public boolean hasCursorName() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public String getCursorName() {
+        java.lang.Object ref = cursorName_;
+        if (!(ref instanceof String)) {
+          String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
+          cursorName_ = s;
+          return s;
+        } else {
+          return (String) ref;
+        }
+      }
+      public Builder setCursorName(String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        cursorName_ = value;
+        onChanged();
+        return this;
+      }
+      public Builder clearCursorName() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        cursorName_ = getDefaultInstance().getCursorName();
+        onChanged();
+        return this;
+      }
+      void setCursorName(com.google.protobuf.ByteString value) {
+        bitField0_ |= 0x00000001;
+        cursorName_ = value;
+        onChanged();
+      }
+      
+      // required .ManagedCursorInfo info = 2;
+      private org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo info_ = org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.Builder, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfoOrBuilder> infoBuilder_;
+      public boolean hasInfo() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo getInfo() {
+        if (infoBuilder_ == null) {
+          return info_;
+        } else {
+          return infoBuilder_.getMessage();
+        }
+      }
+      public Builder setInfo(org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo value) {
+        if (infoBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          info_ = value;
+          onChanged();
+        } else {
+          infoBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      public Builder setInfo(
+          org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.Builder builderForValue) {
+        if (infoBuilder_ == null) {
+          info_ = builderForValue.build();
+          onChanged();
+        } else {
+          infoBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      public Builder mergeInfo(org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo value) {
+        if (infoBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              info_ != org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.getDefaultInstance()) {
+            info_ =
+              org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.newBuilder(info_).mergeFrom(value).buildPartial();
+          } else {
+            info_ = value;
+          }
+          onChanged();
+        } else {
+          infoBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      public Builder clearInfo() {
+        if (infoBuilder_ == null) {
+          info_ = org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.getDefaultInstance();
+          onChanged();
+        } else {
+          infoBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.Builder getInfoBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getInfoFieldBuilder().getBuilder();
+      }
+      public org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfoOrBuilder getInfoOrBuilder() {
+        if (infoBuilder_ != null) {
+          return infoBuilder_.getMessageOrBuilder();
+        } else {
+          return info_;
+        }
+      }
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.Builder, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfoOrBuilder> 
+          getInfoFieldBuilder() {
+        if (infoBuilder_ == null) {
+          infoBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo.Builder, org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfoOrBuilder>(
+                  info_,
+                  getParentForChildren(),
+                  isClean());
+          info_ = null;
+        }
+        return infoBuilder_;
+      }
+      
+      // @@protoc_insertion_point(builder_scope:ManagedCursorNameInfo)
+    }
+    
+    static {
+      defaultInstance = new ManagedCursorNameInfo(true);
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:ManagedCursorNameInfo)
   }
   
   public interface PositionInfoOrBuilder
@@ -1502,7 +2321,7 @@ public final class MLDataFormats {
   public interface ManagedCursorInfoOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
     
-    // required int64 cursorsLedgerId = 1;
+    // optional int64 cursorsLedgerId = 1;
     boolean hasCursorsLedgerId();
     long getCursorsLedgerId();
     
@@ -1543,7 +2362,7 @@ public final class MLDataFormats {
     }
     
     private int bitField0_;
-    // required int64 cursorsLedgerId = 1;
+    // optional int64 cursorsLedgerId = 1;
     public static final int CURSORSLEDGERID_FIELD_NUMBER = 1;
     private long cursorsLedgerId_;
     public boolean hasCursorsLedgerId() {
@@ -1583,10 +2402,6 @@ public final class MLDataFormats {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
       
-      if (!hasCursorsLedgerId()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -1834,10 +2649,6 @@ public final class MLDataFormats {
       }
       
       public final boolean isInitialized() {
-        if (!hasCursorsLedgerId()) {
-          
-          return false;
-        }
         return true;
       }
       
@@ -1885,7 +2696,7 @@ public final class MLDataFormats {
       
       private int bitField0_;
       
-      // required int64 cursorsLedgerId = 1;
+      // optional int64 cursorsLedgerId = 1;
       private long cursorsLedgerId_ ;
       public boolean hasCursorsLedgerId() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
@@ -1970,6 +2781,11 @@ public final class MLDataFormats {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ManagedLedgerInfo_LedgerInfo_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_ManagedCursorNameInfo_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_ManagedCursorNameInfo_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_PositionInfo_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -1988,16 +2804,19 @@ public final class MLDataFormats {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\"src/main/proto/MLDataFormats.proto\"\230\001\n" +
+      "\n\"src/main/proto/MLDataFormats.proto\"\300\001\n" +
       "\021ManagedLedgerInfo\0221\n\nledgerInfo\030\001 \003(\0132\035" +
-      ".ManagedLedgerInfo.LedgerInfo\032P\n\nLedgerI" +
+      ".ManagedLedgerInfo.LedgerInfo\022&\n\006cursor\030" +
+      "\002 \003(\0132\026.ManagedCursorNameInfo\032P\n\nLedgerI" +
       "nfo\022\020\n\010ledgerId\030\001 \002(\003\022\017\n\007entries\030\002 \001(\003\022\014" +
-      "\n\004size\030\003 \001(\003\022\021\n\ttimestamp\030\004 \001(\003\"1\n\014Posit" +
-      "ionInfo\022\020\n\010ledgerId\030\001 \002(\003\022\017\n\007entryId\030\002 \002" +
-      "(\003\"c\n\021ManagedCursorInfo\022\027\n\017cursorsLedger" +
-      "Id\030\001 \002(\003\022\032\n\022markDeleteLedgerId\030\002 \001(\003\022\031\n\021" +
-      "markDeleteEntryId\030\003 \001(\003B\'\n#org.apache.bo" +
-      "okkeeper.mledger.protoH\001"
+      "\n\004size\030\003 \001(\003\022\021\n\ttimestamp\030\004 \001(\003\"M\n\025Manag" +
+      "edCursorNameInfo\022\022\n\ncursorName\030\001 \002(\t\022 \n\004" +
+      "info\030\002 \002(\0132\022.ManagedCursorInfo\"1\n\014Positi" +
+      "onInfo\022\020\n\010ledgerId\030\001 \002(\003\022\017\n\007entryId\030\002 \002(" +
+      "\003\"c\n\021ManagedCursorInfo\022\027\n\017cursorsLedgerI",
+      "d\030\001 \001(\003\022\032\n\022markDeleteLedgerId\030\002 \001(\003\022\031\n\021m" +
+      "arkDeleteEntryId\030\003 \001(\003B\'\n#org.apache.boo" +
+      "kkeeper.mledger.protoH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2009,7 +2828,7 @@ public final class MLDataFormats {
           internal_static_ManagedLedgerInfo_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_ManagedLedgerInfo_descriptor,
-              new java.lang.String[] { "LedgerInfo", },
+              new java.lang.String[] { "LedgerInfo", "Cursor", },
               org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.class,
               org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.Builder.class);
           internal_static_ManagedLedgerInfo_LedgerInfo_descriptor =
@@ -2020,8 +2839,16 @@ public final class MLDataFormats {
               new java.lang.String[] { "LedgerId", "Entries", "Size", "Timestamp", },
               org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.LedgerInfo.class,
               org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.LedgerInfo.Builder.class);
-          internal_static_PositionInfo_descriptor =
+          internal_static_ManagedCursorNameInfo_descriptor =
             getDescriptor().getMessageTypes().get(1);
+          internal_static_ManagedCursorNameInfo_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_ManagedCursorNameInfo_descriptor,
+              new java.lang.String[] { "CursorName", "Info", },
+              org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.class,
+              org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorNameInfo.Builder.class);
+          internal_static_PositionInfo_descriptor =
+            getDescriptor().getMessageTypes().get(2);
           internal_static_PositionInfo_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_PositionInfo_descriptor,
@@ -2029,7 +2856,7 @@ public final class MLDataFormats {
               org.apache.bookkeeper.mledger.proto.MLDataFormats.PositionInfo.class,
               org.apache.bookkeeper.mledger.proto.MLDataFormats.PositionInfo.Builder.class);
           internal_static_ManagedCursorInfo_descriptor =
-            getDescriptor().getMessageTypes().get(2);
+            getDescriptor().getMessageTypes().get(3);
           internal_static_ManagedCursorInfo_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_ManagedCursorInfo_descriptor,
