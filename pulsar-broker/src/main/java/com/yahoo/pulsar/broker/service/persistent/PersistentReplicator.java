@@ -85,10 +85,10 @@ public class PersistentReplicator implements ReadEntriesCallback, DeleteCallback
     private static final ProducerConfiguration producerConfiguration = new ProducerConfiguration().setSendTimeout(0,
             TimeUnit.SECONDS);
 
-    private final Backoff backOff = new Backoff(100, TimeUnit.MILLISECONDS, 1, TimeUnit.MINUTES);
+    private final Backoff backOff = new Backoff(1, TimeUnit.MINUTES, 15, TimeUnit.MINUTES);
     private int messageTTLInSeconds = 0;
 
-    private final Backoff readFailureBackoff = new Backoff(1, TimeUnit.SECONDS, 1, TimeUnit.MINUTES);
+    private final Backoff readFailureBackoff = new Backoff(10, TimeUnit.SECONDS, 1, TimeUnit.MINUTES);
 
     private PersistentMessageExpiryMonitor expiryMonitor;
     // for connected subscriptions, message expiry will be checked if the backlog is greater than this threshold

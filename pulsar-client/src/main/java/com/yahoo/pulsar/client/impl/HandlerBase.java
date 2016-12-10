@@ -44,7 +44,7 @@ abstract class HandlerBase {
         this.client = client;
         this.topic = topic;
         this.clientCnx = new AtomicReference<>();
-        this.backoff = new Backoff(100, TimeUnit.MILLISECONDS, 60, TimeUnit.SECONDS);
+        this.backoff = new Backoff(1, TimeUnit.MINUTES, 15, TimeUnit.MINUTES);
         this.state.set(State.Uninitialized);
     }
 
