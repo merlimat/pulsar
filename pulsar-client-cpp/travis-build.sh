@@ -62,8 +62,7 @@ fi
 
 if [ "$3" = "all" -o "$3" = "compile" ]; then
   # Compile and run unit tests
-  PULSAR_VERSION=`cat $2/pom.xml | grep -Po '(<?<version>)[^<]+' | sed 's/.*>//'  | head -1`;
-  exec_cmd "pushd $2/pulsar-client-cpp && PULSAR_VERSION=$PULSAR_VERSION cmake . && make && popd";
+  exec_cmd "pushd $2/pulsar-client-cpp && cmake . && make && popd";
   PULSAR_STANDALONE_CONF=$2/pulsar-client-cpp/tests/standalone.conf $2/bin/pulsar standalone &
   pid=$!;
   exec_cmd "sleep 10 && pushd $2/pulsar-client-cpp/tests && ./main && popd";
