@@ -26,13 +26,7 @@
 
 #include <epan/expert.h>
 #include <epan/packet.h>
-#include <epan/prefs.h>
-#include <epan/proto.h>
-#include <epan/column-utils.h>
 #include <epan/dissectors/packet-tcp.h>
-#include <epan/value_string.h>
-#include <wsutil/nstime.h>
-
 
 #include "PulsarApi.pb.h"
 
@@ -47,12 +41,15 @@ static int hf_pulsar_cmd_size = -1;
 
 static int hf_pulsar_client_version = -1;
 static int hf_pulsar_auth_method = -1;
+static int hf_pulsar_auth_method_name = -1;
 static int hf_pulsar_auth_data = -1;
 static int hf_pulsar_protocol_version = -1;
 static int hf_pulsar_server_version = -1;
 
 static int hf_pulsar_topic = -1;
 static int hf_pulsar_subscription = -1;
+static int hf_pulsar_subscription_durable = -1;
+static int hf_pulsar_subscription_start_message_id = -1;
 static int hf_pulsar_subType = -1;
 static int hf_pulsar_consumer_id = -1;
 static int hf_pulsar_producer_id = -1;
@@ -61,12 +58,24 @@ static int hf_pulsar_ack_type = -1;
 static int hf_pulsar_request_id = -1;
 static int hf_pulsar_consumer_name = -1;
 static int hf_pulsar_producer_name = -1;
+static int hf_pulsar_num_messages = -1;
 
+static int hf_pulsar_partitions = -1;
+static int hf_pulsar_metadata_response_type = -1;
+static int hf_pulsar_message = -1;
+static int hf_pulsar_checksum = -1;
+static int hf_pulsar_validation_error = -1;
 static int hf_pulsar_publish_time = -1;
 static int hf_pulsar_replicated_from = -1;
 static int hf_pulsar_partition_key = -1;
 static int hf_pulsar_replicate_to = -1;
 static int hf_pulsar_property = -1;
+
+static int hf_pulsar_lookup_authoritative = -1;
+static int hf_pulsar_lookup_broker_url = -1;
+static int hf_pulsar_lookup_broker_url_tls = -1;
+static int hf_pulsar_lookup_response_type = -1;
+
 
 static int hf_pulsar_request_in = -1;
 static int hf_pulsar_response_in = -1;
@@ -84,56 +93,108 @@ static pulsar::proto::BaseCommand command;
 
 using namespace pulsar::proto;
 
-static const value_string pulsar_cmd_names[] = {  //
-        { BaseCommand::CONNECT, "Connect" },  //
-                { BaseCommand::CONNECTED, "Connected" },  //
-                { BaseCommand::SUBSCRIBE, "Subscribe" },  //
-                { BaseCommand::PRODUCER, "Producer" },  //
-                { BaseCommand::SEND, "Send" },  //
-                { BaseCommand::SEND_RECEIPT, "SendReceipt" },  //
-                { BaseCommand::SEND_ERROR, "SendError" },  //
-                { BaseCommand::MESSAGE, "Message" },  //
-                { BaseCommand::ACK, "Ack" },  //
-                { BaseCommand::FLOW, "Flow" },  //
-                { BaseCommand::UNSUBSCRIBE, "Unsubscribe" },  //
-                { BaseCommand::SUCCESS, "Success" },  //
-                { BaseCommand::ERROR, "Error" },  //
-                { BaseCommand::CLOSE_PRODUCER, "CloseProducer" },  //
-                { BaseCommand::CLOSE_CONSUMER, "CloseConsumer" },  //
-                { BaseCommand::PRODUCER_SUCCESS, "ProducerSuccess" },  //
-                { BaseCommand::PING, "Ping" },  //
-                { BaseCommand::PONG, "Pong" },  //
-        };
-
-static const value_string auth_methods_vs[] = { { AuthMethodNone, "None" },  //
-        { AuthMethodYcaV1, "YCAv1" },  //
-        { AuthMethodAthens, "Athens" }  //
+static const value_string pulsar_cmd_names[] = {
+        {BaseCommand::CONNECT,                           "Connect"},
+        {BaseCommand::CONNECTED,                         "Connected"},
+        {BaseCommand::SUBSCRIBE,                         "Subscribe"},
+        {BaseCommand::PRODUCER,                          "Producer"},
+        {BaseCommand::SEND,                              "Send"},
+        {BaseCommand::SEND_RECEIPT,                      "SendReceipt"},
+        {BaseCommand::SEND_ERROR,                        "SendError"},
+        {BaseCommand::MESSAGE,                           "Message"},
+        {BaseCommand::ACK,                               "Ack"},
+        {BaseCommand::FLOW,                              "Flow"},
+        {BaseCommand::UNSUBSCRIBE,                       "Unsubscribe"},
+        {BaseCommand::SUCCESS,                           "Success"},
+        {BaseCommand::ERROR,                             "Error"},
+        {BaseCommand::CLOSE_PRODUCER,                    "CloseProducer"},
+        {BaseCommand::CLOSE_CONSUMER,                    "CloseConsumer"},
+        {BaseCommand::PRODUCER_SUCCESS,                  "ProducerSuccess"},
+        {BaseCommand::PING,                              "Ping"},
+        {BaseCommand::PONG,                              "Pong"},
+        {BaseCommand::REDELIVER_UNACKNOWLEDGED_MESSAGES, "RedeliverUnacknowledgedMessages"},
+        {BaseCommand::PARTITIONED_METADATA,              "PartitionedMetadata"},
+        {BaseCommand::PARTITIONED_METADATA_RESPONSE,     "PartitionedMetadataResponse"},
+        {BaseCommand::LOOKUP,                            "Lookup"},
+        {BaseCommand::LOOKUP_RESPONSE,                   "LookupResponse"},
+        {BaseCommand::CONSUMER_STATS,                    "ConsumerStats"},
+        {BaseCommand::CONSUMER_STATS_RESPONSE,           "ConsumerStatsResponse"},
+        {BaseCommand::REACHED_END_OF_TOPIC,              "ReachedEndOfTopic"},
 };
 
-static const value_string server_errors_vs[] = { { UnknownError, "UnknownError" },  //
-        { MetadataError, "MetadataError" },  //
-        { PersistenceError, "PersistenceError" },  //
-        { AuthenticationError, "AuthenticationError" },  //
-        { AuthorizationError, "AuthorizationError" },  //
-        { ConsumerBusy, "ConsumerBusy" },  //
-        { ServiceNotReady, "ServiceNotReady" },  //
-        { ProducerBlockedQuotaExceededError, "ProducerBlockedQuotaExceededError" },  //
-        { ProducerBlockedQuotaExceededException, "ProducerBlockedQuotaExceededException" }  //
+static const value_string compression_type_vs[] = {
+        {NONE, "None"},
+        {LZ4,  "LZ4"},
+        {ZLIB, "ZLib"},
 };
 
-static const value_string ack_type_vs[] = { { CommandAck::Individual, "Individual" },  //
-        { CommandAck::Cumulative, "Cumulative" }  //
+
+static const value_string auth_methods_vs[] = {
+        {AuthMethodNone,   "None"},
+        {AuthMethodYcaV1,  "YCAv1"},
+        {AuthMethodAthens, "Athens"},
 };
 
-static const value_string protocol_version_vs[] = { { v0, "v0" },  //
-        { v1, "v1" }  //
+static const value_string server_errors_vs[] = {
+        {UnknownError,                          "UnknownError"},
+        {MetadataError,                         "MetadataError"},
+        {PersistenceError,                      "PersistenceError"},
+        {AuthenticationError,                   "AuthenticationError"},
+        {AuthorizationError,                    "AuthorizationError"},
+        {ConsumerBusy,                          "ConsumerBusy"},
+        {ServiceNotReady,                       "ServiceNotReady"},
+        {ProducerBlockedQuotaExceededError,     "ProducerBlockedQuotaExceededError"},
+        {ProducerBlockedQuotaExceededException, "ProducerBlockedQuotaExceededException"},
+        {ChecksumError,                         "ChecksumError"},
+        {UnsupportedVersionError,               "UnsupportedVersionError"},
+        {TopicNotFound,                         "TopicNotFound"},
+        {SubscriptionNotFound,                  "SubscriptionNotFound"},
+        {ConsumerNotFound,                      "ConsumerNotFound"},
+        {TooManyRequests,                       "TooManyRequests"},
+        {TopicTerminatedError,                  "TopicTerminatedError"},
 };
 
-static const value_string sub_type_names_vs[] = {  //
-        { CommandSubscribe::Exclusive, "Exclusive" },  //
-                { CommandSubscribe::Shared, "Shared" },  //
-                { CommandSubscribe::Failover, "Failover" }  //
-        };
+static const value_string ack_type_vs[] = {
+        {CommandAck::Individual, "Individual"},
+        {CommandAck::Cumulative, "Cumulative"},
+};
+
+static const value_string ack_validation_error_vs[] = {
+        {CommandAck::UncompressedSizeCorruption, "UncompressedSizeCorruption"},
+        {CommandAck::DecompressionError,         "DecompressionError"},
+        {CommandAck::ChecksumMismatch,           "ChecksumMismatch"},
+        {CommandAck::BatchDeSerializeError,      "BatchDeSerializeError"},
+};
+
+static const value_string protocol_version_vs[] = {
+        { v0, "v0" },
+        { v1, "v1" },
+        { v2, "v2" },
+        { v3, "v3" },
+        { v4, "v4" },
+        { v5, "v5" },
+        { v6, "v6" },
+        { v7, "v7" },
+        { v8, "v8" },
+        { v9, "v9" },
+};
+
+static const value_string sub_type_names_vs[] = {
+        {CommandSubscribe::Exclusive, "Exclusive"},
+        {CommandSubscribe::Shared,    "Shared"},
+        {CommandSubscribe::Failover,  "Failover"}
+};
+
+static const value_string partitioned_topic_metadata_response_type_vs[] = {
+        {CommandPartitionedTopicMetadataResponse::Success, "Success"},
+        {CommandPartitionedTopicMetadataResponse::Failed,  "Failed"},
+};
+
+static const value_string topic_lookup_response_type_vs[] = {
+        {CommandLookupTopicResponse::Redirect, "Redirect"},
+        {CommandLookupTopicResponse::Connect,  "Connect"},
+        {CommandLookupTopicResponse::Failed,   "Failed"},
+};
 
 static const char* to_str(int value, const value_string* values) {
     return val_to_str(value, values, "Unknown (%d)");
@@ -192,6 +253,16 @@ struct ConnectionState {
 
 static void dissect_message_metadata(proto_tree* frame_tree, tvbuff_t *tvb, int offset,
                                      int maxOffset) {
+    uint16_t magicMarker = (uint16_t) tvb_get_ntohs(tvb, offset);
+    if (magicMarker == 0x0e01) {
+        offset += 2;
+        // We have checksum
+        uint32_t storedChecksum = (uint32_t) tvb_get_ntohl(tvb, offset);
+        proto_tree_add_uint(frame_tree, hf_pulsar_checksum, tvb, offset, 4,
+                            storedChecksum);
+        offset += 4;
+    }
+
     // Decode message metadata
     uint32_t metadataSize = (uint32_t) tvb_get_ntohl(tvb, offset);
     offset += 4;
@@ -297,7 +368,7 @@ void link_to_response_frame(proto_tree* cmd_tree, tvbuff_t* tvb, int offset, int
 /* This method dissects fully reassembled messages */
 static int dissect_pulsar_message(tvbuff_t *tvb, packet_info* pinfo, proto_tree* tree,
                                void* data _U_) {
-    col_set_str(pinfo->cinfo, COL_PROTOCOL, "yahoo-Pulsar");
+    col_set_str(pinfo->cinfo, COL_PROTOCOL, "Pulsar");
 
     conversation_t* conversation = find_or_create_conversation(pinfo);
     ConnectionState* state = (ConnectionState*) conversation_get_proto_data(conversation,
@@ -357,8 +428,14 @@ static int dissect_pulsar_message(tvbuff_t *tvb, packet_info* pinfo, proto_tree*
                                       connect.client_version().c_str());
                 proto_tree_add_string(cmd_tree, hf_pulsar_protocol_version, tvb, cmdOffset, cmdSize,
                                       to_str(connect.protocol_version(), protocol_version_vs));
-                proto_tree_add_string(cmd_tree, hf_pulsar_auth_method, tvb, cmdOffset, cmdSize,
-                                      to_str(connect.auth_method(), auth_methods_vs));
+                if (connect.has_auth_method()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_auth_method, tvb, cmdOffset, cmdSize,
+                                          to_str(connect.auth_method(), auth_methods_vs));
+                }
+                if (connect.has_auth_method_name()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_auth_method_name, tvb, cmdOffset, cmdSize,
+                                          connect.auth_method_name().c_str());
+                }
                 if (connect.has_auth_data()) {
                     proto_tree_add_string(cmd_tree, hf_pulsar_auth_data, tvb, cmdOffset, cmdSize,
                                           connect.auth_data().c_str());
@@ -401,10 +478,17 @@ static int dissect_pulsar_message(tvbuff_t *tvb, packet_info* pinfo, proto_tree*
                                       subscribe.subscription().c_str());
                 proto_tree_add_string(cmd_tree, hf_pulsar_subType, tvb, cmdOffset, cmdSize,
                                       to_str(subscribe.subtype(), sub_type_names_vs));
+                proto_tree_add_boolean(cmd_tree, hf_pulsar_subscription_durable, tvb, cmdOffset, cmdSize,
+                                       subscribe.durable());
+                if (subscribe.has_start_message_id()) {
+                    const MessageIdData &messageId = subscribe.start_message_id();
+                    proto_tree_add_string_format(cmd_tree, hf_pulsar_subscription_start_message_id, tvb, cmdOffset,
+                                                 cmdSize, "", "%llu:%llu",
+                                                 messageId.ledgerid(), messageId.entryid());
+                }
+
                 proto_tree_add_uint64(cmd_tree, hf_pulsar_consumer_id, tvb, cmdOffset, cmdSize,
                                       subscribe.consumer_id());
-                proto_tree_add_uint64(cmd_tree, hf_pulsar_request_id, tvb, cmdOffset, cmdSize,
-                                      subscribe.request_id());
                 proto_tree_add_string(
                         cmd_tree,
                         hf_pulsar_consumer_name,
@@ -413,6 +497,8 @@ static int dissect_pulsar_message(tvbuff_t *tvb, packet_info* pinfo, proto_tree*
                         cmdSize,
                         subscribe.has_consumer_name() ?
                                 subscribe.consumer_name().c_str() : "<none>");
+                proto_tree_add_uint64(cmd_tree, hf_pulsar_request_id, tvb, cmdOffset, cmdSize,
+                                      subscribe.request_id());
             }
             break;
         }
@@ -460,6 +546,8 @@ static int dissect_pulsar_message(tvbuff_t *tvb, packet_info* pinfo, proto_tree*
                                       send.producer_id());
                 proto_tree_add_uint64(cmd_tree, hf_pulsar_sequence_id, tvb, cmdOffset, cmdSize,
                                       send.sequence_id());
+                proto_tree_add_uint(cmd_tree, hf_pulsar_num_messages, tvb, cmdOffset, cmdSize,
+                                    send.num_messages());
 
                 // Decode message metadata
                 dissect_message_metadata(cmd_tree, tvb, offset, maxOffset);
@@ -608,6 +696,11 @@ static int dissect_pulsar_message(tvbuff_t *tvb, packet_info* pinfo, proto_tree*
                 item = proto_tree_add_string(cmd_tree, hf_pulsar_topic, tvb, cmdOffset, cmdSize,
                                              consumerData.topic.c_str());
                 PROTO_ITEM_SET_GENERATED(item);
+
+                if (ack.has_validation_error()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_validation_error, tvb, cmdOffset, cmdSize,
+                                          to_str(ack.validation_error(), ack_validation_error_vs));
+                }
 
                 // Pair with frame information
                 link_to_request_frame(cmd_tree, tvb, cmdOffset, cmdSize, data);
@@ -810,6 +903,183 @@ static int dissect_pulsar_message(tvbuff_t *tvb, packet_info* pinfo, proto_tree*
             break;
         case BaseCommand::PONG:
             break;
+
+        case BaseCommand::REACHED_END_OF_TOPIC: {
+            const CommandReachedEndOfTopic& reachedEndOfTopic = command.reachedendoftopic();
+            const ConsumerData& consumerData = state->consumers[reachedEndOfTopic.consumer_id()];
+
+            col_append_fstr(pinfo->cinfo, COL_INFO, "End Of Topic / %s", consumerData.consumerName.c_str());
+
+            if (tree) {
+                proto_tree_add_uint64(cmd_tree, hf_pulsar_consumer_id, tvb, cmdOffset, cmdSize,
+                                      reachedEndOfTopic.consumer_id());
+
+                item = proto_tree_add_string(cmd_tree, hf_pulsar_consumer_name, tvb, cmdOffset,
+                                             cmdSize, consumerData.consumerName.c_str());
+                PROTO_ITEM_SET_GENERATED(item);
+
+                item = proto_tree_add_string(cmd_tree, hf_pulsar_topic, tvb, cmdOffset, cmdSize,
+                                             consumerData.topic.c_str());
+                PROTO_ITEM_SET_GENERATED(item);
+            }
+            break;
+        }
+
+        case BaseCommand::REDELIVER_UNACKNOWLEDGED_MESSAGES: {
+            const CommandRedeliverUnacknowledgedMessages &redeliverUnacknowledgedMessages = command.redeliverunacknowledgedmessages();
+
+            ConsumerData& consumerData = state->consumers[redeliverUnacknowledgedMessages.consumer_id()];
+            col_append_fstr(pinfo->cinfo, COL_INFO, " / %s / %u", consumerData.consumerName.c_str(),
+                            redeliverUnacknowledgedMessages.message_ids_size());
+
+            if (tree) {
+                proto_tree_add_uint64(cmd_tree, hf_pulsar_consumer_id, tvb, cmdOffset, cmdSize,
+                                      redeliverUnacknowledgedMessages.consumer_id());
+
+                for (int i = 0; i < redeliverUnacknowledgedMessages.message_ids_size(); i++) {
+                    const MessageIdData& messageId = redeliverUnacknowledgedMessages.message_ids(i);
+                    proto_tree_add_string_format(cmd_tree, hf_pulsar_message_id, tvb, cmdOffset,
+                                                 cmdSize, "", "Message Id: %llu:%llu",
+                                                 messageId.ledgerid(), messageId.entryid());
+                }
+
+                item = proto_tree_add_string(cmd_tree, hf_pulsar_consumer_name, tvb, cmdOffset,
+                                             cmdSize, consumerData.consumerName.c_str());
+                PROTO_ITEM_SET_GENERATED(item);
+
+                item = proto_tree_add_string(cmd_tree, hf_pulsar_topic, tvb, cmdOffset, cmdSize,
+                                             consumerData.topic.c_str());
+                PROTO_ITEM_SET_GENERATED(item);
+            }
+            break;
+        }
+
+        case BaseCommand::PARTITIONED_METADATA: {
+            const CommandPartitionedTopicMetadata& partitionedTopicMetadata = command.partitionmetadata();
+            RequestData& reqData = state->requests[partitionedTopicMetadata.request_id()];
+            reqData.requestFrame = pinfo->fd->num;
+            reqData.requestTimestamp.secs = pinfo->fd->abs_ts.secs;
+            reqData.requestTimestamp.nsecs = pinfo->fd->abs_ts.nsecs;
+
+            col_append_fstr(pinfo->cinfo, COL_INFO, " / %s", partitionedTopicMetadata.topic().c_str());
+
+            if (tree) {
+                proto_tree_add_uint64(cmd_tree, hf_pulsar_request_id, tvb, cmdOffset, cmdSize,
+                                      partitionedTopicMetadata.request_id());
+
+                proto_tree_add_string(cmd_tree, hf_pulsar_topic, tvb, cmdOffset,
+                                      cmdSize, partitionedTopicMetadata.topic().c_str());
+
+                link_to_response_frame(cmd_tree, tvb, cmdOffset, cmdSize, reqData);
+            }
+
+            break;
+        }
+
+        case BaseCommand::PARTITIONED_METADATA_RESPONSE: {
+            const CommandPartitionedTopicMetadataResponse &partitionedTopicMetadataResponse = command.partitionmetadataresponse();
+            RequestResponseData &reqData = state->requests[partitionedTopicMetadataResponse.request_id()];
+            reqData.ackFrame = pinfo->fd->num;
+            reqData.ackTimestamp.secs = pinfo->fd->abs_ts.secs;
+            reqData.ackTimestamp.nsecs = pinfo->fd->abs_ts.nsecs;
+
+            if (tree) {
+                proto_tree_add_uint64(cmd_tree, hf_pulsar_request_id, tvb, cmdOffset, cmdSize,
+                                      partitionedTopicMetadataResponse.request_id());
+
+                if (partitionedTopicMetadataResponse.has_partitions()) {
+                    proto_tree_add_uint(cmd_tree, hf_pulsar_partitions, tvb, cmdOffset, cmdSize,
+                                        partitionedTopicMetadataResponse.partitions());
+                }
+
+                if (partitionedTopicMetadataResponse.has_response()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_metadata_response_type, tvb, cmdOffset, cmdSize,
+                                          to_str(partitionedTopicMetadataResponse.response(),
+                                                 partitioned_topic_metadata_response_type_vs));
+                }
+
+                if (partitionedTopicMetadataResponse.has_error()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_server_error, tvb, cmdOffset, cmdSize,
+                                          to_str(partitionedTopicMetadataResponse.error(), server_errors_vs));
+                }
+
+                if (partitionedTopicMetadataResponse.has_message()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_message, tvb, cmdOffset, cmdSize,
+                                          partitionedTopicMetadataResponse.message().c_str());
+                }
+
+                link_to_request_frame(cmd_tree, tvb, cmdOffset, cmdSize, reqData);
+            }
+            break;
+        }
+
+        case BaseCommand::LOOKUP: {
+            const CommandLookupTopic& lookupTopic = command.lookuptopic();
+            RequestData& reqData = state->requests[lookupTopic.request_id()];
+            reqData.requestFrame = pinfo->fd->num;
+            reqData.requestTimestamp.secs = pinfo->fd->abs_ts.secs;
+            reqData.requestTimestamp.nsecs = pinfo->fd->abs_ts.nsecs;
+
+            col_append_fstr(pinfo->cinfo, COL_INFO, " / %s", lookupTopic.topic().c_str());
+
+            if (tree) {
+                proto_tree_add_uint64(cmd_tree, hf_pulsar_request_id, tvb, cmdOffset, cmdSize,
+                                      lookupTopic.request_id());
+
+                proto_tree_add_string(cmd_tree, hf_pulsar_topic, tvb, cmdOffset,
+                                      cmdSize, lookupTopic.topic().c_str());
+
+                proto_tree_add_boolean(cmd_tree, hf_pulsar_lookup_authoritative, tvb, cmdOffset, cmdSize,
+                                       lookupTopic.authoritative());
+
+                link_to_response_frame(cmd_tree, tvb, cmdOffset, cmdSize, reqData);
+            }
+
+            break;
+        }
+
+        case BaseCommand::LOOKUP_RESPONSE: {
+            const CommandLookupTopicResponse &lookupTopicResponse = command.lookuptopicresponse();
+            RequestResponseData &reqData = state->requests[lookupTopicResponse.request_id()];
+            reqData.ackFrame = pinfo->fd->num;
+            reqData.ackTimestamp.secs = pinfo->fd->abs_ts.secs;
+            reqData.ackTimestamp.nsecs = pinfo->fd->abs_ts.nsecs;
+
+            if (tree) {
+                proto_tree_add_uint64(cmd_tree, hf_pulsar_request_id, tvb, cmdOffset, cmdSize,
+                                      lookupTopicResponse.request_id());
+
+                if (lookupTopicResponse.has_brokerserviceurl()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_lookup_broker_url, tvb, cmdOffset, cmdSize,
+                                          lookupTopicResponse.brokerserviceurl().c_str());
+                }
+
+                if (lookupTopicResponse.has_brokerserviceurltls()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_lookup_broker_url_tls, tvb, cmdOffset, cmdSize,
+                                          lookupTopicResponse.brokerserviceurltls().c_str());
+                }
+
+                if (lookupTopicResponse.has_response()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_lookup_response_type, tvb, cmdOffset, cmdSize,
+                                          to_str(lookupTopicResponse.response(),
+                                                 topic_lookup_response_type_vs));
+                }
+
+                if (lookupTopicResponse.has_error()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_server_error, tvb, cmdOffset, cmdSize,
+                                          to_str(lookupTopicResponse.error(), server_errors_vs));
+                }
+
+                if (lookupTopicResponse.has_message()) {
+                    proto_tree_add_string(cmd_tree, hf_pulsar_message, tvb, cmdOffset, cmdSize,
+                                          lookupTopicResponse.message().c_str());
+                }
+
+                link_to_request_frame(cmd_tree, tvb, cmdOffset, cmdSize, reqData);
+            }
+            break;
+        }
+
     }
 
     return maxOffset;
@@ -829,109 +1099,60 @@ static int dissect_pulsar(tvbuff_t *tvb, packet_info* pinfo, proto_tree* tree, v
 }
 
 static hf_register_info hf[] = {  //
-        { &hf_pulsar_error, { "Error", "yahoo.pulsar.error", FT_BOOLEAN, BASE_DEC,
-        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_error_message, { "Message", "yahoo.pulsar.error_message", FT_STRING, 0,
-                NULL, 0x0,
-                NULL, HFILL } },  //
-                { &hf_pulsar_cmd_type, { "Command Type", "yahoo.pulsar.cmd.type", FT_STRING, 0,
-                NULL, 0x0,
-                NULL, HFILL } },  //
-                { &hf_pulsar_frame_size, { "Frame size", "yahoo.pulsar.frame_size", FT_UINT32, BASE_DEC,
-                NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_cmd_size, { "Command size", "yahoo.pulsar.cmd_size", FT_UINT32, BASE_DEC,
-                NULL, 0x0,
-                NULL, HFILL } },  //
+        {&hf_pulsar_error,                  {"Error",                "pulsar.error",                    FT_BOOLEAN,       BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_error_message,          {"Message",              "pulsar.error.message",            FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_cmd_type,               {"Command Type",         "pulsar.cmd.type",                 FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_frame_size,             {"Frame size",           "pulsar.frame.size",               FT_UINT32,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_cmd_size,               {"Command size",         "pulsar.cmd.size",                 FT_UINT32,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_client_version,         {"Client version",       "pulsar.connect.client_version",   FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_auth_method,            {"Auth method",          "pulsar.connect.auth_method",      FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_auth_method_name,       {"Auth method name",     "pulsar.connect.auth_method_name", FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_auth_data,              {"Auth data",            "pulsar.auth_data",                FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_protocol_version,       {"Protocol version",     "pulsar.protocol_version",         FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_server_version,         {"Server version",       "pulsar.server_version",           FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_topic,                  {"Topic",                "pulsar.topic",                    FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_subscription,           {"Subscription",         "pulsar.subscription",             FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_subscription_durable,   {"Durable",              "pulsar.subscription.durable",     FT_BOOLEAN,       0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_subType,                {"Subscription type",    "pulsar.sub_type",                 FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_consumer_id,            {"Consumer Id",          "pulsar.consumer_id",              FT_UINT64,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_producer_id,            {"Producer Id",          "pulsar.producer_id",              FT_UINT64,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_server_error,           {"Server error",         "pulsar.server_error",             FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_ack_type,               {"Ack type",             "pulsar.ack_type",                 FT_STRING,        0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_request_id,             {"Request Id",           "pulsar.request_id",               FT_UINT64,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_consumer_name,          {"Consumer Name",        "pulsar.consumer_name",            FT_STRING,        BASE_NONE,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_producer_name,          {"Producer Name",        "pulsar.producer_name",            FT_STRING,        BASE_NONE,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_num_messages,           {"Number of messages",   "pulsar.num_messages",             FT_UINT32,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_sequence_id,            {"Sequence Id",          "pulsar.sequence_id",              FT_UINT64,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_message_id,             {"Message Id",           "pulsar.message_id",               FT_STRING,        BASE_NONE,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_message_permits,        {"Message Permits",      "pulsar.message_permits",          FT_UINT32,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_checksum,               {"Checksum",             "pulsar.checksum",                 FT_UINT32,        BASE_HEX_DEC, NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_publish_time,           {"Publish time",         "pulsar.publish_time",             FT_UINT64,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_replicated_from,        {"Replicated from",      "pulsar.replicated_from",          FT_STRING,        BASE_NONE,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_partition_key,          {"Partition key",        "pulsar.partition_key",            FT_STRING,        BASE_NONE,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_replicate_to,           {"Replicate to",         "pulsar.replicate_to",             FT_STRING,        BASE_NONE,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_property,               {"Property",             "pulsar.property",                 FT_STRING,        BASE_NONE,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_request_in,             {"Request in frame",     "pulsar.request_in",               FT_FRAMENUM,      BASE_NONE,    NULL, 0, "This packet is a response to the packet with this number",     HFILL}},
+        {&hf_pulsar_response_in,            {"Response in frame",    "pulsar.response_in",              FT_FRAMENUM,      BASE_NONE,    NULL, 0, "This packet will be responded in the packet with this number", HFILL}},
+        {&hf_pulsar_publish_latency,        {"Latency",              "pulsar.publish_latency",          FT_RELATIVE_TIME, BASE_NONE,    NULL, 0, "How long time it took to ACK message",                         HFILL}},
+        {&hf_pulsar_partitions,             {"Number of partitions", "pulsar.partitions",               FT_UINT32,        BASE_DEC,     NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_message,                {"Message",              "pulsar.message",                  FT_STRING,        BASE_NONE,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_metadata_response_type, {"Response type",        "pulsar.metadata.response_type",   FT_STRING,        0,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_lookup_authoritative,   {"Authoritive",              "pulsar.lookup.authoritative",     FT_BOOLEAN,       0,            NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_lookup_broker_url, {"Broker URL",        "pulsar.lookup.broker_url",   FT_STRING,        0,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_lookup_broker_url_tls, {"Broker URL TLS",        "pulsar.lookup.broker_url_tls",   FT_STRING,        0,    NULL, 0, NULL,                                                           HFILL}},
+        {&hf_pulsar_lookup_response_type, {"Response type",        "pulsar.lookup.response_type",   FT_STRING,        0,    NULL, 0, NULL,                                                           HFILL}},
 
-                { &hf_pulsar_client_version, { "Client version", "yahoo.pulsar.client_version", FT_STRING,
-                        0,
-                        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_auth_method, { "Auth method", "yahoo.pulsar.auth_method", FT_STRING, 0, NULL,
-                        0x0,
-                        NULL, HFILL } },  //
-                { &hf_pulsar_auth_data, { "Auth data", "yahoo.pulsar.auth_data", FT_STRING, 0,
-                NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_protocol_version, { "Protocol version", "yahoo.pulsar.protocol_version",
-                        FT_STRING, 0,
-                        NULL, 0x0, NULL, HFILL } },
-
-                { &hf_pulsar_server_version, { "Server version", "yahoo.pulsar.server_version", FT_STRING,
-                        0,
-                        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_topic, { "Topic", "yahoo.pulsar.topic", FT_STRING, 0, NULL, 0x0,
-                NULL, HFILL } },  //
-                { &hf_pulsar_subscription, { "Subscription", "yahoo.pulsar.subscription", FT_STRING, 0,
-                NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_subType, { "Subscription type:", "yahoo.pulsar.sub_type", FT_STRING, 0, NULL,
-                        0x0,
-                        NULL, HFILL } },  //
-                { &hf_pulsar_consumer_id, { "Consumer Id", "yahoo.pulsar.consumer_id", FT_UINT64,
-                        BASE_DEC,
-                        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_producer_id, { "Producer Id", "yahoo.pulsar.producer_id", FT_UINT64,
-                        BASE_DEC,
-                        NULL, 0x0, NULL, HFILL } },  //
-
-                { &hf_pulsar_server_error, { "Server error", "yahoo.pulsar.server_error", FT_STRING, 0,
-                NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_ack_type, { "Ack type", "yahoo.pulsar.ack_type", FT_STRING, 0,
-                NULL, 0x0, NULL, HFILL } },  //
-
-                { &hf_pulsar_request_id, { "Request Id", "yahoo.pulsar.request_id", FT_UINT64, BASE_DEC,
-                NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_consumer_name, { "Consumer Name", "yahoo.pulsar.consumer_name", FT_STRING,
-                        BASE_NONE,
-                        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_producer_name, { "Producer Name", "yahoo.pulsar.producer_name", FT_STRING,
-                        BASE_NONE,
-                        NULL, 0x0, NULL, HFILL } },  //
-
-                { &hf_pulsar_sequence_id, { "Sequence Id", "yahoo.pulsar.sequence_id", FT_UINT64,
-                        BASE_DEC,
-                        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_message_id, { "Message Id", "yahoo.pulsar.message_id", FT_STRING, BASE_NONE,
-                NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_message_permits, { "Message Permits", "yahoo.pulsar.message_permits",
-                        FT_UINT32, BASE_DEC,
-                        NULL, 0x0, NULL, HFILL } },  //
-
-                { &hf_pulsar_publish_time, { "Publish time", "yahoo.pulsar.publish_time", FT_UINT64,
-                        BASE_DEC,
-                        NULL, 0x0, NULL, HFILL } },  //
-
-                { &hf_pulsar_replicated_from, { "Replicated from", "yahoo.pulsar.replicated_from",
-                        FT_STRING, BASE_NONE,
-                        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_partition_key, { "Partition key", "yahoo.pulsar.partition_key", FT_STRING,
-                        BASE_NONE,
-                        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_replicate_to, { "Replicate to", "yahoo.pulsar.replicate_to", FT_STRING,
-                        BASE_NONE,
-                        NULL, 0x0, NULL, HFILL } },  //
-                { &hf_pulsar_property, { "Property", "yahoo.pulsar.property", FT_STRING, BASE_NONE,
-                NULL, 0x0, NULL, HFILL } },  //
-
-                { &hf_pulsar_request_in, { "Request in frame", "yahoo.pulsar.request_in", FT_FRAMENUM,
-                        BASE_NONE,
-                        NULL, 0, "This packet is a response to the packet with this number",
-                        HFILL } },  //
-                { &hf_pulsar_response_in, { "Response in frame", "yahoo.pulsar.response_in", FT_FRAMENUM,
-                        BASE_NONE,
-                        NULL, 0, "This packet will be responded in the packet with this number",
-                        HFILL } },  //
-                { &hf_pulsar_publish_latency, { "Latency", "yahoo.pulsar.publish_latency",
-                        FT_RELATIVE_TIME, BASE_NONE, NULL, 0x0,
-                        "How long time it took to ACK message", HFILL } }, };
+};
 
 ////////////////
 ///
 void proto_register_pulsar() {
     // register the new protocol, protocol fields, and subtrees
 
-    proto_pulsar = proto_register_protocol("Pulsar Wire Protocol", /* name       */
-                                        "Yahoo Pulsar", /* short name */
-                                        "yahoo.pulsar" /* abbrev     */
-                                        );
+    proto_pulsar = proto_register_protocol("Apache Pulsar Wire Protocol", /* name       */
+                                           "Pulsar", /* short name */
+                                           "pulsar" /* abbrev     */
+    );
 
     /* Setup protocol subtree array */
     static int *ett[] = { &ett_pulsar };
