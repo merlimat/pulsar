@@ -757,7 +757,7 @@ flexible messaging model and an intuitive client API.</description>
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.7.7.201606060606</version>
+            <version>0.7.9</version>
             <executions>
               <execution>
                 <id>pre-unit-test</id>
@@ -765,17 +765,12 @@ flexible messaging model and an intuitive client API.</description>
                   <goal>prepare-agent</goal>
                 </goals>
               </execution>
-              <execution>
-                <id>post-test</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>report</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>target/report</outputDirectory>
-                </configuration>
-              </execution>
             </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.eluder.coveralls</groupId>
+            <artifactId>coveralls-maven-plugin</artifactId>
+            <version>4.3.0</version>
           </plugin>
         </plugins>
       </build>
@@ -793,7 +788,7 @@ flexible messaging model and an intuitive client API.</description>
             <reportSets>
               <reportSet>
                 <reports>
-                  <report>report</report>
+                  <report>aggregate</report>
                 </reports>
               </reportSet>
             </reportSets>
