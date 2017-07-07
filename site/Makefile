@@ -67,3 +67,6 @@ protobuf_setup:
 api_docs: javadoc python_doc_gen cpp_doc_gen
 
 publish: deep_clean setup swagger_definition_gen build
+
+travis_setup: ruby_setup
+travis_publish: deep_clean setup build
