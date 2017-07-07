@@ -1,0 +1,49 @@
+nav.navbar {
+  background-color: white;
+  width: 80%;
+
+  img {
+    &.main-logo {
+      height: 40px;
+    }
+
+    &.japan-flag {
+      height: 28px;
+      border: 1px solid darken(#ddd, 10%);
+    }
+  }
+
+  li.nav-item {
+    a.nav-link {
+      color: $pulsar-blue;
+
+      &:hover, &:active {
+        color: $pulsar-blue;
+      }
+    }
+  }
+
+  .collapse {
+    margin: 8px 0 8px 100px;
+
+    ul.navbar-nav {
+      li.nav-item + li.nav-item {
+        margin-left: 50px;
+      }
+    }
+  }
+
+  a.dropdown-item {
+    font-size: 18px;
+
+    span.badge {
+      margin-left: 2rem;
+    }
+  }
+
+  ul.navbar-nav {
+    li {
+      font-size: 24px;
+    }
+  }
+}

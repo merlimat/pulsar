@@ -1,0 +1,60 @@
+<nav class="navbar navbar-toggleable-md navbar-light container-fluid sticky-top">
+  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <a class="navbar-brand" href="{{ site.baseurl }}">
+    <img class="main-logo" src="{{ site.baseurl }}img/pulsar-logo.png" alt="Pulsar logo">
+  </a>
+
+
+  <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" href="{{ site.baseurl }}docs/{{ site.current_version }}">Docs</a>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="versionsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Versions
+        </a>
+        <div class="dropdown-menu" aria-labelledby="versionsDropdown">
+          {% for version in site.versions | sort %}
+          <a class="dropdown-item" href="{{ site.baseurl }}docs/{{ version }}">
+            {{ version }}
+            {% if forloop.first %}<span class="badge badge-primary">LATEST</span>{% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="clientLibsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Client libraries
+        </a>
+        <div class="dropdown-menu" aria-labelledby="clientLibsDropdown">
+          <a class="dropdown-item" href="{{ site.baseurl }}docs/{{ site.current_version }}/applications/JavaClient">
+            Java
+          </a>
+          <a class="dropdown-item" href="{{ site.baseurl }}docs/{{ site.current_version }}/applications/PythonClient">
+            Python
+          </a>
+          <a class="dropdown-item" href="{{ site.baseurl }}docs/{{ site.current_version }}/applications/CppClient">
+            C++
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/api/client">
+            Java client Javadoc
+          </a>
+          <a class="dropdown-item" href="/api/admin">
+            Java admin Javadoc
+          </a>
+          <a class="dropdown-item" href="/api/python">
+            Python API docs
+          </a>
+          <a class="dropdown-item" href="/api/cpp">
+            C++ API docs
+          </a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
