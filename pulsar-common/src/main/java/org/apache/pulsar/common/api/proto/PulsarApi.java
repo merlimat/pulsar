@@ -3092,6 +3092,10 @@ public final class PulsarApi {
     // optional bytes ordering_key = 18;
     boolean hasOrderingKey();
     org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString getOrderingKey();
+    
+    // optional int64 deliver_at_time = 19;
+    boolean hasDeliverAtTime();
+    long getDeliverAtTime();
   }
   public static final class MessageMetadata extends
       org.apache.pulsar.shaded.com.google.protobuf.v241.GeneratedMessageLite
@@ -3412,6 +3416,16 @@ public final class PulsarApi {
       return orderingKey_;
     }
     
+    // optional int64 deliver_at_time = 19;
+    public static final int DELIVER_AT_TIME_FIELD_NUMBER = 19;
+    private long deliverAtTime_;
+    public boolean hasDeliverAtTime() {
+      return ((bitField0_ & 0x00004000) == 0x00004000);
+    }
+    public long getDeliverAtTime() {
+      return deliverAtTime_;
+    }
+    
     private void initFields() {
       producerName_ = "";
       sequenceId_ = 0L;
@@ -3430,6 +3444,7 @@ public final class PulsarApi {
       schemaVersion_ = org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString.EMPTY;
       partitionKeyB64Encoded_ = false;
       orderingKey_ = org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString.EMPTY;
+      deliverAtTime_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3523,6 +3538,9 @@ public final class PulsarApi {
       if (((bitField0_ & 0x00002000) == 0x00002000)) {
         output.writeBytes(18, orderingKey_);
       }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        output.writeInt64(19, deliverAtTime_);
+      }
     }
     
     private int memoizedSerializedSize = -1;
@@ -3603,6 +3621,10 @@ public final class PulsarApi {
       if (((bitField0_ & 0x00002000) == 0x00002000)) {
         size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
           .computeBytesSize(18, orderingKey_);
+      }
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+        size += org.apache.pulsar.shaded.com.google.protobuf.v241.CodedOutputStream
+          .computeInt64Size(19, deliverAtTime_);
       }
       memoizedSerializedSize = size;
       return size;
@@ -3751,6 +3773,8 @@ public final class PulsarApi {
         bitField0_ = (bitField0_ & ~0x00008000);
         orderingKey_ = org.apache.pulsar.shaded.com.google.protobuf.v241.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00010000);
+        deliverAtTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00020000);
         return this;
       }
       
@@ -3856,6 +3880,10 @@ public final class PulsarApi {
           to_bitField0_ |= 0x00002000;
         }
         result.orderingKey_ = orderingKey_;
+        if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+          to_bitField0_ |= 0x00004000;
+        }
+        result.deliverAtTime_ = deliverAtTime_;
         result.bitField0_ = to_bitField0_;
         return result;
       }
@@ -3933,6 +3961,9 @@ public final class PulsarApi {
         }
         if (other.hasOrderingKey()) {
           setOrderingKey(other.getOrderingKey());
+        }
+        if (other.hasDeliverAtTime()) {
+          setDeliverAtTime(other.getDeliverAtTime());
         }
         return this;
       }
@@ -4076,6 +4107,11 @@ public final class PulsarApi {
             case 146: {
               bitField0_ |= 0x00010000;
               orderingKey_ = input.readBytes();
+              break;
+            }
+            case 152: {
+              bitField0_ |= 0x00020000;
+              deliverAtTime_ = input.readInt64();
               break;
             }
           }
@@ -4680,6 +4716,27 @@ public final class PulsarApi {
       public Builder clearOrderingKey() {
         bitField0_ = (bitField0_ & ~0x00010000);
         orderingKey_ = getDefaultInstance().getOrderingKey();
+        
+        return this;
+      }
+      
+      // optional int64 deliver_at_time = 19;
+      private long deliverAtTime_ ;
+      public boolean hasDeliverAtTime() {
+        return ((bitField0_ & 0x00020000) == 0x00020000);
+      }
+      public long getDeliverAtTime() {
+        return deliverAtTime_;
+      }
+      public Builder setDeliverAtTime(long value) {
+        bitField0_ |= 0x00020000;
+        deliverAtTime_ = value;
+        
+        return this;
+      }
+      public Builder clearDeliverAtTime() {
+        bitField0_ = (bitField0_ & ~0x00020000);
+        deliverAtTime_ = 0L;
         
         return this;
       }

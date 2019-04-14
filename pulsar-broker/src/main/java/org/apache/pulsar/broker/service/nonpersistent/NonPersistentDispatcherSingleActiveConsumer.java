@@ -19,7 +19,6 @@
 package org.apache.pulsar.broker.service.nonpersistent;
 
 import static org.apache.pulsar.broker.cache.ConfigurationCacheService.POLICIES;
-import static org.apache.pulsar.broker.service.Consumer.getBatchSizeforEntry;
 
 import java.util.List;
 
@@ -61,7 +60,7 @@ public final class NonPersistentDispatcherSingleActiveConsumer extends AbstractD
             currentConsumer.sendMessages(entries);
         } else {
             entries.forEach(entry -> {
-                int totalMsgs = getBatchSizeforEntry(entry.getDataBuffer(), subscription, -1);
+                int totalMsgs = Consumer.getNumberOfMessagesInBatch(entry.getDataBuffer(), subscription, -1);
                 if (totalMsgs > 0) {
                     msgDrop.recordEvent();
                 }

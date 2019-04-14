@@ -18,8 +18,6 @@
  */
 package org.apache.pulsar.broker.service.nonpersistent;
 
-import static org.apache.pulsar.broker.service.Consumer.getBatchSizeforEntry;
-
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
@@ -194,7 +192,7 @@ public class NonPersistentDispatcherMultipleConsumers extends AbstractDispatcher
             TOTAL_AVAILABLE_PERMITS_UPDATER.addAndGet(this, -consumer.sendMessages(entries).getTotalSentMessages());
         } else {
             entries.forEach(entry -> {
-                int totalMsgs = getBatchSizeforEntry(entry.getDataBuffer(), subscription, -1);
+                int totalMsgs  = Consumer.getNumberOfMessagesInBatch(entry.getDataBuffer(), subscription, -1);
                 if (totalMsgs > 0) {
                     msgDrop.recordEvent();
                 }

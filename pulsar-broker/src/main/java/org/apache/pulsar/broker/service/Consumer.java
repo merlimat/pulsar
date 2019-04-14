@@ -39,8 +39,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.stream.Collectors;
 
-import lombok.Data;
-
 import org.apache.bookkeeper.mledger.Entry;
 import org.apache.bookkeeper.mledger.Position;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
@@ -56,6 +54,7 @@ import org.apache.pulsar.common.api.proto.PulsarApi.CommandAck.AckType;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandSubscribe.InitialPosition;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandSubscribe.SubType;
 import org.apache.pulsar.common.api.proto.PulsarApi.MessageIdData;
+import org.apache.pulsar.common.api.proto.PulsarApi.MessageMetadata;
 import org.apache.pulsar.common.api.proto.PulsarApi.ProtocolVersion;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.policies.data.ConsumerStats;
@@ -222,7 +221,7 @@ public class Consumer {
         }
 
         try {
-            updatePermitsAndPendingAcks(entries, sentMessages);
+            updatePermitsAndFilterMessages(entries, sentMessages);
         } catch (PulsarServerException pe) {
             log.warn("[{}] [{}] consumer doesn't support batch-message {}", subscription, consumerId,
                     cnx.getRemoteEndpointProtocolVersion());
@@ -239,6 +238,11 @@ public class Consumer {
         ctx.channel().eventLoop().execute(() -> {
             for (int i = 0; i < entries.size(); i++) {
                 Entry entry = entries.get(i);
+                if (entry == null) {
+                    // Skip deleted entry
+                    continue;
+                }
+
                 PositionImpl pos = (PositionImpl) entry.getPosition();
                 MessageIdData.Builder messageIdBuilder = MessageIdData.newBuilder();
                 MessageIdData messageId = messageIdBuilder
@@ -284,42 +288,69 @@ public class Consumer {
         }
     }
 
-    public static int getBatchSizeforEntry(ByteBuf metadataAndPayload, Subscription subscription, long consumerId) {
-        try {
-            // save the reader index and restore after parsing
-            metadataAndPayload.markReaderIndex();
-            PulsarApi.MessageMetadata metadata = Commands.parseMessageMetadata(metadataAndPayload);
-            metadataAndPayload.resetReaderIndex();
-            int batchSize = metadata.getNumMessagesInBatch();
-            metadata.recycle();
-            if (log.isDebugEnabled()) {
-                log.debug("[{}] [{}] num messages in batch are {} ", subscription, consumerId, batchSize);
-            }
-            return batchSize;
-        } catch (Throwable t) {
-            log.error("[{}] [{}] Failed to parse message metadata", subscription, consumerId, t);
+    public static int getNumberOfMessagesInBatch(ByteBuf metadataAndPayload, Subscription subscription,
+            long consumerId) {
+        MessageMetadata msgMetadata = peekMessageMetadata(metadataAndPayload, subscription, consumerId);
+        if (msgMetadata == null) {
+            return -1;
+        } else {
+            int numMessagesInBatch = msgMetadata.getNumMessagesInBatch();
+            msgMetadata.recycle();
+            return numMessagesInBatch;
         }
-        return -1;
     }
 
-    void updatePermitsAndPendingAcks(final List<Entry> entries, SendMessageInfo sentMessages) throws PulsarServerException {
+    public static MessageMetadata peekMessageMetadata(ByteBuf metadataAndPayload, Subscription subscription,
+            long consumerId) {
+        try {
+            // save the reader index and restore after parsing
+            int readerIdx = metadataAndPayload.readerIndex();
+            PulsarApi.MessageMetadata metadata = Commands.parseMessageMetadata(metadataAndPayload);
+            metadataAndPayload.readerIndex(readerIdx);
+
+            return metadata;
+        } catch (Throwable t) {
+            log.error("[{}] [{}] Failed to parse message metadata", subscription, consumerId, t);
+            return null;
+        }
+    }
+
+    private void updatePermitsAndFilterMessages(final List<Entry> entries, SendMessageInfo sentMessages) throws PulsarServerException {
         int permitsToReduce = 0;
-        Iterator<Entry> iter = entries.iterator();
         boolean unsupportedVersion = false;
         long totalReadableBytes = 0;
         boolean clientSupportBatchMessages = cnx.isBatchMessageCompatibleVersion();
-        while (iter.hasNext()) {
-            Entry entry = iter.next();
+
+        for (int i = 0, entriesSize = entries.size(); i < entriesSize; i++) {
+            Entry entry = entries.get(i);
             ByteBuf metadataAndPayload = entry.getDataBuffer();
-            int batchSize = getBatchSizeforEntry(metadataAndPayload, subscription, consumerId);
-            if (batchSize == -1) {
-                // this would suggest that the message might have been corrupted
-                iter.remove();
-                PositionImpl pos = (PositionImpl) entry.getPosition();
-                entry.release();
-                subscription.acknowledgeMessage(Collections.singletonList(pos), AckType.Individual, Collections.emptyMap());
-                continue;
+            PositionImpl pos = (PositionImpl) entry.getPosition();
+
+            int batchSize;
+            MessageMetadata msgMetadata = peekMessageMetadata(metadataAndPayload, subscription, consumerId);
+
+            try {
+                if (msgMetadata == null) {
+                    // Message metadata was corrupted
+                    entries.set(i, null);
+                    entry.release();
+                    subscription.acknowledgeMessage(Collections.singletonList(pos), AckType.Individual,
+                            Collections.emptyMap());
+                    continue;
+                } else if (msgMetadata.hasDeliverAtTime()
+                        && subscription.getDispatcher()
+                                .trackDelayedDelivery(entry.getLedgerId(), entry.getEntryId(), msgMetadata)) {
+                    // The message is marked for delayed delivery. Ignore for now.
+                    entries.set(i, null);
+                    entry.release();
+                    continue;
+                }
+
+                batchSize = msgMetadata.getNumMessagesInBatch();
+            } finally {
+                msgMetadata.recycle();
             }
+
             if (pendingAcks != null) {
                 pendingAcks.put(entry.getLedgerId(), entry.getEntryId(), batchSize, 0);
             }
