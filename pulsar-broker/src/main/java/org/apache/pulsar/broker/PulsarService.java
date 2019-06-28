@@ -71,6 +71,7 @@ import org.apache.pulsar.broker.authentication.AuthenticationService;
 import org.apache.pulsar.broker.authorization.AuthorizationService;
 import org.apache.pulsar.broker.cache.ConfigurationCacheService;
 import org.apache.pulsar.broker.cache.LocalZooKeeperCacheService;
+import org.apache.pulsar.broker.intercept.InterceptService;
 import org.apache.pulsar.broker.loadbalance.LeaderElectionService;
 import org.apache.pulsar.broker.loadbalance.LeaderElectionService.LeaderListener;
 import org.apache.pulsar.broker.loadbalance.LoadManager;
@@ -502,7 +503,9 @@ public class PulsarService implements AutoCloseable {
             acquireSLANamespace();
 
             // start function worker service if necessary
-            this.startWorkerService(brokerService.getAuthenticationService(), brokerService.getAuthorizationService());
+            this.startWorkerService(brokerService.getAuthenticationService(),
+                    brokerService.getAuthorizationService(),
+                    brokerService.getInterceptService());
 
             final String bootstrapMessage = "bootstrap service "
                     + (config.getWebServicePort().isPresent() ? "port = " + config.getWebServicePort().get() : "")
@@ -999,7 +1002,8 @@ public class PulsarService implements AutoCloseable {
     }
 
     private void startWorkerService(AuthenticationService authenticationService,
-                                    AuthorizationService authorizationService)
+                                    AuthorizationService authorizationService,
+                                    InterceptService interceptService)
             throws InterruptedException, IOException, KeeperException {
         if (functionWorkerService.isPresent()) {
             LOG.info("Starting function worker service");
@@ -1105,7 +1109,8 @@ public class PulsarService implements AutoCloseable {
                 throw ioe;
             }
             LOG.info("Function worker service setup completed");
-            functionWorkerService.get().start(dlogURI, authenticationService, authorizationService);
+            functionWorkerService.get().start(dlogURI, authenticationService, authorizationService,
+                    interceptService);
             LOG.info("Function worker service started");
         }
     }
