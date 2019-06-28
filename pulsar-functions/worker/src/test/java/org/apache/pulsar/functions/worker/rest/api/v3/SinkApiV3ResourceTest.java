@@ -226,7 +226,7 @@ public class SinkApiV3ResourceTest {
         }
     }
 
-    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink Name is not provided")
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink name is not provided")
     public void testRegisterSinkMissingSinkName() {
         try {
             testRegisterSinkMissingArguments(
@@ -451,6 +451,33 @@ public class SinkApiV3ResourceTest {
 
     }
 
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink config is not provided")
+    public void testMissingSinkConfig() {
+        resource.registerSink(
+                tenant,
+                namespace,
+                sink,
+                mockedInputStream,
+                mockedFormData,
+                null,
+                null,
+                null, null);
+    }
+
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink config is not provided")
+    public void testUpdateMissingSinkConfig() {
+        when(mockedManager.containsFunction(eq(tenant), eq(namespace), eq(sink))).thenReturn(true);
+        resource.updateSink(
+                tenant,
+                namespace,
+                sink,
+                mockedInputStream,
+                mockedFormData,
+                null,
+                null,
+                null, null, null);
+    }
+
     private void registerDefaultSink() throws IOException {
         SinkConfig sinkConfig = createDefaultSinkConfig();
         resource.registerSink(
@@ -658,7 +685,7 @@ public class SinkApiV3ResourceTest {
         }
     }
 
-    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink Name is not provided")
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink name is not provided")
     public void testUpdateSinkMissingFunctionName() throws Exception {
         try {
             testUpdateSinkMissingArguments(
@@ -670,7 +697,7 @@ public class SinkApiV3ResourceTest {
             topicsToSerDeClassName,
             className,
             parallelism,
-                "Sink Name is not provided");
+                "Sink name is not provided");
         } catch (RestException re){
             assertEquals(re.getResponse().getStatusInfo(), Response.Status.BAD_REQUEST);
             throw re;
@@ -1071,7 +1098,7 @@ public class SinkApiV3ResourceTest {
         }
     }
 
-    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink Name is not provided")
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink name is not provided")
     public void testDeregisterSinkMissingFunctionName() {
         try {
             testDeregisterSinkMissingArguments(
@@ -1198,7 +1225,7 @@ public class SinkApiV3ResourceTest {
         }
     }
 
-    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink Name is not provided")
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Sink name is not provided")
     public void testGetSinkMissingFunctionName() {
         try {
 

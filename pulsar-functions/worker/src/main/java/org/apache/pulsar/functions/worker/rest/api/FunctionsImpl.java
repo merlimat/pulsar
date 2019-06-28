@@ -89,7 +89,10 @@ public class FunctionsImpl extends ComponentImpl {
             throw new RestException(Response.Status.BAD_REQUEST, "Namespace is not provided");
         }
         if (functionName == null) {
-            throw new RestException(Response.Status.BAD_REQUEST, ComponentTypeUtils.toString(componentType) + " Name is not provided");
+            throw new RestException(Response.Status.BAD_REQUEST, "Function name is not provided");
+        }
+        if (functionConfig == null) {
+            throw new RestException(Response.Status.BAD_REQUEST, "Function config is not provided");
         }
 
         try {
@@ -263,7 +266,10 @@ public class FunctionsImpl extends ComponentImpl {
             throw new RestException(Response.Status.BAD_REQUEST, "Namespace is not provided");
         }
         if (functionName == null) {
-            throw new RestException(Response.Status.BAD_REQUEST, ComponentTypeUtils.toString(componentType) + " Name is not provided");
+            throw new RestException(Response.Status.BAD_REQUEST, "Function name is not provided");
+        }
+        if (functionConfig == null) {
+            throw new RestException(Response.Status.BAD_REQUEST, "Function config is not provided");
         }
 
         try {

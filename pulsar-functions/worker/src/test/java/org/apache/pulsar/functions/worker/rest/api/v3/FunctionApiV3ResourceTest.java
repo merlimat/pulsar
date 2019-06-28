@@ -230,7 +230,7 @@ public class FunctionApiV3ResourceTest {
         }
     }
 
-    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function Name is not provided")
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function name is not provided")
     public void testRegisterFunctionMissingFunctionName() {
         try {
         testRegisterFunctionMissingArguments(
@@ -492,6 +492,34 @@ public class FunctionApiV3ResourceTest {
 
     }
 
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function config is not provided")
+    public void testMissingFunctionConfig() {
+        resource.registerFunction(
+                tenant,
+                namespace,
+                function,
+                mockedInputStream,
+                mockedFormData,
+                null,
+                null,
+                null, null);
+    }
+
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function config is not provided")
+    public void testUpdateMissingFunctionConfig() {
+        when(mockedManager.containsFunction(eq(tenant), eq(namespace), eq(function))).thenReturn(true);
+
+        resource.updateFunction(
+                tenant,
+                namespace,
+                function,
+                mockedInputStream,
+                mockedFormData,
+                null,
+                null,
+                null, null, null);
+    }
+
     private void registerDefaultFunction() {
         FunctionConfig functionConfig = createDefaultFunctionConfig();
         resource.registerFunction(
@@ -686,7 +714,7 @@ public class FunctionApiV3ResourceTest {
         }
     }
 
-    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function Name is not provided")
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function name is not provided")
     public void testUpdateFunctionMissingFunctionName() {
         try {
             testUpdateFunctionMissingArguments(
@@ -700,7 +728,7 @@ public class FunctionApiV3ResourceTest {
                     outputSerdeClassName,
                 className,
                 parallelism,
-                    "Function Name is not provided");
+                    "Function name is not provided");
         } catch (RestException re) {
             assertEquals(re.getResponse().getStatusInfo(), Response.Status.BAD_REQUEST);
             throw re;
@@ -1115,7 +1143,7 @@ public class FunctionApiV3ResourceTest {
         }
     }
 
-    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function Name is not provided")
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function name is not provided")
     public void testDeregisterFunctionMissingFunctionName() {
         try {
              testDeregisterFunctionMissingArguments(
@@ -1242,7 +1270,7 @@ public class FunctionApiV3ResourceTest {
         }
     }
 
-    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function Name is not provided")
+    @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Function name is not provided")
     public void testGetFunctionMissingFunctionName() {
         try {
             testGetFunctionMissingArguments(

@@ -1254,7 +1254,7 @@ public abstract class ComponentImpl {
             throw new IllegalArgumentException("Namespace is not provided");
         }
         if (subject == null) {
-            throw new IllegalArgumentException(ComponentTypeUtils.toString(componentType) + " Name is not provided");
+            throw new IllegalArgumentException(ComponentTypeUtils.toString(componentType) + " name is not provided");
         }
     }
 
@@ -1268,7 +1268,7 @@ public abstract class ComponentImpl {
             throw new IllegalArgumentException("Namespace is not provided");
         }
         if (subject == null) {
-            throw new IllegalArgumentException(ComponentTypeUtils.toString(componentType) + " Name is not provided");
+            throw new IllegalArgumentException(ComponentTypeUtils.toString(componentType) + " name is not provided");
         }
     }
 
@@ -1285,7 +1285,7 @@ public abstract class ComponentImpl {
             throw new IllegalArgumentException("Namespace is not provided");
         }
         if (functionName == null) {
-            throw new IllegalArgumentException("Function Name is not provided");
+            throw new IllegalArgumentException(ComponentTypeUtils.toString(componentType) + " name is not provided");
         }
         if (key == null) {
             throw new IllegalArgumentException("Key is not provided");
@@ -1325,7 +1325,7 @@ public abstract class ComponentImpl {
             throw new IllegalArgumentException("Namespace is not provided");
         }
         if (functionName == null) {
-            throw new IllegalArgumentException("Function Name is not provided");
+            throw new IllegalArgumentException("Function name is not provided");
         }
         if (uploadedInputStream == null && input == null) {
             throw new IllegalArgumentException("Trigger Data is not provided");
