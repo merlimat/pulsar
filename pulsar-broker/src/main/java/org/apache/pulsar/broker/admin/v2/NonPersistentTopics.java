@@ -42,6 +42,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.pulsar.broker.PulsarServerException;
+import org.apache.pulsar.broker.intercept.InterceptException;
 import org.apache.pulsar.broker.service.Topic;
 import org.apache.pulsar.broker.service.nonpersistent.NonPersistentTopic;
 import org.apache.pulsar.broker.web.RestException;
@@ -134,6 +135,18 @@ public class NonPersistentTopics extends PersistentTopics {
         if (numPartitions <= 0) {
             throw new RestException(Status.NOT_ACCEPTABLE, "Number of partitions should be more than 0");
         }
+
+        try {
+            pulsar().getBrokerService()
+                    .getInterceptService()
+                    .topics()
+                    .createPartitionedTopic(topicName, new PartitionedTopicMetadata(numPartitions), clientAppId());
+        } catch (InterceptException e) {
+            throw new RestException(
+                    e.getErrorCode().orElse(Status.INTERNAL_SERVER_ERROR.getStatusCode()),
+                    e.getMessage());
+        }
+
         try {
             boolean topicExist = pulsar().getNamespaceService()
                     .getListOfTopics(topicName.getNamespaceObject(), PulsarApi.CommandGetTopicsOfNamespace.Mode.ALL)
