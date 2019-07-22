@@ -25,12 +25,14 @@ import org.apache.pulsar.client.admin.PulsarAdminBuilder;
 import org.apache.pulsar.client.api.Authentication;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.bookkeeper.stats.NullStatsProvider;
+import org.apache.pulsar.common.naming.NamedEntity;
 import org.apache.pulsar.common.protocol.Commands;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 public class PulsarConnectorConfig implements AutoCloseable {
 
@@ -42,12 +44,16 @@ public class PulsarConnectorConfig implements AutoCloseable {
     private int maxSplitEntryQueueSize = 1000;
     private int maxMessageSize = Commands.DEFAULT_MAX_MESSAGE_SIZE;
     private String statsProvider = NullStatsProvider.class.getName();
+
     private Map<String, String> statsProviderConfigs = new HashMap<>();
     private String authPluginClassName;
     private String authParams;
     private String tlsTrustCertsFilePath;
     private Boolean tlsAllowInsecureConnection;
     private Boolean tlsHostnameVerificationEnable;
+
+    private boolean namespaceDelimiterRewriteEnable = false;
+    private String rewriteNamespaceDelimiter = "/";
 
     /**** --- Ledger Offloading --- ****/
     private String managedLedgerOffloadDriver = null;
@@ -152,6 +158,33 @@ public class PulsarConnectorConfig implements AutoCloseable {
     @Config("pulsar.stats-provider-configs")
     public PulsarConnectorConfig setStatsProviderConfigs(String statsProviderConfigs) throws IOException {
         this.statsProviderConfigs = new ObjectMapper().readValue(statsProviderConfigs, Map.class);
+        return this;
+    }
+
+    public String getRewriteNamespaceDelimiter() {
+        return rewriteNamespaceDelimiter;
+    }
+
+    @Config("pulsar.rewrite-namespace-delimiter")
+    public PulsarConnectorConfig setRewriteNamespaceDelimiter(String rewriteNamespaceDelimiter) {
+        Matcher m = NamedEntity.NAMED_ENTITY_PATTERN.matcher(rewriteNamespaceDelimiter);
+        if (m.matches()) {
+            throw new IllegalArgumentException(
+                    "Can't use " + rewriteNamespaceDelimiter + "as delimiter, "
+                            + "because delimiter must contain characters which name of namespace not allowed"
+            );
+        }
+        this.rewriteNamespaceDelimiter = rewriteNamespaceDelimiter;
+        return this;
+    }
+
+    public boolean getNamespaceDelimiterRewriteEnable() {
+        return namespaceDelimiterRewriteEnable;
+    }
+
+    @Config("pulsar.namespace-delimiter-rewrite-enable")
+    public PulsarConnectorConfig setNamespaceDelimiterRewriteEnable(boolean namespaceDelimiterRewriteEnable) {
+        this.namespaceDelimiterRewriteEnable = namespaceDelimiterRewriteEnable;
         return this;
     }
 

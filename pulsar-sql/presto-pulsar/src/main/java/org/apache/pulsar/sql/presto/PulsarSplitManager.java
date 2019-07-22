@@ -61,6 +61,7 @@ import static com.facebook.presto.spi.StandardErrorCode.QUERY_REJECTED;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 import static org.apache.bookkeeper.mledger.ManagedCursor.FindPositionConstraint.SearchAllAvailableEntries;
+import static org.apache.pulsar.sql.presto.PulsarConnectorUtils.restoreNamespaceDelimiterIfNeeded;
 
 public class PulsarSplitManager implements ConnectorSplitManager {
 
@@ -95,13 +96,15 @@ public class PulsarSplitManager implements ConnectorSplitManager {
         PulsarTableHandle tableHandle = layoutHandle.getTable();
         TupleDomain<ColumnHandle> tupleDomain = layoutHandle.getTupleDomain();
 
-        TopicName topicName = TopicName.get("persistent", NamespaceName.get(tableHandle.getSchemaName()),
+        String namespace = restoreNamespaceDelimiterIfNeeded(tableHandle.getSchemaName(), pulsarConnectorConfig);
+        TopicName topicName = TopicName.get("persistent", NamespaceName.get(namespace),
                 tableHandle.getTableName());
 
         SchemaInfo schemaInfo;
+
         try {
             schemaInfo = this.pulsarAdmin.schemas().getSchemaInfo(
-                    String.format("%s/%s", tableHandle.getSchemaName(), tableHandle.getTableName()));
+                    String.format("%s/%s", namespace, tableHandle.getTableName()));
         } catch (PulsarAdminException e) {
             if (e.getStatusCode() == 401) {
                 throw new PrestoException(QUERY_REJECTED,
@@ -270,7 +273,7 @@ public class PulsarSplitManager implements ConnectorSplitManager {
                 PositionImpl endPosition = (PositionImpl) readOnlyCursor.getReadPosition();
 
                 splits.add(new PulsarSplit(i, this.connectorId,
-                        tableHandle.getSchemaName(),
+                        restoreNamespaceDelimiterIfNeeded(tableHandle.getSchemaName(), pulsarConnectorConfig),
                         tableName,
                         entriesForSplit,
                         new String(schemaInfo.getSchema()),
