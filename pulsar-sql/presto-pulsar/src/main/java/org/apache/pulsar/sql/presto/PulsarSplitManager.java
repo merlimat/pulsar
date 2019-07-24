@@ -29,7 +29,6 @@ import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
 import com.facebook.presto.spi.predicate.Domain;
 import com.facebook.presto.spi.predicate.Range;
 import com.facebook.presto.spi.predicate.TupleDomain;
-import com.facebook.presto.spi.type.SqlTimestampWithTimeZone;
 import com.google.common.annotations.VisibleForTesting;
 import io.airlift.log.Logger;
 import lombok.Data;
@@ -110,11 +109,11 @@ public class PulsarSplitManager implements ConnectorSplitManager {
             if (e.getStatusCode() == 401) {
                 throw new PrestoException(QUERY_REJECTED,
                         String.format("Failed to get pulsar topic schema for topic %s/%s: Unauthorized",
-                                tableHandle.getSchemaName(), tableHandle.getTableName()));
+                                namespace, tableHandle.getTableName()));
             }
 
             throw new RuntimeException("Failed to get pulsar topic schema for topic "
-                    + String.format("%s/%s", tableHandle.getSchemaName(), tableHandle.getTableName())
+                    + String.format("%s/%s", namespace, tableHandle.getTableName())
                     + ": " + ExceptionUtils.getRootCause(e).getLocalizedMessage(), e);
         }
 

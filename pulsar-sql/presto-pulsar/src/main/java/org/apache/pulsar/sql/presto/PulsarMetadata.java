@@ -289,10 +289,10 @@ public class PulsarMetadata implements ConnectorMetadata {
             }
         } catch (PulsarAdminException e) {
             if (e.getStatusCode() == 404) {
-                throw new PrestoException(NOT_FOUND, "Schema " + schemaTableName.getSchemaName() + " does not exist");
+                throw new PrestoException(NOT_FOUND, "Schema " + namespace + " does not exist");
             } else if (e.getStatusCode() == 401) {
                 throw new PrestoException(QUERY_REJECTED,
-                        String.format("Failed to get topics in schema %s: Unauthorized", schemaTableName.getSchemaName()));
+                        String.format("Failed to get topics in schema %s: Unauthorized", namespace));
             }
             throw new RuntimeException("Failed to get topics in schema " + namespace
                     + ": " + ExceptionUtils.getRootCause(e).getLocalizedMessage(), e);
@@ -316,10 +316,11 @@ public class PulsarMetadata implements ConnectorMetadata {
             } else if (e.getStatusCode() == 401) {
                 throw new PrestoException(QUERY_REJECTED,
                         String.format("Failed to get pulsar topic schema information for topic %s/%s: Unauthorized",
-                                schemaTableName.getSchemaName(), schemaTableName.getTableName()));
+                                namespace, schemaTableName.getTableName()));
             }
+
             throw new RuntimeException("Failed to get pulsar topic schema information for topic "
-                    + String.format("%s/%s", schemaTableName.getSchemaName(), schemaTableName.getTableName())
+                    + String.format("%s/%s", namespace, schemaTableName.getTableName())
                     + ": " + ExceptionUtils.getRootCause(e).getLocalizedMessage(), e);
         }
         List<ColumnMetadata> handles = getPulsarColumns(
