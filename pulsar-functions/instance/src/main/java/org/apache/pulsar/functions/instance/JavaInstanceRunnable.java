@@ -171,7 +171,7 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
     /**
      * NOTE: this method should be called in the instance thread, in order to make class loading work.
      */
-    JavaInstance setupJavaInstance(ContextImpl contextImpl) throws Exception {
+    JavaInstance setupJavaInstance() throws Exception {
         // initialize the thread context
         ThreadContext.put("function", FunctionCommon.getFullyQualifiedName(instanceConfig.getFunctionDetails()));
         ThreadContext.put("functionname", instanceConfig.getFunctionDetails().getName());
@@ -193,6 +193,9 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
 
         // start the state table
         setupStateTable();
+
+        ContextImpl contextImpl = setupContext();
+
         // start the output producer
         setupOutput(contextImpl);
         // start the input consumer
@@ -207,7 +210,7 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
         Logger instanceLog = LoggerFactory.getLogger(
                 "function-" + instanceConfig.getFunctionDetails().getName());
         return new ContextImpl(instanceConfig, instanceLog, client, secretsProvider,
-                collectorRegistry, metricsLabels, this.componentType, this.stats);
+                collectorRegistry, metricsLabels, this.componentType, this.stats, stateTable);
     }
 
     /**
@@ -225,12 +228,7 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
                     this.instanceCache.getScheduledExecutorService(),
                     this.componentType);
 
-            ContextImpl contextImpl = setupContext();
-            javaInstance = setupJavaInstance(contextImpl);
-            if (null != stateTable) {
-                StateContextImpl stateContext = new StateContextImpl(stateTable);
-                javaInstance.getContext().setStateContext(stateContext);
-            }
+            javaInstance = setupJavaInstance();
             while (true) {
                 currentRecord = readInput();
 
