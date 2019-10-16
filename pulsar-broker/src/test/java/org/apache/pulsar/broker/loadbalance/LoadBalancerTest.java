@@ -109,7 +109,7 @@ public class LoadBalancerTest {
 
     private static final int MAX_RETRIES = 10;
 
-    private final int ZOOKEEPER_PORT = PortManager.nextFreePort();
+    private int zookkeeperPort;
 
     private static final int BROKER_COUNT = 5;
     private int[] brokerWebServicePorts = new int[BROKER_COUNT];
@@ -122,7 +122,8 @@ public class LoadBalancerTest {
     @BeforeMethod
     void setup() throws Exception {
         // Start local bookkeeper ensemble
-        bkEnsemble = new LocalBookkeeperEnsemble(3, ZOOKEEPER_PORT, () -> PortManager.nextFreePort());
+        zookkeeperPort = PortManager.nextFreePort();
+        bkEnsemble = new LocalBookkeeperEnsemble(3, zookkeeperPort, () -> PortManager.nextFreePort());
         bkEnsemble.start();
         ZkUtils.createFullPathOptimistic(bkEnsemble.getZkClient(),
                 SimpleLoadManagerImpl.LOADBALANCER_DYNAMIC_SETTING_STRATEGY_ZPATH,
@@ -141,7 +142,7 @@ public class LoadBalancerTest {
             config.setAdvertisedAddress(localhost);
             config.setAdvertisedAddress("localhost");
             config.setWebServicePort(Optional.ofNullable(brokerWebServicePorts[i]));
-            config.setZookeeperServers("127.0.0.1" + ":" + ZOOKEEPER_PORT);
+            config.setZookeeperServers("127.0.0.1" + ":" + zookkeeperPort);
             config.setBrokerServicePort(Optional.ofNullable(brokerNativeBrokerPorts[i]));
             config.setLoadManagerClassName(SimpleLoadManagerImpl.class.getName());
             config.setAdvertisedAddress(localhost+i);
