@@ -1145,8 +1145,8 @@ flexible messaging model and an intuitive client API.</description>
             -Dpulsar.allocator.exit_on_oom=false
             -Dlog4j.configurationFile=log4j2.xml
           </argLine>
-          <reuseForks>false</reuseForks>
-          <forkCount>1</forkCount>
+          <reuseForks>true</reuseForks>
+          <forkCount>2C</forkCount>
           <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
           <trimStackTrace>false</trimStackTrace>
           <properties>
