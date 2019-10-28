@@ -175,6 +175,7 @@ public class KubernetesRuntimeTest {
             null,
             null,
             null,
+null,
                 null, new TestSecretProviderConfigurator(), false,
                 Optional.empty()));
         doNothing().when(factory).setupClient();
