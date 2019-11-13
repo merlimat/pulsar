@@ -1,0 +1,56 @@
+cache:
+  paths:
+    - /root/.m2/repository
+
+variables:
+  DOCKER_IMAGE: "aahmedse/maven"
+  DOCKER_TAG: "3.6.1-jdk-8-dind"
+
+stages:
+  - deploy
+  - ci
+
+release_artifacts:
+  image: $DOCKER_IMAGE:$DOCKER_TAG
+  stage: deploy
+  timeout: 60 mins
+  script:
+    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install -DskipTests
+    - ./release_maven.sh
+  when: manual
+
+checkin_unit:
+  image: apachepulsar/pulsar-build:latest
+  stage: ci
+  timeout: 180 mins
+  only:
+    - merge_requests
+    - branch-2.4-streamlio
+  script:
+    - mvn -fae -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install
+  after_script:
+    - tar zcf test-results.tgz */target/surefire-reports/
+    - echo "[START_TEST_SUMMARY]"
+    - build/testsummary.py $(find . -name 'TEST*.xml')
+    - echo "[END_TEST_SUMMARY]"
+    - dev/testtrim.py $(find . -name 'TEST*.xml')
+  artifacts:
+    paths:
+      - test-results.tgz
+    expire_in: 100 days
+    when: always
+    reports:
+      junit:
+        - "*/target/surefire-reports/TEST-*.xml"
+
+checkin_cpp:
+  image: apachepulsar/pulsar-build:latest
+  stage: ci
+  timeout: 120 mins
+  only:
+    - merge_requests
+    - branch-2.4-streamlio
+  script:
+    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp package -DskipTests
+    - /bin/bash -c "cd pulsar-client-cpp && cmake . -DCMAKE_BUILD_TYPE=Debug && make check-format && make -j8"
+    - /bin/bash -c "cd pulsar-client-cpp && ./run-unit-tests.sh"
