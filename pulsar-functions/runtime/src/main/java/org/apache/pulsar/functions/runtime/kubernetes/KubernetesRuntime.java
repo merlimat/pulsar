@@ -143,6 +143,7 @@ public class KubernetesRuntime implements Runtime {
     private double memoryOverCommitRatio;
     private final Optional<KubernetesFunctionAuthProvider> functionAuthDataCacheProvider;
     private final AuthenticationConfig authConfig;
+    private final Optional<KubernetesManifestCustomizer> manifestCustomizer;
 
     KubernetesRuntime(AppsV1Api appsClient,
                       CoreV1Api coreClient,
@@ -170,7 +171,8 @@ public class KubernetesRuntime implements Runtime {
                       double cpuOverCommitRatio,
                       double memoryOverCommitRatio,
                       Optional<KubernetesFunctionAuthProvider> functionAuthDataCacheProvider,
-                      boolean authenticationEnabled) throws Exception {
+                      boolean authenticationEnabled,
+                      Optional<KubernetesManifestCustomizer> manifestCustomizer) throws Exception {
         this.appsClient = appsClient;
         this.coreClient = coreClient;
         this.instanceConfig = instanceConfig;
@@ -187,6 +189,7 @@ public class KubernetesRuntime implements Runtime {
         this.cpuOverCommitRatio = cpuOverCommitRatio;
         this.memoryOverCommitRatio = memoryOverCommitRatio;
         this.authenticationEnabled = authenticationEnabled;
+        this.manifestCustomizer = manifestCustomizer;
         String logConfigFile = null;
         String secretsProviderClassName = secretsProviderConfigurator.getSecretsProviderClassName(instanceConfig.getFunctionDetails());
         String secretsProviderConfig = null;
@@ -434,7 +437,8 @@ public class KubernetesRuntime implements Runtime {
         }
     }
 
-    private V1Service createService() {
+    @VisibleForTesting
+    V1Service createService() {
         final String jobName = createJobName(instanceConfig.getFunctionDetails());
 
         final V1Service service = new V1Service();
@@ -443,6 +447,8 @@ public class KubernetesRuntime implements Runtime {
         final V1ObjectMeta objectMeta = new V1ObjectMeta();
         objectMeta.name(jobName);
         objectMeta.setLabels(getLabels(instanceConfig.getFunctionDetails()));
+        // we don't technically need to set this, but it is useful for testing
+        objectMeta.setNamespace(jobNamespace);
         service.metadata(objectMeta);
 
         // create the stateful set spec
@@ -458,7 +464,11 @@ public class KubernetesRuntime implements Runtime {
 
         service.spec(serviceSpec);
 
-        return service;
+        // let the customizer run but ensure it doesn't change the name so we can find it again
+        final V1Service overridden = manifestCustomizer.map((customizer) -> customizer.customizeService(instanceConfig.getFunctionDetails(), service)).orElse(service);
+        overridden.getMetadata().name(jobName);
+
+        return overridden;
     }
 
     private void submitStatefulSet() throws Exception {
@@ -828,7 +838,8 @@ public class KubernetesRuntime implements Runtime {
         return String.format("%s=${POD_NAME##*-} && echo shardId=${%s}", ENV_SHARD_ID, ENV_SHARD_ID);
     }
 
-    private V1StatefulSet createStatefulSet() {
+    @VisibleForTesting
+    V1StatefulSet createStatefulSet() {
         final String jobName = createJobName(instanceConfig.getFunctionDetails());
 
         final V1StatefulSet statefulSet = new V1StatefulSet();
@@ -837,6 +848,8 @@ public class KubernetesRuntime implements Runtime {
         final V1ObjectMeta objectMeta = new V1ObjectMeta();
         objectMeta.name(jobName);
         objectMeta.setLabels(getLabels(instanceConfig.getFunctionDetails()));
+        // we don't technically need to set this, but it is useful for testing
+        objectMeta.setNamespace(jobNamespace);
         statefulSet.metadata(objectMeta);
 
         // create the stateful set spec
@@ -870,6 +883,9 @@ public class KubernetesRuntime implements Runtime {
 
         statefulSet.spec(statefulSetSpec);
 
+        // let the customizer run but ensure it doesn't change the name so we can find it again
+        final V1StatefulSet overridden = manifestCustomizer.map((customizer) -> customizer.customizeStatefulSet(instanceConfig.getFunctionDetails(), statefulSet)).orElse(statefulSet);
+        overridden.getMetadata().name(jobName);
 
         return statefulSet;
     }
@@ -1018,7 +1034,7 @@ public class KubernetesRuntime implements Runtime {
         return ports;
     }
 
-    private static String createJobName(Function.FunctionDetails functionDetails) {
+    public static String createJobName(Function.FunctionDetails functionDetails) {
         return createJobName(functionDetails.getTenant(),
                 functionDetails.getNamespace(),
                 functionDetails.getName());
