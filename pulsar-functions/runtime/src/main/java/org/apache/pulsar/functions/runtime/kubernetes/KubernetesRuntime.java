@@ -103,8 +103,6 @@ public class KubernetesRuntime implements Runtime {
 
     private static final String ENV_SHARD_ID = "SHARD_ID";
     private static final int maxJobNameSize = 55;
-    private static final Integer GRPC_PORT = 9093;
-    private static final Integer METRICS_PORT = 9094;
     public static final Pattern VALID_POD_NAME_REGEX =
             Pattern.compile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*",
                     Pattern.CASE_INSENSITIVE);
@@ -143,6 +141,8 @@ public class KubernetesRuntime implements Runtime {
     private double memoryOverCommitRatio;
     private final Optional<KubernetesFunctionAuthProvider> functionAuthDataCacheProvider;
     private final AuthenticationConfig authConfig;
+    private Integer grpcPort;
+    private Integer metricsPort;
     private final Optional<KubernetesManifestCustomizer> manifestCustomizer;
 
     KubernetesRuntime(AppsV1Api appsClient,
@@ -172,6 +172,8 @@ public class KubernetesRuntime implements Runtime {
                       double memoryOverCommitRatio,
                       Optional<KubernetesFunctionAuthProvider> functionAuthDataCacheProvider,
                       boolean authenticationEnabled,
+                      Integer grpcPort,
+                      Integer metricsPort,
                       Optional<KubernetesManifestCustomizer> manifestCustomizer) throws Exception {
         this.appsClient = appsClient;
         this.coreClient = coreClient;
@@ -211,6 +213,9 @@ public class KubernetesRuntime implements Runtime {
 
         this.functionAuthDataCacheProvider = functionAuthDataCacheProvider;
 
+        this.grpcPort = grpcPort;
+        this.metricsPort = metricsPort;
+
         this.processArgs = new LinkedList<>();
         this.processArgs.addAll(RuntimeUtils.getArgsBeforeCmd(instanceConfig, extraDependenciesDir));
         // use exec to to launch function so that it gets launched in the foreground with the same PID as shell
@@ -228,7 +233,7 @@ public class KubernetesRuntime implements Runtime {
                         stateStorageServiceUrl,
                         authConfig,
                         "$" + ENV_SHARD_ID,
-                        GRPC_PORT,
+                        grpcPort,
                         -1l,
                         logConfigFile,
                         secretsProviderClassName,
@@ -236,7 +241,7 @@ public class KubernetesRuntime implements Runtime {
                         installUserCodeDependencies,
                         pythonDependencyRepository,
                         pythonExtraDependencyRepository,
-                        METRICS_PORT));
+                        metricsPort));
 
         doChecks(instanceConfig.getFunctionDetails());
     }
@@ -276,7 +281,7 @@ public class KubernetesRuntime implements Runtime {
             String jobName = createJobName(instanceConfig.getFunctionDetails());
             for (int i = 0; i < instanceConfig.getFunctionDetails().getParallelism(); ++i) {
                 String address = getServiceUrl(jobName, jobNamespace, i);
-                channel[i] = ManagedChannelBuilder.forAddress(address, GRPC_PORT)
+                channel[i] = ManagedChannelBuilder.forAddress(address, grpcPort)
                         .usePlaintext(true)
                         .build();
                 stub[i] = InstanceControlGrpc.newFutureStub(channel[i]);
@@ -383,7 +388,7 @@ public class KubernetesRuntime implements Runtime {
 
     @Override
     public String getPrometheusMetrics() throws IOException {
-        return RuntimeUtils.getPrometheusMetrics(METRICS_PORT);
+        return RuntimeUtils.getPrometheusMetrics(metricsPort);
     }
 
     @Override
@@ -457,7 +462,7 @@ public class KubernetesRuntime implements Runtime {
         serviceSpec.clusterIP("None");
 
         final V1ServicePort servicePort = new V1ServicePort();
-        servicePort.name("grpc").port(GRPC_PORT).protocol("TCP");
+        servicePort.name("grpc").port(grpcPort).protocol("TCP");
         serviceSpec.addPortsItem(servicePort);
 
         serviceSpec.selector(getLabels(instanceConfig.getFunctionDetails()));
@@ -893,7 +898,7 @@ public class KubernetesRuntime implements Runtime {
     private Map<String, String> getPrometheusAnnotations() {
         final Map<String, String> annotations = new HashMap<>();
         annotations.put("prometheus.io/scrape", "true");
-        annotations.put("prometheus.io/port", String.valueOf(METRICS_PORT));
+        annotations.put("prometheus.io/port", String.valueOf(metricsPort));
         return annotations;
     }
 
@@ -1020,7 +1025,7 @@ public class KubernetesRuntime implements Runtime {
         List<V1ContainerPort> ports = new ArrayList<>();
         final V1ContainerPort port = new V1ContainerPort();
         port.setName("grpc");
-        port.setContainerPort(GRPC_PORT);
+        port.setContainerPort(grpcPort);
         ports.add(port);
         return ports;
     }
@@ -1029,7 +1034,7 @@ public class KubernetesRuntime implements Runtime {
         List<V1ContainerPort> ports = new ArrayList<>();
         final V1ContainerPort port = new V1ContainerPort();
         port.setName("prometheus");
-        port.setContainerPort(METRICS_PORT);
+        port.setContainerPort(metricsPort);
         ports.add(port);
         return ports;
     }
