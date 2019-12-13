@@ -112,7 +112,7 @@ public class PulsarFunctionPublishTest {
     private final String TLS_CLIENT_KEY_FILE_PATH = "./src/test/resources/authentication/tls/client-key.pem";
     private final String TLS_TRUST_CERT_FILE_PATH = "./src/test/resources/authentication/tls/cacert.pem";
 
-    private static final Logger log = LoggerFactory.getLogger(PulsarFunctionStateTest.class);
+    private static final Logger log = LoggerFactory.getLogger(PulsarFunctionPublishTest.class);
 
     @DataProvider(name = "validRoleName")
     public Object[][] validRoleName() {
