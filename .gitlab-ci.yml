@@ -16,6 +16,6 @@ maven_build:
   stage: deploy
   script:
     - apt-get update && apt-get -y install zip
-    - mvn -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO -B --show-version -ntp install 
+    - mvn -DskipTests -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO -B --show-version -ntp install 
     - ./release_maven.sh
   when: manual
