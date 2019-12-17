@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.pulsar</groupId>
     <artifactId>docker-images</artifactId>
-    <version>v2.4.2-streamlio-1</version>
+    <version>v2.4.2-streamlio-2</version>
     <relativePath>../docker</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>

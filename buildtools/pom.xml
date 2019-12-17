@@ -30,7 +30,7 @@
 
   <groupId>org.apache.pulsar</groupId>
   <artifactId>buildtools</artifactId>
-  <version>v2.4.2-streamlio-1</version>
+  <version>v2.4.2-streamlio-2</version>
   <packaging>jar</packaging>
   <name>Pulsar Build Tools</name>
 

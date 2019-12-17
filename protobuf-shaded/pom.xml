@@ -32,7 +32,7 @@
 
   <artifactId>protobuf-shaded</artifactId>
   <name>Apache Pulsar :: Protobuf shaded</name>
-  <version>v2.4.2-streamlio-1</version>
+  <version>v2.4.2-streamlio-2</version>
 
   <dependencies>
     <dependency>
