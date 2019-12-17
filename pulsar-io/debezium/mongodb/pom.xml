@@ -31,10 +31,20 @@
     <name>Pulsar IO :: Debezium :: mongodb</name>
 
     <dependencies>
-
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>pulsar-io-debezium-core</artifactId>
+		</dependency>
+
+        <dependency>
+            <groupId>org.apache.pulsar</groupId>
+            <artifactId>pulsar-transaction-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.pulsar</groupId>
+            <artifactId>managed-ledger</artifactId>
             <version>${project.version}</version>
         </dependency>
 
