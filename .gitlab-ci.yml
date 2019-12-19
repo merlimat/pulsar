@@ -3,19 +3,40 @@ cache:
     - /root/.m2/repository
 
 variables:
-  DOCKER_IMAGE: "maven"
-  DOCKER_TAG: "3.6.1-jdk-8"
-  MAVEN_OPTS: "-Djava.awt.headless=true"
-  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -ntp"
+  DOCKER_IMAGE: "aahmedse/maven"
+  DOCKER_TAG: "3.6.1-jdk-8-dind"
 
 stages:
   - deploy
+  - ci
 
-maven_build:
+release_artifacts:
   image: $DOCKER_IMAGE:$DOCKER_TAG
   stage: deploy
+  timeout: 60 mins
   script:
-    - apt-get update && apt-get -y install zip
-    - mvn -DskipTests -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO -B --show-version -ntp install 
+    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install -DskipTests
     - ./release_maven.sh
   when: manual
+
+checkin_unit:
+  image: apachepulsar/pulsar-build:latest
+  stage: ci
+  timeout: 180 mins
+  only: [merge_requests]
+  script:
+    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install
+  artifacts:
+    reports:
+      junit:
+        - "**/surefire-reports/TEST-*.xml"
+
+checkin_cpp:
+  image: apachepulsar/pulsar-build:latest
+  stage: ci
+  timeout: 120 mins
+  only: [merge_requests]
+  script:
+    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp package -DskipTests
+    - /bin/bash -c "cd pulsar-client-cpp && cmake . -DCMAKE_BUILD_TYPE=Debug && make check-format && make -j8"
+    - /bin/bash -c "cd pulsar-client-cpp && ./run-unit-tests.sh"
