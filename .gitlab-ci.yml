@@ -26,10 +26,14 @@ checkin_unit:
   only: [merge_requests]
   script:
     - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install
+  after_script:
+    - echo "[START_TEST_SUMMARY]"
+    - build/testsummary.py $(find . -name 'TEST*.xml')
+    - echo "[END_TEST_SUMMARY]"
   artifacts:
     reports:
       junit:
-        - "**/surefire-reports/TEST-*.xml"
+        - "**/target/surefire-reports/TEST-*.xml"
 
 checkin_cpp:
   image: apachepulsar/pulsar-build:latest
