@@ -19,7 +19,7 @@
 package org.apache.pulsar.client.impl;
 
 import com.google.common.base.Preconditions;
-import net.jcip.annotations.NotThreadSafe;
+
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 
@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-@NotThreadSafe
 public class MessagesImpl<T> implements Messages<T> {
 
     private List<Message<T>> messageList;

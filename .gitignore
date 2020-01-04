@@ -38,6 +38,10 @@ pulsar-broker/src/test/resources/pulsar-functions-api-examples.jar
 log/
 target/
 
+# Gradle
+.gradle
+build
+
 # Python
 *.pyc
 

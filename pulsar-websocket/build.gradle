@@ -1,0 +1,30 @@
+/**
+ *
+ */
+
+description = 'Pulsar WebSocket'
+
+dependencies {
+  implementation project(':pulsar-common')
+  implementation project(':pulsar-broker-common')
+  implementation project(':pulsar-client-original')
+  implementation project(':pulsar-client-api')
+  implementation project(':pulsar-zookeeper-utils')
+
+  implementation "org.apache.bookkeeper:bookkeeper-common:${depVersions.bookkeeper}"
+  implementation "org.apache.zookeeper:zookeeper:${depVersions.zookeeper}"
+  implementation "org.apache.commons:commons-lang3:${depVersions.commonsLang3}"
+  implementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${depVersions.jersey}"
+  implementation "org.glassfish.jersey.containers:jersey-container-servlet:${depVersions.jersey}"
+  implementation "com.google.guava:guava:${depVersions.guava}"
+
+  // implementation 'com.google.code.gson:gson:2.8.2'
+  implementation "io.swagger:swagger-core:${depVersions.swagger}"
+  implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${depVersions.jackson}"
+  implementation "org.slf4j:jul-to-slf4j:${depVersions.slf4j}"
+  implementation "org.eclipse.jetty.websocket:websocket-api:${depVersions.jetty}"
+  implementation "org.eclipse.jetty.websocket:websocket-server:${depVersions.jetty}"
+  implementation "org.eclipse.jetty.websocket:javax-websocket-client-impl:${depVersions.jetty}"
+  // implementation 'org.hdrhistogram:HdrHistogram:2.1.9'
+  // testImplementation project(':managed-ledger')
+}
