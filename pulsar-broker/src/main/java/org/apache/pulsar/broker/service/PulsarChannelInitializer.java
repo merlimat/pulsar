@@ -18,16 +18,26 @@
  */
 package org.apache.pulsar.broker.service;
 
+import static org.apache.bookkeeper.util.SafeRunnable.safeRun;
+
+import java.net.SocketAddress;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.common.protocol.ByteBufPair;
 import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.util.NettySslContextBuilder;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PulsarChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     public static final String TLS_HANDLER = "tls";
@@ -36,6 +46,11 @@ public class PulsarChannelInitializer extends ChannelInitializer<SocketChannel> 
     private final boolean enableTls;
     private final NettySslContextBuilder sslCtxRefresher;
     private final ServiceConfiguration brokerConf;
+
+    private final Cache<SocketAddress, ServerCnx> connections = Caffeine.newBuilder()
+            .weakKeys()
+            .weakValues()
+            .build();
 
     /**
      *
@@ -56,6 +71,10 @@ public class PulsarChannelInitializer extends ChannelInitializer<SocketChannel> 
             this.sslCtxRefresher = null;
         }
         this.brokerConf = pulsar.getConfiguration();
+
+        pulsar.getExecutor().scheduleAtFixedRate(safeRun(this::refreshAuthenticationCredentials),
+                pulsar.getConfig().getAuthenticationRefreshCheckSeconds(),
+                pulsar.getConfig().getAuthenticationRefreshCheckSeconds(), TimeUnit.SECONDS);
     }
 
     @Override
@@ -69,6 +88,19 @@ public class PulsarChannelInitializer extends ChannelInitializer<SocketChannel> 
 
         ch.pipeline().addLast("frameDecoder", new LengthFieldBasedFrameDecoder(
             brokerConf.getMaxMessageSize() + Commands.MESSAGE_SIZE_FRAME_PADDING, 0, 4, 0, 4));
-        ch.pipeline().addLast("handler", new ServerCnx(pulsar));
+        ServerCnx cnx = new ServerCnx(pulsar);
+        ch.pipeline().addLast("handler", cnx);
+
+        connections.put(ch.remoteAddress(), cnx);
+    }
+
+    private void refreshAuthenticationCredentials() {
+        connections.asMap().values().forEach(cnx -> {
+            try {
+                cnx.refreshAuthenticationCredentials();
+            } catch (Throwable t) {
+                log.warn("[{}] Failed to refresh auth credentials", cnx.getRemoteAddress());
+            }
+        });
     }
 }
