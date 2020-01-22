@@ -160,6 +160,7 @@ flexible messaging model and an intuitive client API.</description>
     <aspectj.version>1.9.2</aspectj.version>
     <rocksdb.version>5.13.3</rocksdb.version>
     <slf4j.version>1.7.25</slf4j.version>
+    <commons-collections4.version>4.1</commons-collections4.version>
     <commons.collections.version>3.2.2</commons.collections.version>
     <log4j2.version>2.10.0</log4j2.version>
     <bouncycastle.version>1.60</bouncycastle.version>
@@ -339,6 +340,12 @@ flexible messaging model and an intuitive client API.</description>
         <artifactId>bookkeeper-tools-framework</artifactId>
         <version>${bookkeeper.version}</version>
       </dependency>
+	  
+      <dependency>
+        <groupId>org.apache.bookkeeper</groupId>
+        <artifactId>bookkeeper-proto</artifactId>
+        <version>${bookkeeper.version}</version>
+      </dependency>
 
       <!-- reflection libs -->
       <dependency>
@@ -351,6 +358,78 @@ flexible messaging model and an intuitive client API.</description>
       <dependency>
         <groupId>org.apache.bookkeeper</groupId>
         <artifactId>stream-storage-java-client</artifactId>
+        <version>${bookkeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-all</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.bookkeeper</groupId>
+        <artifactId>stream-storage-java-client-base</artifactId>
+        <version>${bookkeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-all</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.bookkeeper</groupId>
+        <artifactId>stream-storage-proto</artifactId>
+        <version>${bookkeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-all</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.bookkeeper</groupId>
+        <artifactId>stream-storage-service-api</artifactId>
+        <version>${bookkeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-all</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.bookkeeper</groupId>
+        <artifactId>stream-storage-service-impl</artifactId>
+        <version>${bookkeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-all</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.bookkeeper</groupId>
+        <artifactId>stream-storage-common</artifactId>
+        <version>${bookkeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-all</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.bookkeeper</groupId>
+        <artifactId>stream-storage-api</artifactId>
         <version>${bookkeeper.version}</version>
         <exclusions>
           <exclusion>
@@ -1001,6 +1080,38 @@ flexible messaging model and an intuitive client API.</description>
       </dependency>
 
       <dependency>
+        <groupId>org.apache.distributedlog</groupId>
+        <artifactId>distributedlog-protocol</artifactId>
+        <version>${bookkeeper.version}</version>
+        <exclusions>
+          <!-- exclude bookkeeper, reply on the bookkeeper version that pulsar uses -->
+          <exclusion>
+            <groupId>org.apache.bookkeeper</groupId>
+            <artifactId>bookkeeper-server</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.distributedlog</groupId>
+        <artifactId>distributedlog-common</artifactId>
+        <version>${bookkeeper.version}</version>
+        <exclusions>
+          <!-- exclude bookkeeper, reply on the bookkeeper version that pulsar uses -->
+          <exclusion>
+            <groupId>org.apache.bookkeeper</groupId>
+            <artifactId>bookkeeper-server</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>${commons-collections4.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>commons-collections</groupId>
         <artifactId>commons-collections</artifactId>
         <version>${commons.collections.version}</version>
@@ -1013,6 +1124,12 @@ flexible messaging model and an intuitive client API.</description>
       </dependency>
 
       <!-- test dependencies -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.12</version>
+      </dependency>
+
       <dependency>
         <groupId>com.lmax</groupId>
         <artifactId>disruptor</artifactId>

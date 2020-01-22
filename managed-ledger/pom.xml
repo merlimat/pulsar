@@ -35,24 +35,23 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.bookkeeper</groupId>
+      <artifactId>bookkeeper-common</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.bookkeeper</groupId>
       <artifactId>bookkeeper-server</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.bookkeeper.stats</groupId>
-      <artifactId>prometheus-metrics-provider</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.bookkeeper.stats</groupId>
-      <artifactId>codahale-metrics-provider</artifactId>
-      <version>${bookkeeper.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
       <version>${protobuf3.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-configuration</groupId>
+      <artifactId>commons-configuration</artifactId>
     </dependency>
 
     <dependency>
@@ -64,6 +63,11 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
     </dependency>
 
     <dependency>
