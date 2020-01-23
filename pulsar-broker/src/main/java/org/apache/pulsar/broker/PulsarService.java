@@ -35,6 +35,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.pulsar.PulsarVersion;
 import org.apache.pulsar.broker.admin.AdminResource;
+import org.apache.pulsar.broker.authentication.AuthenticationProvider;
 import org.apache.pulsar.broker.authentication.AuthenticationService;
 import org.apache.pulsar.broker.authorization.AuthorizationService;
 import org.apache.pulsar.broker.cache.ConfigurationCacheService;
@@ -183,6 +185,8 @@ public class PulsarService implements AutoCloseable {
     private ProtocolHandlers protocolHandlers = null;
 
     private ShutdownService shutdownService;
+
+    private final List<PulsarPlugin> plugins = new ArrayList<>();
 
     private MetricsGenerator metricsGenerator;
     private TransactionMetadataStoreService transactionMetadataStoreService;
@@ -315,6 +319,12 @@ public class PulsarService implements AutoCloseable {
                 protocolHandlers.close();
                 protocolHandlers = null;
             }
+
+            for (PulsarPlugin p : plugins) {
+                p.close();
+            }
+
+            state = State.Closed;
 
             state = State.Closed;
         } catch (Exception e) {
@@ -458,6 +468,8 @@ public class PulsarService implements AutoCloseable {
             this.webService.addStaticResources("/static", "/static");
 
             schemaRegistryService = SchemaRegistryService.create(this);
+
+            this.loadPlugins();
 
             webService.start();
 
@@ -1129,5 +1141,22 @@ public class PulsarService implements AutoCloseable {
 
     public Optional<Integer> getBrokerListenPortTls() {
         return brokerService.getListenPortTls();
+    }
+
+    private void loadPlugins() throws Exception {
+        try {
+            for (String className : config.getPulsarPlugins()) {
+                if (className.isEmpty()) {
+                    continue;
+                }
+
+                PulsarPlugin plugin = (PulsarPlugin) Class.forName(className).newInstance();
+                plugin.initialize(this);
+                plugins.add(plugin);
+                LOG.info("Loaded plugin from {}", className);
+            }
+        } catch (Throwable e) {
+            throw new PulsarServerException("Failed to load an plugin: " + e.getMessage(), e);
+        }
     }
 }

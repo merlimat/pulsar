@@ -1465,4 +1465,6 @@ public class ServiceConfiguration implements PulsarConfiguration {
             return type;
         }
     }
+
+    private List<String> pulsarPlugins = new ArrayList<>();
 }
