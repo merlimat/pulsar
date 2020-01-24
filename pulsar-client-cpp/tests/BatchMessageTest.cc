@@ -345,7 +345,7 @@ TEST(BatchMessageTest, testSmallReceiverQueueSize) {
     ASSERT_EQ(i, numOfMessages);
 }
 
-TEST(BatchMessageTest, testIndividualAck) {
+TEST(BatchMessageTest, DISABLED_testIndividualAck) {  // PLSR-239
     std::string testName = std::to_string(epochTime) + "testIndividualAck";
 
     ClientConfiguration clientConfig;
@@ -729,7 +729,7 @@ TEST(BatchMessageTest, testMixedAck) {
 
 // Also testing Cumulative Ack test case where greatestCumulativeAck returns
 // MessageId()
-TEST(BatchMessageTest, testPermits) {
+TEST(BatchMessageTest, DISABLED_testPermits) {  // PLSR-238
     std::string testName = std::to_string(epochTime) + "testPermits";
 
     Client client(lookupUrl);

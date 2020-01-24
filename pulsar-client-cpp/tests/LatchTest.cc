@@ -65,7 +65,7 @@ TEST(LatchTest, testLatchCount) {
     ASSERT_EQ(0, latch.getCount());
 }
 
-TEST(LatchTest, testTimedWait) {
+TEST(LatchTest, DISABLED_testTimedWait) {  // PLSR-242
     // Wait for 7 seconds which is more than the maximum sleep time (5 seconds)
     Latch latch1(3);
     Service service1("service1", std::chrono::milliseconds(50), latch1);

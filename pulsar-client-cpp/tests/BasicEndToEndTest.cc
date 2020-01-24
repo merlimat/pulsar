@@ -307,7 +307,7 @@ TEST(BasicEndToEndTest, testRedeliveryCount) {
     producer.close();
 }
 
-TEST(BasicEndToEndTest, testLookupThrottling) {
+TEST(BasicEndToEndTest, DISABLED_testLookupThrottling) {  // PLSR-229
     std::string topicName = "testLookupThrottling";
     ClientConfiguration config;
     config.setConcurrentLookupRequest(0);
@@ -531,7 +531,7 @@ TEST(BasicEndToEndTest, testInvalidUrlPassed) {
     ASSERT_EQ(ResultConnectError, result);
 }
 
-TEST(BasicEndToEndTest, testPartitionedProducerConsumer) {
+TEST(BasicEndToEndTest, DISABLED_testPartitionedProducerConsumer) {  // PLSR-230
     Client client(lookupUrl);
     std::string topicName = "testPartitionedProducerConsumer";
 
@@ -823,7 +823,7 @@ TEST(BasicEndToEndTest, testDuplicateConsumerCreationOnPartitionedTopic) {
     producer.close();
 }
 
-TEST(BasicEndToEndTest, testRoundRobinRoutingPolicy) {
+TEST(BasicEndToEndTest, DISABLED_testRoundRobinRoutingPolicy) {  // PLSR-237
     Client client(lookupUrl);
     std::string topicName = "persistent://public/default/partition-testRoundRobinRoutingPolicy";
     // call admin api to make it partitioned
@@ -888,7 +888,7 @@ TEST(BasicEndToEndTest, testRoundRobinRoutingPolicy) {
     client.shutdown();
 }
 
-TEST(BasicEndToEndTest, testMessageListener) {
+TEST(BasicEndToEndTest, DISABLED_testMessageListener) {  // PLSR-227
     Client client(lookupUrl);
     std::string topicName = "partition-testMessageListener";
     // call admin api to make it partitioned
@@ -931,7 +931,7 @@ TEST(BasicEndToEndTest, testMessageListener) {
     client.close();
 }
 
-TEST(BasicEndToEndTest, testMessageListenerPause) {
+TEST(BasicEndToEndTest, DISABLED_testMessageListenerPause) {  // PLSR-236
     Client client(lookupUrl);
     std::string topicName = "partition-testMessageListenerPause";
 
@@ -987,7 +987,7 @@ TEST(BasicEndToEndTest, testMessageListenerPause) {
     client.close();
 }
 
-TEST(BasicEndToEndTest, testResendViaSendCallback) {
+TEST(BasicEndToEndTest, DISABLED_testResendViaSendCallback) {  // PLSR-240
     ClientConfiguration clientConfiguration;
     clientConfiguration.setIOThreads(1);
     Client client(lookupUrl, clientConfiguration);
@@ -1289,7 +1289,7 @@ TEST(BasicEndToEndTest, testHandlerReconnectionLogic) {
     }
 }
 
-TEST(BasicEndToEndTest, testRSAEncryption) {
+TEST(BasicEndToEndTest, DISABLED_testRSAEncryption) {  // PLSR-235
     ClientConfiguration config;
     Client client(lookupUrl);
     std::string topicName = "my-rsaenctopic";
@@ -2095,7 +2095,7 @@ TEST(BasicEndToEndTest, testpatternMultiTopicsHttpConsumerPubSub) {
     client.shutdown();
 }
 
-TEST(BasicEndToEndTest, testPatternEmptyUnsubscribe) {
+TEST(BasicEndToEndTest, DISABLED_testPatternEmptyUnsubscribe) {  // PLSR-241
     Client client(lookupUrl);
     std::string pattern = "persistent://public/default/patternEmptyUnsubscribe.*";
 
