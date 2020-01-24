@@ -1679,6 +1679,11 @@ flexible messaging model and an intuitive client API.</description>
       <url>https://repo1.maven.org/maven2</url>
     </repository>
     <repository>
+      <id>splunk</id>
+      <layout>default</layout>
+      <url>https://repo.splunk.com/artifactory/maven-splunk-local/</url>
+    </repository>
+    <repository>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
