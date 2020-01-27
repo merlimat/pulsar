@@ -33,7 +33,7 @@ checkin_unit:
     - echo "[START_TEST_SUMMARY]"
     - build/testsummary.py $(find . -name 'TEST*.xml')
     - echo "[END_TEST_SUMMARY]"
-    - dev/testtrim.py $(find . -name 'TEST*.xml')
+    - build/testtrim.py $(find . -name 'TEST*.xml')
   artifacts:
     paths:
       - test-results.tgz
