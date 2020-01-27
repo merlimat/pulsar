@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 public class ProxyIsAHttpProxyTest extends MockedPulsarServiceBaseTest {
@@ -190,7 +191,7 @@ public class ProxyIsAHttpProxyTest extends MockedPulsarServiceBaseTest {
         }
     }
 
-    @Test
+    @Ignore // PLSR-279
     public void testMultipleRedirect() throws Exception {
         Properties props = new Properties();
 

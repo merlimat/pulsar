@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
@@ -454,7 +455,7 @@ public class PersistentQueueE2ETest extends BrokerTestBase {
         assertEquals(receivedConsumer1, totalMessages);
     }
 
-    @Test
+    @Ignore // PLSR-252
     public void testUnackedCountWithRedeliveries() throws Exception {
         final String topicName = "persistent://prop/use/ns-abc/testUnackedCountWithRedeliveries";
         final String subName = "sub3";

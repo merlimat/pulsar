@@ -102,8 +102,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
+@Ignore // PLSR-257
 public class BrokerServiceLookupTest extends ProducerConsumerBase {
     private static final Logger log = LoggerFactory.getLogger(BrokerServiceLookupTest.class);
 

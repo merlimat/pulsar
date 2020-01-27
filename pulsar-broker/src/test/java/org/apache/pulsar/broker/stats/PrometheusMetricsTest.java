@@ -37,6 +37,7 @@ import org.apache.pulsar.broker.stats.prometheus.PrometheusMetricsGenerator;
 import org.apache.pulsar.client.api.Producer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import com.google.common.base.MoreObjects;
@@ -57,7 +58,7 @@ public class PrometheusMetricsTest extends BrokerTestBase {
         super.internalCleanup();
     }
 
-    @Test
+    @Ignore // PLSR-256
     public void testPerTopicStats() throws Exception {
         Producer<byte[]> p1 = pulsarClient.newProducer().topic("persistent://my-property/use/my-ns/my-topic1").create();
         Producer<byte[]> p2 = pulsarClient.newProducer().topic("persistent://my-property/use/my-ns/my-topic2").create();
@@ -113,7 +114,7 @@ public class PrometheusMetricsTest extends BrokerTestBase {
         p2.close();
     }
 
-    @Test
+    @Ignore // PLSR-256
     public void testPerNamespaceStats() throws Exception {
         Producer<byte[]> p1 = pulsarClient.newProducer().topic("persistent://my-property/use/my-ns/my-topic1").create();
         Producer<byte[]> p2 = pulsarClient.newProducer().topic("persistent://my-property/use/my-ns/my-topic2").create();

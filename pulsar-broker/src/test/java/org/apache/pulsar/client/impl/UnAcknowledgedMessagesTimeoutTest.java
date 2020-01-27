@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 public class UnAcknowledgedMessagesTimeoutTest extends BrokerTestBase {
@@ -251,7 +252,7 @@ public class UnAcknowledgedMessagesTimeoutTest extends BrokerTestBase {
         return messagesReceived;
     }
 
-    @Test
+    @Ignore // PLSR-259 Test(timeOut = testTimeout)
     public void testFailoverSingleAckedPartitionedTopic() throws Exception {
         String key = "testFailoverSingleAckedPartitionedTopic";
         final String topicName = "persistent://prop/ns-abc/topic-" + key + UUID.randomUUID().toString();

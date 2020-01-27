@@ -104,6 +104,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 /**
@@ -486,7 +487,7 @@ public class PulsarFunctionE2ETest {
         Assert.assertEquals(foundFiles.length, 0, "Temporary files left over: " + Arrays.asList(foundFiles));
     }
 
-    @Test(timeOut = 20000)
+    @Ignore // PLSR-260 Test(timeOut = 20000)
     public void testE2EPulsarFunctionWithFile() throws Exception {
         String jarFilePathUrl = Utils.FILE + ":" + getClass().getClassLoader().getResource("pulsar-functions-api-examples.jar").getFile();
         testE2EPulsarFunction(jarFilePathUrl);
@@ -717,7 +718,7 @@ public class PulsarFunctionE2ETest {
         Assert.assertEquals(foundFiles.length, 0, "Temporary files left over: " + Arrays.asList(foundFiles));
     }
 
-    @Test(timeOut = 20000)
+    @Ignore // PLSR-273 Test(timeOut = 20000)
     public void testPulsarSinkStatsWithFile() throws Exception {
         String jarFilePathUrl = Utils.FILE + ":" + getClass().getClassLoader().getResource("pulsar-io-data-generator.nar").getFile();
         testPulsarSinkStats(jarFilePathUrl);

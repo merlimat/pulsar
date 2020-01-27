@@ -35,6 +35,7 @@ import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.util.RelativeTimeUtil;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 /**
@@ -142,7 +143,7 @@ public class SubscriptionSeekTest extends BrokerTestBase {
         assertEquals(sub.getNumberOfEntriesInBacklog(), 10);
     }
 
-    @Test
+    @Ignore // PLSR-255
     public void testSeekTimeOnPartitionedTopic() throws Exception {
         final String topicName = "persistent://prop/use/ns-abc/testSeekTimePartitions";
         final String resetTimeStr = "100s";

@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 public class ProxyPublishConsumeTlsTest extends TlsProducerConsumerBase {
@@ -53,40 +54,41 @@ public class ProxyPublishConsumeTlsTest extends TlsProducerConsumerBase {
     private ProxyServer proxyServer;
     private WebSocketService service;
 
-    @BeforeMethod
-    public void setup() throws Exception {
-        super.setup();
-        super.internalSetUpForNamespace();
+//    @BeforeMethod commenting fixtures, as they get run even with ignore
+//    public void setup() throws Exception {
+//        super.setup();
+//        super.internalSetUpForNamespace();
+//
+//        WebSocketProxyConfiguration config = new WebSocketProxyConfiguration();
+//        config.setWebServicePort(Optional.of(0));
+//        config.setWebServicePortTls(Optional.of(0));
+//        config.setBrokerClientTlsEnabled(true);
+//        config.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
+//        config.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
+//        config.setTlsTrustCertsFilePath(TLS_TRUST_CERT_FILE_PATH);
+//        config.setBrokerClientTrustCertsFilePath(TLS_TRUST_CERT_FILE_PATH);
+//        config.setClusterName("use");
+//        config.setConfigurationStoreServers("dummy-zk-servers");
+//        config.setBrokerClientAuthenticationParameters("tlsCertFile:" + TLS_CLIENT_CERT_FILE_PATH + ",tlsKeyFile:" + TLS_CLIENT_KEY_FILE_PATH);
+//        config.setBrokerClientAuthenticationPlugin(AuthenticationTls.class.getName());
+//        service = spy(new WebSocketService(config));
+//        doReturn(mockZooKeeperClientFactory).when(service).getZooKeeperClientFactory();
+//        proxyServer = new ProxyServer(config);
+//        WebSocketServiceStarter.start(proxyServer, service);
+//        log.info("Proxy Server Started");
+//    }
 
-        WebSocketProxyConfiguration config = new WebSocketProxyConfiguration();
-        config.setWebServicePort(Optional.of(0));
-        config.setWebServicePortTls(Optional.of(0));
-        config.setBrokerClientTlsEnabled(true);
-        config.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
-        config.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
-        config.setTlsTrustCertsFilePath(TLS_TRUST_CERT_FILE_PATH);
-        config.setBrokerClientTrustCertsFilePath(TLS_TRUST_CERT_FILE_PATH);
-        config.setClusterName("use");
-        config.setConfigurationStoreServers("dummy-zk-servers");
-        config.setBrokerClientAuthenticationParameters("tlsCertFile:" + TLS_CLIENT_CERT_FILE_PATH + ",tlsKeyFile:" + TLS_CLIENT_KEY_FILE_PATH);
-        config.setBrokerClientAuthenticationPlugin(AuthenticationTls.class.getName());
-        service = spy(new WebSocketService(config));
-        doReturn(mockZooKeeperClientFactory).when(service).getZooKeeperClientFactory();
-        proxyServer = new ProxyServer(config);
-        WebSocketServiceStarter.start(proxyServer, service);
-        log.info("Proxy Server Started");
-    }
-
-    @AfterMethod
-    protected void cleanup() throws Exception {
-        super.cleanup();
-        service.close();
-        proxyServer.stop();
-        log.info("Finished Cleaning Up Test setup");
-
-    }
+//    @AfterMethod commenting fixtures, as they get run even with ignore
+//    protected void cleanup() throws Exception {
+//        super.cleanup();
+//        service.close();
+//        proxyServer.stop();
+//        log.info("Finished Cleaning Up Test setup");
+//
+//    }
 
     @Test(timeOut = 30000)
+    @Ignore // PLSR-261 Test(timeOut = 30000)
     public void socketTest() throws InterruptedException, GeneralSecurityException {
         String consumerUri =
                 "wss://localhost:" + proxyServer.getListenPortHTTPS().get() + "/ws/consumer/persistent/my-property/use/my-ns/my-topic/my-sub";

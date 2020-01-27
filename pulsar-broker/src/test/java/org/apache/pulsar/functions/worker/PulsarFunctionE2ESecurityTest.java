@@ -80,6 +80,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 public class PulsarFunctionE2ESecurityTest {
@@ -529,7 +530,7 @@ public class PulsarFunctionE2ESecurityTest {
         }
     }
 
-    @Test
+    @Ignore // PLSR-276
     public void testAuthorization() throws Exception {
         String token1 = AuthTokenUtils.createToken(secretKey, SUBJECT, Optional.empty());
         String token2 = AuthTokenUtils.createToken(secretKey, "wrong-subject", Optional.empty());

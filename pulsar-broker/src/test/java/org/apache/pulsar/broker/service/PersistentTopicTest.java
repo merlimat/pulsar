@@ -116,6 +116,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -707,7 +708,7 @@ public class PersistentTopicTest {
         }
     }
 
-    @Test
+    @Ignore // PLSR-253
     public void testMaxConsumersSharedForBroker() throws Exception {
         // set max clients
         ServiceConfiguration svcConfig = spy(new ServiceConfiguration());
@@ -718,7 +719,7 @@ public class PersistentTopicTest {
         testMaxConsumersShared();
     }
 
-    @Test
+    @Ignore // PLSR-253
     public void testMaxConsumersSharedForNamespace() throws Exception {
         ServiceConfiguration svcConfig = spy(new ServiceConfiguration());
         doReturn(svcConfig).when(pulsar).getConfiguration();
