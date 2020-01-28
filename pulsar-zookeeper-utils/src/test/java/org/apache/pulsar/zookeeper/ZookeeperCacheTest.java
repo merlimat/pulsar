@@ -65,7 +65,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-@Test
 public class ZookeeperCacheTest {
     private MockZooKeeper zkClient;
     private OrderedScheduler executor;
@@ -95,7 +94,7 @@ public class ZookeeperCacheTest {
 
 
     @Test(timeOut = 10000)
-    void testSimpleCache() throws Exception {
+    public void testSimpleCache() throws Exception {
 
         ZooKeeperCache zkCacheService = new LocalZooKeeperCache(zkClient, 30, executor);
         ZooKeeperDataCache<String> zkCache = new ZooKeeperDataCache<String>(zkCacheService) {
@@ -134,7 +133,7 @@ public class ZookeeperCacheTest {
     }
 
     @Test(timeOut = 10000)
-    void testChildrenCache() throws Exception {
+    public void testChildrenCache() throws Exception {
         zkClient.create("/test", new byte[0], null, null);
 
         ZooKeeperCache zkCacheService = new LocalZooKeeperCache(zkClient, 30, executor);
@@ -186,7 +185,7 @@ public class ZookeeperCacheTest {
     }
 
     @Test(timeOut = 10000)
-    void testChildrenCacheZnodeCreatedAfterCache() throws Exception {
+    public void testChildrenCacheZnodeCreatedAfterCache() throws Exception {
 
         ZooKeeperCache zkCacheService = new LocalZooKeeperCache(zkClient, 30, executor);
         ZooKeeperChildrenCache cache = new ZooKeeperChildrenCache(zkCacheService, "/test");
@@ -238,7 +237,7 @@ public class ZookeeperCacheTest {
     }
 
     @Test(timeOut = 10000)
-    void testExistsCache() throws Exception {
+    public void testExistsCache() throws Exception {
         // Check existence after creation of the node
         zkClient.create("/test", new byte[0], null, null);
         Thread.sleep(20);
@@ -254,7 +253,7 @@ public class ZookeeperCacheTest {
     }
 
     @Test(timeOut = 10000)
-    void testInvalidateCache() throws Exception {
+    public void testInvalidateCache() throws Exception {
         zkClient.create("/test", new byte[0], null, null);
         zkClient.create("/test/c1", new byte[0], null, null);
         zkClient.create("/test/c2", new byte[0], null, null);
@@ -287,7 +286,7 @@ public class ZookeeperCacheTest {
     }
 
     @Test(timeOut = 10000)
-    void testGlobalZooKeeperCache() throws Exception {
+    public void testGlobalZooKeeperCache() throws Exception {
         MockZooKeeper zkc = MockZooKeeper.newInstance();
         ZooKeeperClientFactory zkClientfactory = new ZooKeeperClientFactory() {
             @Override
@@ -394,7 +393,7 @@ public class ZookeeperCacheTest {
      * @throws Exception
      */
     @Test(timeOut = 2000)
-    void testZkCallbackThreadStuck() throws Exception {
+    public void testZkCallbackThreadStuck() throws Exception {
         OrderedScheduler executor = OrderedScheduler.newSchedulerBuilder().build();
         ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(2);
         ExecutorService zkExecutor = Executors.newSingleThreadExecutor(new DefaultThreadFactory("mockZk"));

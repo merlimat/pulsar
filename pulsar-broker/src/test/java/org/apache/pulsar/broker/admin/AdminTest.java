@@ -93,7 +93,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-@Test
 public class AdminTest extends MockedPulsarServiceBaseTest {
     private final String configClusterName = "use";
     private ConfigurationCacheService configurationCache;
@@ -216,7 +215,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
     }
 
     @Test
-    void internalConfiguration() throws Exception {
+    public void internalConfiguration() throws Exception {
         InternalConfigurationData expectedData = new InternalConfigurationData(
             pulsar.getConfiguration().getZookeeperServers(),
             pulsar.getConfiguration().getConfigurationStoreServers(),
@@ -227,7 +226,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
     }
 
     @Test
-    void clusters() throws Exception {
+    public void clusters() throws Exception {
         assertEquals(clusters.getClusters(), Lists.newArrayList());
         verify(clusters, never()).validateSuperUserAccess();
 
@@ -377,7 +376,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
     }
 
     @Test
-    void properties() throws Exception {
+    public void properties() throws Exception {
         assertEquals(properties.getTenants(), Lists.newArrayList());
         verify(properties, times(1)).validateSuperUserAccess();
 
@@ -525,7 +524,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
     }
 
     @Test
-    void brokers() throws Exception {
+    public void brokers() throws Exception {
         clusters.createCluster("use", new ClusterData("http://broker.messaging.use.example.com",
                 "https://broker.messaging.use.example.com:4443"));
 
@@ -543,7 +542,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
     }
 
     @Test
-    void resourceQuotas() throws Exception {
+    public void resourceQuotas() throws Exception {
         // get Default Resource Quota
         ResourceQuota quota = resourceQuotas.getDefaultResourceQuota();
         assertNotNull(quota);
@@ -605,7 +604,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
     }
 
     @Test
-    void brokerStats() throws Exception {
+    public void brokerStats() throws Exception {
         doReturn("client-id").when(brokerStats).clientAppId();
         Collection<Metrics> metrics = brokerStats.getMetrics();
         assertNotNull(metrics);
@@ -629,7 +628,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
     }
 
     @Test
-    void persistentTopics() throws Exception {
+    public void persistentTopics() throws Exception {
 
         final String property = "prop-xyz";
         final String cluster = "use";

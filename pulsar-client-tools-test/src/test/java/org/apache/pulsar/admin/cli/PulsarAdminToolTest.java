@@ -75,11 +75,10 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.testng.annotations.Test;
 
-@Test
 public class PulsarAdminToolTest {
 
     @Test
-    void brokers() throws Exception {
+    public void brokers() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Brokers mockBrokers = mock(Brokers.class);
         doReturn(mockBrokers).when(admin).brokers();
@@ -115,7 +114,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void brokerStats() throws Exception {
+    public void brokerStats() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         BrokerStats mockBrokerStats = mock(BrokerStats.class);
         doReturn(mockBrokerStats).when(admin).brokerStats();
@@ -136,7 +135,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void getOwnedNamespaces() throws Exception {
+    public void getOwnedNamespaces() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Brokers mockBrokers = mock(Brokers.class);
         doReturn(mockBrokers).when(admin).brokers();
@@ -149,7 +148,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void clusters() throws Exception {
+    public void clusters() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Clusters mockClusters = mock(Clusters.class);
         when(admin.clusters()).thenReturn(mockClusters);
@@ -214,7 +213,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void tenants() throws Exception {
+    public void tenants() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Tenants mockTenants = mock(Tenants.class);
         when(admin.tenants()).thenReturn(mockTenants);
@@ -242,7 +241,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void namespaces() throws Exception {
+    public void namespaces() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Namespaces mockNamespaces = mock(Namespaces.class);
         when(admin.namespaces()).thenReturn(mockNamespaces);
@@ -483,7 +482,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void namespacesCreateV1() throws Exception {
+    public void namespacesCreateV1() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Namespaces mockNamespaces = mock(Namespaces.class);
         when(admin.namespaces()).thenReturn(mockNamespaces);
@@ -494,7 +493,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void namespacesCreateV1WithBundlesAndClusters() throws Exception {
+    public void namespacesCreateV1WithBundlesAndClusters() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Namespaces mockNamespaces = mock(Namespaces.class);
         when(admin.namespaces()).thenReturn(mockNamespaces);
@@ -506,7 +505,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void namespacesCreate() throws Exception {
+    public void namespacesCreate() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Namespaces mockNamespaces = mock(Namespaces.class);
         when(admin.namespaces()).thenReturn(mockNamespaces);
@@ -520,7 +519,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void namespacesCreateWithBundlesAndClusters() throws Exception {
+    public void namespacesCreateWithBundlesAndClusters() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Namespaces mockNamespaces = mock(Namespaces.class);
         when(admin.namespaces()).thenReturn(mockNamespaces);
@@ -535,7 +534,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void resourceQuotas() throws Exception {
+    public void resourceQuotas() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         ResourceQuotas mockResourceQuotas = mock(ResourceQuotas.class);
         when(admin.resourceQuotas()).thenReturn(mockResourceQuotas);
@@ -573,7 +572,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void namespaceIsolationPolicy() throws Exception {
+    public void namespaceIsolationPolicy() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Clusters mockClusters = mock(Clusters.class);
         when(admin.clusters()).thenReturn(mockClusters);
@@ -588,7 +587,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void topics() throws Exception {
+    public void topics() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Topics mockTopics = mock(Topics.class);
         when(admin.topics()).thenReturn(mockTopics);
@@ -677,7 +676,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void persistentTopics() throws Exception {
+    public void persistentTopics() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Topics mockTopics = mock(Topics.class);
         when(admin.topics()).thenReturn(mockTopics);
@@ -759,7 +758,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void nonPersistentTopics() throws Exception {
+    public void nonPersistentTopics() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         NonPersistentTopics mockTopics = mock(NonPersistentTopics.class);
         when(admin.nonPersistentTopics()).thenReturn(mockTopics);
@@ -784,7 +783,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void bookies() throws Exception {
+    public void bookies() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
         Bookies mockBookies = mock(Bookies.class);
         doReturn(mockBookies).when(admin).bookies();
@@ -805,7 +804,7 @@ public class PulsarAdminToolTest {
     }
 
     @Test
-    void testAuthTlsWithJsonParam() throws Exception {
+    public void testAuthTlsWithJsonParam() throws Exception {
 
         Properties properties = new Properties();
         properties.put("authPlugin", AuthenticationTls.class.getName());
