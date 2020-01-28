@@ -54,3 +54,10 @@ checkin_cpp:
     - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp package -DskipTests
     - /bin/bash -c "cd pulsar-client-cpp && cmake . -DCMAKE_BUILD_TYPE=Debug && make check-format && make -j8"
     - /bin/bash -c "cd pulsar-client-cpp && ./run-unit-tests.sh"
+  after_script:
+    - cp -r /tmp/pulsar-test-dist/logs broker-logs
+  artifacts:
+    paths:
+      - broker-logs/
+    expire_in: 100 days
+    when: always
