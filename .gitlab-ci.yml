@@ -31,7 +31,7 @@ checkin_unit:
   after_script:
     - tar zcf test-results.tgz */target/surefire-reports/
     - echo "[START_TEST_SUMMARY]"
-    - build/testsummary.py $(find . -name 'TEST*.xml')
+    - build/testsummary.py */target/surefire-reports/TEST-*.xml
     - echo "[END_TEST_SUMMARY]"
     - build/testtrim.py $(find . -name 'TEST*.xml')
   artifacts:
