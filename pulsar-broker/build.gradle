@@ -3,12 +3,14 @@ plugins {
   id "com.google.protobuf" version "0.8.11"
 }
 
+description = 'Pulsar Broker'
+
 dependencies {
-  implementation project(':pulsar-client-api')
   implementation project(':pulsar-common')
   implementation project(':pulsar-broker-common')
   implementation project(':pulsar-transaction-parent:pulsar-transaction-common')
   implementation project(':pulsar-zookeeper-utils')
+  implementation project(':pulsar-functions:pulsar-functions-proto')
   implementation project(':pulsar-functions:pulsar-functions-worker')
   implementation project(':pulsar-client-original')
   implementation project(':pulsar-websocket')
@@ -26,65 +28,54 @@ dependencies {
   implementation "com.github.ben-manes.caffeine:caffeine:${depVersions.caffeine}"
   implementation "io.jsonwebtoken:jjwt-api:${depVersions.jsonwebtoken}"
 
-    // implementation 'commons-codec:commons-codec:1.10'
   implementation "commons-collections:commons-collections:${depVersions.commonsCollections}"
-    // implementation 'org.apache.commons:commons-lang3:3.4'
-    // implementation 'org.slf4j:slf4j-api:1.7.25'
-    // implementation 'io.netty:netty-transport:4.1.43.Final'
+  implementation "com.yahoo.datasketches:sketches-core:${depVersions.datasketches}"
+  implementation "org.eclipse.jetty:jetty-server:${depVersions.jetty}"
+  implementation "org.eclipse.jetty:jetty-servlet:${depVersions.jetty}"
+  implementation "org.eclipse.jetty:jetty-servlets:${depVersions.jetty}"
+  implementation "org.eclipse.jetty.websocket:websocket-servlet:${depVersions.jetty}"
 
-    // implementation 'com.google.protobuf:protobuf-java:3.5.1'
-    //
-    // implementation 'org.apache.bookkeeper:bookkeeper-tools-framework:4.10.0'
-    //
-    implementation "org.eclipse.jetty:jetty-server:${depVersions.jetty}"
-    implementation "org.eclipse.jetty:jetty-servlet:${depVersions.jetty}"
-    implementation "org.eclipse.jetty:jetty-servlets:${depVersions.jetty}"
+  implementation "org.glassfish.jersey.core:jersey-server:${depVersions.jersey}"
+  implementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${depVersions.jersey}"
+  implementation "org.glassfish.jersey.containers:jersey-container-servlet:${depVersions.jersey}"
+  implementation "org.glassfish.jersey.media:jersey-media-json-jackson:${depVersions.jersey}"
+  implementation "org.glassfish.jersey.inject:jersey-hk2:${depVersions.jersey}"
+  implementation "org.glassfish.jersey.media:jersey-media-multipart:${depVersions.jersey}"
 
-    implementation "org.glassfish.jersey.core:jersey-server:${depVersions.jersey}"
-    implementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${depVersions.jersey}"
-    implementation "org.glassfish.jersey.containers:jersey-container-servlet:${depVersions.jersey}"
-    implementation "org.glassfish.jersey.media:jersey-media-json-jackson:${depVersions.jersey}"
-    implementation "org.glassfish.jersey.inject:jersey-hk2:${depVersions.jersey}"
+  implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${depVersions.jackson}"
+  implementation "com.fasterxml.jackson.module:jackson-module-jsonSchema:${depVersions.jackson}"
 
-    implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${depVersions.jackson}"
-    implementation "com.fasterxml.jackson.module:jackson-module-jsonSchema:${depVersions.jackson}"
+  implementation "org.slf4j:jul-to-slf4j:${depVersions.slf4j}"
+  implementation "org.slf4j:jcl-over-slf4j:${depVersions.slf4j}"
 
-    implementation "org.slf4j:jul-to-slf4j:${depVersions.slf4j}"
-    implementation "org.slf4j:jcl-over-slf4j:${depVersions.slf4j}"
-    // implementation 'com.google.guava:guava:25.1-jre'
-    // implementation 'com.beust:jcommander:1.48'
+  implementation "io.prometheus:simpleclient:${depVersions.prometheus}"
+  implementation "io.prometheus:simpleclient_jetty:${depVersions.prometheus}"
+  implementation "io.prometheus:simpleclient_hotspot:${depVersions.prometheus}"
+  implementation "io.prometheus:simpleclient_caffeine:${depVersions.prometheus}"
 
-    implementation "io.prometheus:simpleclient:${depVersions.prometheus}"
-    implementation "io.prometheus:simpleclient_jetty:${depVersions.prometheus}"
-    implementation "io.prometheus:simpleclient_hotspot:${depVersions.prometheus}"
+  implementation "io.swagger:swagger-annotations:${depVersions.swagger}"
+  implementation "io.swagger:swagger-core:${depVersions.swagger}"
 
-    implementation "io.swagger:swagger-annotations:${depVersions.swagger}"
-    implementation "io.swagger:swagger-core:${depVersions.swagger}"
-
-    // implementation 'org.hdrhistogram:HdrHistogram:2.1.9'
-    // implementation 'com.google.code.gson:gson:2.8.2'
-    implementation "com.github.zafarkhaja:java-semver:${depVersions.semver}"
+  implementation "com.github.zafarkhaja:java-semver:${depVersions.semver}"
   implementation "org.apache.avro:avro:${depVersions.avro}"
-    implementation "com.carrotsearch:hppc:${depVersions.hppc}"
-    // implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    // implementation 'com.sun.activation:javax.activation:1.2.0'
+  implementation "com.carrotsearch:hppc:${depVersions.hppc}"
 
-    testImplementation project(':pulsar-discovery-service')
-    testImplementation project(':managed-ledger')
-    testImplementation project(':pulsar-zookeeper-utils')
-    testImplementation project(':pulsar-functions:pulsar-functions-local-runner-original')
-    testImplementation project(':pulsar-functions:pulsar-functions-api-examples')
-    testImplementation project(':pulsar-io:pulsar-io-data-generator')
+  testImplementation project(':pulsar-discovery-service')
+  testImplementation project(path: ":managed-ledger", configuration: 'testJar')
+  testImplementation project(path: ':pulsar-zookeeper-utils', configuration: 'testJar')
+  testImplementation project(':pulsar-functions:pulsar-functions-local-runner-original')
+  testImplementation project(':pulsar-functions:pulsar-functions-api')
+  testImplementation project(':pulsar-functions:pulsar-functions-utils')
+  testImplementation project(':pulsar-functions:pulsar-functions-instance')
+  testImplementation project(':pulsar-functions:pulsar-functions-api-examples')
+  testImplementation project(':pulsar-io:pulsar-io-data-generator')
+
+  testImplementation "org.asynchttpclient:async-http-client:${depVersions.asyncHttpClient}"
+  testImplementation "org.eclipse.jetty.websocket:websocket-client:${depVersions.jetty}"
+  testImplementation "org.apache.httpcomponents:httpclient:${depVersions.commonsHttpClient}"
+  testImplementation "com.google.code.gson:gson:${depVersions.gson}"
+  testImplementation "com.google.guava:guava:${depVersions.guava}"
 }
-
-description = 'Pulsar Broker'
-
-task testsJar(type: Jar) {
-    archiveClassifier = 'tests'
-    from(sourceSets.test.output)
-}
-
-publishing.publications.maven.artifact(testsJar)
 
 protobuf {
   protoc {

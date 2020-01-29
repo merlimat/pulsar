@@ -3,9 +3,10 @@
  */
 
 dependencies {
-    implementation project(':pulsar-client-api')
+    api project(':pulsar-client-api')
     implementation project(':pulsar-client-original')
     implementation project(':pulsar-common')
+
     implementation "org.apache.pulsar:protobuf-shaded:${depVersions.protobufShaded}"
 
     implementation "org.glassfish.jersey.core:jersey-client:${depVersions.jersey}"

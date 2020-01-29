@@ -7,8 +7,15 @@ dependencies {
     implementation project(':pulsar-common')
     implementation project(':pulsar-client-api')
 
-    implementation "org.apache.bookkeeper:bookkeeper-server:${depVersions.bookkeeper}"
-    implementation "org.apache.zookeeper:zookeeper:${depVersions.zookeeper}"
+    implementation("org.apache.bookkeeper:bookkeeper-server:${depVersions.bookkeeper}") {
+		    exclude group: "org.slf4j", module: "slf4j-log4j12"
+        exclude group: "log4j", module: "log4j"
+    }
+
+    implementation("org.apache.zookeeper:zookeeper:${depVersions.zookeeper}") {
+      exclude group: "org.slf4j", module: "slf4j-log4j12"
+      exclude group: "log4j", module: "log4j"
+    }
     implementation "com.google.guava:guava:${depVersions.guava}"
 
     implementation "org.apache.commons:commons-lang3:${depVersions.commonsLang3}"

@@ -18,7 +18,7 @@
  */
 package org.apache.pulsar.io.debezium;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.debezium.annotation.ThreadSafe;
 import io.debezium.config.Configuration;

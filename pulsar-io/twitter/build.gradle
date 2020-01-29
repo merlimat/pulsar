@@ -4,12 +4,16 @@
 
 dependencies {
     implementation project(':pulsar-io:pulsar-io-core')
+    implementation project(':pulsar-io:pulsar-io-common')
+    implementation project(':pulsar-client-api')
+    implementation project(':pulsar-functions:pulsar-functions-api')
+    
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.1'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.1'
     implementation 'com.twitter:hbc-core:2.2.0'
     implementation 'commons-collections:commons-collections:3.2.2'
     implementation 'org.apache.commons:commons-lang3:3.4'
-    implementation project(':pulsar-io:pulsar-io-common')
+    
 }
 
 description = 'Pulsar IO :: Twitter'

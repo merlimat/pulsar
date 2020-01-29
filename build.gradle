@@ -13,12 +13,15 @@ allprojects {
 
 subprojects {
     apply from: "$rootDir/dependencies.gradle"
+
     apply plugin: 'java'
-    // apply plugin: 'com.google.protobuf'
+    apply plugin: 'java-library'
     apply plugin: 'maven-publish'
 
     repositories {
         mavenCentral()
+        jcenter()
+
         maven {
             url = 'https://yahoo.bintray.com/maven'
         }
@@ -26,47 +29,90 @@ subprojects {
         maven {
             url = 'https://repository.apache.org/snapshots'
         }
-
-        maven {
-            url = 'https://jcenter.bintray.com/'
-        }
     }
+
+    buildscript {
+    	repositories {
+    		jcenter()
+    	}
+    	dependencies {
+        	classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
+    	}
+	}
 
     dependencies {
       implementation "org.slf4j:slf4j-api:${depVersions.slf4j}"
-      testImplementation project(':buildtools')
-
+      
       testImplementation "org.testng:testng:${depVersions.testng}"
-      testImplementation 'org.mockito:mockito-core:2.28.2'
+      testImplementation "org.mockito:mockito-core:${depVersions.mockito}"
       testImplementation 'org.powermock:powermock-api-mockito2:2.0.2'
       testImplementation 'org.powermock:powermock-module-testng:2.0.2'
       testImplementation 'org.assertj:assertj-core:3.11.1'
-      // testImplementation "org.apache.bookkeeper:bookkeeper-server:${depVersions.bookkeeper}"
+      
+       // testImplementation "org.apache.bookkeeper:bookkeeper-server:${depVersions.bookkeeper}"
 
       compileOnly "org.projectlombok:lombok:${pluginVersions.lombok}"
       testCompileOnly "org.projectlombok:lombok:${pluginVersions.lombok}"
       annotationProcessor "org.projectlombok:lombok:${pluginVersions.lombok}"
       testAnnotationProcessor "org.projectlombok:lombok:${pluginVersions.lombok}"
-    }
 
-    sourceCompatibility = '1.8'
+    }
 
     configurations.all {
+ 	  exclude group: "org.slf4j", module: "slf4j-log4j12"
+	  exclude group: "log4j", module: "log4j"
+	  
+	  resolutionStrategy {
+		force "org.slf4j:slf4j-api:${depVersions.slf4j}"
+      }
+    }
+    
+    sourceCompatibility = '1.8'
+
+    configurations {
+    	testJar
     }
 
-    publishing {
-        publications {
-            maven(MavenPublication) {
-                from(components.java)
-            }
-        }
-    }
+    task testJar (type: Jar) {
+    	archiveBaseName = "${project.name}-test"
+    	from sourceSets.test.output
+	}
+  	artifacts {
+    	testJar testJar
+	}
+
+	// publishing {
+	//     publications {
+	// 		maven(MavenPublication) {
+	// 			from(components.java)
+    // 		}	 
+	// 	} 
+    // }    
 
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
     }
 
     test {
-        useTestNG()
+        useTestNG {
+        	options {
+        		parallel    = "tests"
+        		threadCount = 1
+        	}
+        }
+        
+        failFast = false
+        maxHeapSize = "1G"
+
+        systemProperty "pulsar.allocator.pooled", "false"
+		systemProperty "pulsar.allocator.leak_detection", "Advanced"
+		systemProperty "pulsar.allocator.exit_on_oom", "false"
+		systemProperty "log4j.configurationFile", "log4j2.xml"
+    }
+}
+
+configure(subprojects.findAll {it.name != 'pulsar-io-rabbitmq'}) {
+    dependencies {
+		testImplementation project(':buildtools')
     }
 }

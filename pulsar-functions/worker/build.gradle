@@ -3,25 +3,45 @@
  */
 
 dependencies {
+    implementation project(':pulsar-common')
     implementation project(':pulsar-broker-common')
     implementation project(':pulsar-functions:pulsar-functions-proto')
+    implementation project(':pulsar-functions:pulsar-functions-instance')
     implementation project(':pulsar-functions:pulsar-functions-runtime')
+    implementation project(':pulsar-functions:pulsar-functions-utils')
+    implementation project(':pulsar-functions:pulsar-functions-secrets')
+    implementation project(':pulsar-client-api')
     implementation project(':pulsar-client-original')
     implementation project(':pulsar-client-admin-original')
+    implementation project(':pulsar-zookeeper-utils')
 
-    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
-    implementation 'org.glassfish.jersey.core:jersey-server:2.27'
-    implementation 'org.glassfish.jersey.containers:jersey-container-servlet:2.27'
-    implementation 'org.glassfish.jersey.containers:jersey-container-servlet-core:2.27'
-    implementation 'org.glassfish.jersey.media:jersey-media-multipart:2.27'
-    implementation 'org.eclipse.jetty:jetty-server:9.4.20.v20190813'
-    implementation 'org.eclipse.jetty:jetty-servlet:9.4.20.v20190813'
-    implementation 'org.apache.distributedlog:distributedlog-core:4.10.0'
-    implementation 'commons-io:commons-io:2.5'
-    implementation 'io.swagger:swagger-core:1.5.21'
+    implementation("org.apache.distributedlog:distributedlog-core:${depVersions.bookkeeper}") {
+       exclude group: "org.slf4j", module: "slf4j-log4j12"
+	     exclude group: "log4j", module: "log4j"
+    }
+    implementation("org.apache.bookkeeper:stream-storage-java-client:${depVersions.bookkeeper}") {
+       exclude group: "org.slf4j", module: "slf4j-log4j12"
+       exclude group: "log4j", module: "log4j"
+    }
 
-//    testImplementation project(':pulsar-io:pulsar-io-cassandra')
-//    testImplementation project(':pulsar-io:pulsar-io-twitter')
+    implementation "org.glassfish.jersey.media:jersey-media-json-jackson:${depVersions.jersey}"
+    implementation "org.glassfish.jersey.core:jersey-server:${depVersions.jersey}"
+    implementation "org.glassfish.jersey.containers:jersey-container-servlet:${depVersions.jersey}"
+    implementation "org.glassfish.jersey.containers:jersey-container-servlet-core:${depVersions.jersey}"
+    implementation "org.glassfish.jersey.media:jersey-media-multipart:${depVersions.jersey}"
+    implementation "org.eclipse.jetty:jetty-server:${depVersions.jetty}"
+    implementation "org.eclipse.jetty:jetty-servlet:${depVersions.jetty}"
+
+    implementation "com.google.guava:guava:${depVersions.guava}"
+    implementation "io.swagger:swagger-core:${depVersions.swagger}"
+
+    testImplementation project(':pulsar-functions:pulsar-functions-api')
+    testImplementation project(':pulsar-io:pulsar-io-cassandra')
+    testImplementation project(':pulsar-io:pulsar-io-twitter')
+    testImplementation "io.prometheus:simpleclient:${depVersions.prometheus}"
+    testImplementation "com.google.protobuf:protobuf-java-util:${depVersions.protobuf3}"
+    testImplementation "org.apache.logging.log4j:log4j-api:${depVersions.log4j2}"
+    testImplementation "org.apache.logging.log4j:log4j-core:${depVersions.log4j2}"
 }
 
 description = 'Pulsar Functions :: Worker'

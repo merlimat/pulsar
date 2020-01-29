@@ -4,6 +4,11 @@
 
 dependencies {
     implementation project(':pulsar-broker')
-    implementation 'com.yahoo.athenz:athenz-zpe-java-client:1.8.38'
+    implementation project(':pulsar-broker-common')
+    
+    implementation "com.yahoo.athenz:athenz-zpe-java-client:${depVersions.athenz}"
+    implementation "org.apache.commons:commons-lang3:${depVersions.commonsLang3}"
+    implementation "com.google.guava:guava:${depVersions.guava}"
+    
     testImplementation project(':managed-ledger')
 }

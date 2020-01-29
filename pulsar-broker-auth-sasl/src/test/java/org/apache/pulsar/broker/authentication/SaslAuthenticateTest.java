@@ -24,6 +24,10 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.net.URI;
@@ -36,11 +40,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.login.Configuration;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.io.FileUtils;
-import org.apache.curator.shaded.com.google.common.collect.Maps;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.Authentication;
 import org.apache.pulsar.client.api.AuthenticationDataProvider;

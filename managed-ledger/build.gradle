@@ -20,10 +20,9 @@ dependencies {
 
   testImplementation "org.apache.pulsar:protobuf-shaded:${depVersions.protobufShaded}"
 
-  testCompile(group: 'org.apache.zookeeper', name: 'zookeeper', version: "${depVersions.zookeeper}", classifier: 'tests')
+  testImplementation(group: 'org.apache.zookeeper', name: 'zookeeper', version: "${depVersions.zookeeper}", classifier: 'tests')
 
-  // testImplementation 'junit:junit:4.12'
-  // testImplementation 'log4j:log4j:1.2.17'
+  testImplementation "junit:junit:${depVersions.junit}"
 }
 
 protobuf {

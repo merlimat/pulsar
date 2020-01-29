@@ -20,17 +20,16 @@ package org.apache.pulsar.websocket;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.netty.util.concurrent.DefaultThreadFactory;
+
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.ServletException;
-import javax.websocket.DeploymentException;
-
 import lombok.Setter;
+
 import org.apache.bookkeeper.common.util.OrderedScheduler;
 import org.apache.pulsar.broker.PulsarServerException;
 import org.apache.pulsar.broker.ServiceConfiguration;
@@ -39,7 +38,6 @@ import org.apache.pulsar.broker.authorization.AuthorizationService;
 import org.apache.pulsar.broker.cache.ConfigurationCacheService;
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.common.configuration.PulsarConfigurationLoader;
 import org.apache.pulsar.common.policies.data.ClusterData;
 import org.apache.pulsar.common.util.collections.ConcurrentOpenHashMap;
@@ -53,8 +51,6 @@ import org.apache.pulsar.zookeeper.ZookeeperClientFactoryImpl;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.netty.util.concurrent.DefaultThreadFactory;
 
 /**
  * Socket proxy server which initializes other dependent services and starts server by opening web-socket end-point url.
@@ -98,8 +94,7 @@ public class WebSocketService implements Closeable {
         this.proxyStats = new ProxyStats(this);
     }
 
-    public void start() throws PulsarServerException, PulsarClientException, MalformedURLException, ServletException,
-            DeploymentException {
+    public void start() throws PulsarServerException {
 
         if (isNotBlank(config.getConfigurationStoreServers())) {
             this.globalZkCache = new GlobalZooKeeperCache(getZooKeeperClientFactory(),

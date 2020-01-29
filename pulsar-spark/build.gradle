@@ -4,7 +4,8 @@
 
 dependencies {
     implementation project(':pulsar-client')
-    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation project(':pulsar-client-api')
+    
     implementation 'org.apache.spark:spark-streaming_2.10:2.1.0'
     implementation 'com.google.guava:guava:25.1-jre'
 }

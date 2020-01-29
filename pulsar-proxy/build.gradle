@@ -4,8 +4,22 @@
 
 dependencies {
     implementation project(':pulsar-client-original')
+    implementation project(':pulsar-client-api')
     implementation project(':pulsar-zookeeper-utils')
     implementation project(':pulsar-broker-common')
+    implementation project(':pulsar-common')
+
+    implementation "org.apache.pulsar:protobuf-shaded:${depVersions.protobufShaded}"
+    implementation "org.bouncycastle:bcpkix-jdk15on:${depVersions.bouncycastle}"
+
+    implementation "org.apache.bookkeeper:bookkeeper-common:${depVersions.bookkeeper}"
+    implementation "org.apache.zookeeper:zookeeper:${depVersions.zookeeper}"
+    implementation "org.apache.httpcomponents:httpclient:${depVersions.commonsHttpClient}"
+
+    implementation "io.netty:netty-transport:${depVersions.netty}"
+    implementation "io.netty:netty-resolver-dns:${depVersions.netty}"
+
+    implementation "com.google.guava:guava:${depVersions.guava}"
     implementation 'org.apache.commons:commons-lang3:3.4'
     implementation 'org.eclipse.jetty:jetty-server:9.4.20.v20190813'
     implementation 'org.eclipse.jetty:jetty-servlet:9.4.20.v20190813'
@@ -24,9 +38,15 @@ dependencies {
     implementation 'io.prometheus:simpleclient_servlet:0.5.0'
     implementation 'io.prometheus:simpleclient_jetty:0.5.0'
     implementation 'com.beust:jcommander:1.48'
+
     testImplementation project(':pulsar-broker')
-    testImplementation project(':pulsar-broker')
+    testImplementation project(path: ':pulsar-broker', configuration: 'testJar')
+    testImplementation project(':pulsar-client-admin-original')
+    testImplementation project(':pulsar-client-api')
     testImplementation project(':managed-ledger')
+
+    testImplementation "org.apache.avro:avro:${depVersions.avro}"
+    testImplementation "com.google.code.gson:gson:${depVersions.gson}"
 }
 
 description = 'Pulsar Proxy'

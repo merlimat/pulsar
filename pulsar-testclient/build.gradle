@@ -3,12 +3,23 @@
  */
 
 dependencies {
-    implementation 'org.apache.zookeeper:zookeeper:3.5.6'
+    
     implementation project(':pulsar-client-admin-original')
     implementation project(':pulsar-client-original')
+    implementation project(':pulsar-client-api')
+    implementation project(':pulsar-common')
     implementation project(':pulsar-broker')
+    implementation project(':managed-ledger')
+    
+    implementation "org.apache.zookeeper:zookeeper:${depVersions.zookeeper}"
+    implementation "org.apache.bookkeeper:bookkeeper-server:${depVersions.bookkeeper}"
+    implementation "com.google.guava:guava:${depVersions.guava}"
+    implementation "org.eclipse.jetty.websocket:websocket-api:${depVersions.jetty}"
+    implementation "org.eclipse.jetty.websocket:websocket-client:${depVersions.jetty}"
+    implementation "com.google.code.gson:gson:${depVersions.gson}"
+    implementation "commons-codec:commons-codec:${depVersions.commonsCodec}"
     implementation 'commons-configuration:commons-configuration:1.10'
-    implementation 'com.beust:jcommander:1.48'
+    implementation "com.beust:jcommander:${depVersions.jcommander}"
     implementation 'org.hdrhistogram:HdrHistogram:2.1.9'
     testImplementation project(':managed-ledger')
 }
