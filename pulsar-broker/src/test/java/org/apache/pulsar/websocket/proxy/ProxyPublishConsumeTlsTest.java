@@ -87,7 +87,6 @@ public class ProxyPublishConsumeTlsTest extends TlsProducerConsumerBase {
 //
 //    }
 
-    @Test(timeOut = 30000)
     @Ignore // PLSR-261 Test(timeOut = 30000)
     public void socketTest() throws InterruptedException, GeneralSecurityException {
         String consumerUri =
