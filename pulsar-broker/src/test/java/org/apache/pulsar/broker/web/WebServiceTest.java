@@ -46,7 +46,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 import org.apache.pulsar.broker.MockedBookKeeperClientFactory;
-import org.apache.pulsar.broker.NoOpShutdownService;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -257,7 +256,6 @@ public class WebServiceTest {
         config.setAdvertisedAddress("localhost"); // TLS certificate expects localhost
         config.setZookeeperServers("localhost:2181");
         pulsar = spy(new PulsarService(config));
-        pulsar.setShutdownService(new NoOpShutdownService());
         doReturn(zkFactory).when(pulsar).getZooKeeperClientFactory();
         doReturn(new MockedBookKeeperClientFactory()).when(pulsar).newBookKeeperClientFactory();
         pulsar.start();
