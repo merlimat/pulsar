@@ -304,7 +304,6 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
                 .loadDelayedDeliveryTrackerFactory(pulsar.getConfiguration());
 
         this.defaultServerBootstrap = defaultServerBootstrap();
-        this.interceptService = new InterceptService(pulsar.getConfiguration(), pulsar().getAdminClient());
     }
 
     // This call is used for starting additional protocol handlers
@@ -689,7 +688,7 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
         }
 
         try {
-            interceptService
+            getInterceptService()
                     .topics()
                     .createTopic(TopicName.get(topic), null);
         } catch (InterceptException e) {
@@ -2033,7 +2032,14 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
         }
     }
 
-    public InterceptService getInterceptService() {
+    public synchronized InterceptService getInterceptService() {
+        if (interceptService == null) {
+            try {
+                interceptService = new InterceptService(pulsar.getConfiguration(), pulsar().getAdminClient());
+            } catch (PulsarServerException e) {
+                throw new RuntimeException(e);
+            }
+        }
         return interceptService;
     }
 }
