@@ -26,6 +26,7 @@ checkin_unit:
   only:
     - merge_requests
     - branch-2.4-streamlio
+    - branch-2.5-streamlio
   script:
     - mvn -fae -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install
   after_script:
@@ -50,6 +51,7 @@ checkin_cpp:
   only:
     - merge_requests
     - branch-2.4-streamlio
+    - branch-2.5-streamlio
   script:
     - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp package -DskipTests
     - /bin/bash -c "cd pulsar-client-cpp && cmake . -DCMAKE_BUILD_TYPE=Debug && make check-format && make -j8"
