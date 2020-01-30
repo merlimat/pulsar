@@ -308,7 +308,7 @@ public class BrokerClientIntegrationTest extends ProducerConsumerBase {
      * @param subType
      * @throws Exception
      */
-    @Test(dataProvider = "subType")
+    @Ignore // PLSR-296 Test(dataProvider = "subType")
     public void testUnsupportedBatchMessageConsumer(SubscriptionType subType) throws Exception {
         log.info("-- Starting {} test --", methodName);
 

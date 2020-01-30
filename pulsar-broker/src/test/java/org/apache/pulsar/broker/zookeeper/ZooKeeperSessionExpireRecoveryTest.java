@@ -27,6 +27,7 @@ import org.apache.pulsar.common.policies.data.ClusterData;
 import org.apache.zookeeper.KeeperException.Code;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Sets;
@@ -48,7 +49,7 @@ public class ZooKeeperSessionExpireRecoveryTest extends MockedPulsarServiceBaseT
     /**
      * Verify we are able to recover when receiving a SessionExpired event on global ZK session
      */
-    @Test
+    @Ignore // PLSR-295
     public void testSessionExpired() throws Exception {
         admin.clusters().createCluster("my-cluster", new ClusterData("test-url"));
 
