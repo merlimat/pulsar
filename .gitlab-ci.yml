@@ -5,6 +5,7 @@ cache:
 variables:
   DOCKER_IMAGE: "aahmedse/maven"
   DOCKER_TAG: "3.6.1-jdk-8-dind"
+  PYPI_URL: "https://repo.splunk.com/artifactory/api/pypi/pypi"
 
 stages:
   - deploy
@@ -17,6 +18,36 @@ release_artifacts:
   script:
     - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install -DskipTests
     - ./release_maven.sh
+  when: manual
+
+release_pypi_alpine3.7:
+  image: apachepulsar/pulsar-build:alpine-cp37-cp37m
+  stage: deploy
+  cache: {}
+  script:
+    - export USE_FULL_POM_NAME=True
+    - export NAME_POSTFIX=-alpine
+    - cd pulsar-client-cpp
+    - cmake . -DBUILD_TESTS=OFF -DPYTHON_INCLUDE_DIR=/usr/include/python3.7m
+    - make -j8 _pulsar
+    - cd python
+    - python3 setup.py bdist_wheel
+    - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}" dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"
+  when: manual
+
+release_pypi_manylinux3.7:
+  image: apachepulsar/pulsar-build:manylinux-cp37-cp37m
+  stage: deploy
+  cache: {}
+  script:
+    - export USE_FULL_POM_NAME=True
+    - cd pulsar-client-cpp
+    - cmake . -DPYTHON_INCLUDE_DIR=/opt/python/cp37-cp37m/include/python3.7 -DPYTHON_LIBRARY=/opt/python/cp37-cp37m/lib -DLINK_STATIC=ON -DBUILD_TESTS=OFF
+    - make -j8 _pulsar
+    - cd python
+    - python3 setup.py bdist_wheel
+    - auditwheel repair dist/pulsar_client-*-$PYTHON_SPEC-linux_x86_64.whl
+    - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}" dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"
   when: manual
 
 checkin_unit:
