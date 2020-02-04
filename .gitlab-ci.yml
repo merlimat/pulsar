@@ -20,8 +20,25 @@ release_artifacts:
     - ./release_maven.sh
   when: manual
 
+# Python Build Job Start
+
+release_pypi_alpine3.6:
+  image: apachepulsar/pulsar-build:3.6-alpine3.9
+  stage: deploy
+  cache: {}
+  script:
+    - export USE_FULL_POM_NAME=True
+    - export NAME_POSTFIX=-alpine
+    - cd pulsar-client-cpp
+    - cmake . -DBUILD_TESTS=OFF -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m
+    - make -j8 _pulsar
+    - cd python
+    - python3 setup.py bdist_wheel
+    - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}" dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"
+  when: manual
+
 release_pypi_alpine3.7:
-  image: apachepulsar/pulsar-build:alpine-cp37-cp37m
+  image: apachepulsar/pulsar-build:3.7-alpine3.10
   stage: deploy
   cache: {}
   script:
@@ -29,6 +46,21 @@ release_pypi_alpine3.7:
     - export NAME_POSTFIX=-alpine
     - cd pulsar-client-cpp
     - cmake . -DBUILD_TESTS=OFF -DPYTHON_INCLUDE_DIR=/usr/include/python3.7m
+    - make -j8 _pulsar
+    - cd python
+    - python3 setup.py bdist_wheel
+    - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}" dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"
+  when: manual
+
+release_pypi_alpine3.8:
+  image: apachepulsar/pulsar-build:3.8-alpine3.11
+  stage: deploy
+  cache: {}
+  script:
+    - export USE_FULL_POM_NAME=True
+    - export NAME_POSTFIX=-alpine
+    - cd pulsar-client-cpp
+    - cmake . -DBUILD_TESTS=OFF -DPYTHON_INCLUDE_DIR=/usr/include/python3.8
     - make -j8 _pulsar
     - cd python
     - python3 setup.py bdist_wheel
@@ -49,6 +81,8 @@ release_pypi_manylinux3.7:
     - auditwheel repair dist/pulsar_client-*-$PYTHON_SPEC-linux_x86_64.whl
     - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}" dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"
   when: manual
+
+# Python Build Job End
 
 checkin_unit:
   image: apachepulsar/pulsar-build:latest
