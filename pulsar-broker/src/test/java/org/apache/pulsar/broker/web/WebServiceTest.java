@@ -51,6 +51,7 @@ import lombok.Cleanup;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -214,10 +215,11 @@ public class WebServiceTest {
     public void testMaxRequestSize() throws Exception {
         setupEnv(true, "1.0", true, false, false, false);
 
+        String url = pulsar.getWebServiceAddress() + "/admin/v2/tenants/my-tenant" + System.currentTimeMillis();
+
         @Cleanup
         CloseableHttpClient client = HttpClients.createDefault();
-        HttpPut httpPut = new HttpPut(
-                pulsar.getWebServiceAddress() + "/admin/v2/tenants/my-tenant" + System.currentTimeMillis());
+        HttpPut httpPut = new HttpPut(url);
         httpPut.setHeader("Content-Type", "application/json");
         httpPut.setHeader("Accept", "application/json");
 
@@ -236,6 +238,13 @@ public class WebServiceTest {
 
         response = client.execute(httpPut);
         assertEquals(response.getStatusLine().getStatusCode(), 204);
+
+        // Simple GET without content size should go through
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.setHeader("Content-Type", "application/json");
+        httpGet.setHeader("Accept", "application/json");
+        response = client.execute(httpGet);
+        assertEquals(response.getStatusLine().getStatusCode(), 200);
     }
 
     private String makeHttpRequest(boolean useTls, boolean useAuth) throws Exception {
