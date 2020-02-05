@@ -48,7 +48,7 @@ TEST(BackoffTest, mandatoryStopTestNegativeTest) {
     ASSERT_FALSE(withinTenPercentAndDecrementTimer(backoff, 400));
 }
 
-TEST(BackoffTest, DISABLED_firstBackoffTimerTest) {  // PLSR-232
+TEST(BackoffTest, firstBackoffTimerTest) {
     Backoff backoff(milliseconds(100), seconds(60), milliseconds(1900));
     ASSERT_EQ(backoff.next().total_milliseconds(), 100);
     boost::posix_time::ptime firstBackOffTime = PulsarFriend::getFirstBackoffTime(backoff);
@@ -59,7 +59,7 @@ TEST(BackoffTest, DISABLED_firstBackoffTimerTest) {  // PLSR-232
     backoff.reset();
     ASSERT_EQ(backoff.next().total_milliseconds(), 100);
     diffBackOffTime = PulsarFriend::getFirstBackoffTime(backoff) - firstBackOffTime;
-    ASSERT_TRUE(diffBackOffTime >= milliseconds(300) && diffBackOffTime < milliseconds(310));
+    ASSERT_TRUE(diffBackOffTime >= milliseconds(300) && diffBackOffTime < seconds(1));
 }
 
 TEST(BackoffTest, basicTest) {
