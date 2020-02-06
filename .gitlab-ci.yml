@@ -1,3 +1,8 @@
+before_script:
+  - eval $(ssh-agent -s)
+  - git config user.name "Streamlio CI"
+  - git config user.email "ssg-streamlio@splunk.com"
+
 cache:
   paths:
     - /root/.m2/repository
@@ -8,23 +13,15 @@ variables:
   PYPI_URL: "https://repo.splunk.com/artifactory/api/pypi/pypi"
 
 stages:
-  - deploy
+  - deploy-manual
   - ci
-
-release_artifacts:
-  image: $DOCKER_IMAGE:$DOCKER_TAG
-  stage: deploy
-  timeout: 60 mins
-  script:
-    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install -DskipTests
-    - ./release_maven.sh
-  when: manual
+  - deploy
 
 # Python Build Job Start
 
 release_pypi_alpine3.6:
   image: apachepulsar/pulsar-build:3.6-alpine3.9
-  stage: deploy
+  stage: deploy-manual
   cache: {}
   script:
     - export USE_FULL_POM_NAME=True
@@ -39,7 +36,7 @@ release_pypi_alpine3.6:
 
 release_pypi_alpine3.7:
   image: apachepulsar/pulsar-build:3.7-alpine3.10
-  stage: deploy
+  stage: deploy-manual
   cache: {}
   script:
     - export USE_FULL_POM_NAME=True
@@ -54,7 +51,7 @@ release_pypi_alpine3.7:
 
 release_pypi_alpine3.8:
   image: apachepulsar/pulsar-build:3.8-alpine3.11
-  stage: deploy
+  stage: deploy-manual
   cache: {}
   script:
     - export USE_FULL_POM_NAME=True
@@ -69,7 +66,7 @@ release_pypi_alpine3.8:
 
 release_pypi_manylinux3.7:
   image: apachepulsar/pulsar-build:manylinux-cp37-cp37m
-  stage: deploy
+  stage: deploy-manual
   cache: {}
   script:
     - export USE_FULL_POM_NAME=True
@@ -84,6 +81,15 @@ release_pypi_manylinux3.7:
 
 # Python Build Job End
 
+tag_release:
+  image: apachepulsar/pulsar-build:latest
+  stage: deploy
+  only:
+    - branch-2.4-streamlio
+    - branch-2.5-streamlio
+  script:
+    - build/splunk-tag-release.sh
+
 checkin_unit:
   image: apachepulsar/pulsar-build:latest
   stage: ci
@@ -92,6 +98,7 @@ checkin_unit:
     - merge_requests
     - branch-2.4-streamlio
     - branch-2.5-streamlio
+    - /^release-.*$/
   script:
     - mvn -fae -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install -DtestForkCount=1 -DtestReuseFork=false
   after_script:
@@ -117,6 +124,7 @@ checkin_cpp:
     - merge_requests
     - branch-2.4-streamlio
     - branch-2.5-streamlio
+    - /^release-.*$/
   script:
     - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp package -DskipTests
     - /bin/bash -c "cd pulsar-client-cpp && cmake . -DCMAKE_BUILD_TYPE=Debug && make check-format && make -j8"
@@ -128,3 +136,13 @@ checkin_cpp:
       - broker-logs/
     expire_in: 100 days
     when: always
+
+release_artifacts:
+  image: $DOCKER_IMAGE:$DOCKER_TAG
+  stage: deploy
+  timeout: 60 mins
+  only:
+    - /^release-.*$/
+  script:
+    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install -DskipTests
+    - ./release_maven.sh
