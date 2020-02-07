@@ -541,7 +541,7 @@ TEST(BasicEndToEndTest, testInvalidUrlPassed) {
     ASSERT_EQ(ResultConnectError, result);
 }
 
-TEST(BasicEndToEndTest, DISABLED_testPartitionedProducerConsumer) {  // PLSR-230
+TEST(BasicEndToEndTest, testPartitionedProducerConsumer) {
     Client client(lookupUrl);
     std::string topicName = "testPartitionedProducerConsumer";
 
