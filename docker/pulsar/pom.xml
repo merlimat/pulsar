@@ -85,18 +85,6 @@
                   </arguments>
                 </configuration>
               </execution>
-              <execution>
-                <id>build-pulsar-cpp-client-deb</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>exec</goal>
-                </goals>
-                <configuration>
-                  <skip>${skipBuildCppClient}</skip>
-                  <workingDirectory>${project.basedir}/target</workingDirectory>
-                  <executable>${project.basedir}/../../pulsar-client-cpp/pkg/deb/docker-build-deb.sh</executable>
-                </configuration>
-              </execution>
             </executions>
           </plugin>
           <plugin>
