@@ -2,6 +2,7 @@ before_script:
   - eval $(ssh-agent -s)
   - git config user.name "Streamlio CI"
   - git config user.email "ssg-streamlio@splunk.com"
+  - ulimit -c unlimited
 
 cache:
   paths:
@@ -131,9 +132,16 @@ checkin_cpp:
     - /bin/bash -c "cd pulsar-client-cpp && ./run-unit-tests.sh"
   after_script:
     - cp -r /tmp/pulsar-test-dist/logs broker-logs
+    - cp /tmp/*core* .
   artifacts:
     paths:
       - broker-logs/
+      - "pulsar-client-cpp/tests/main"
+      - "pulsar-client-cpp/tests/*core*"
+      - "pulsar-client-cpp/lib/libpulsar.so.*"
+      - "pulsar-client-cpp/lib/libpulsar.so"
+      - "pulsar-client-cpp/python/_pulsar.so"
+      - "*core*"
     expire_in: 100 days
     when: always
 
