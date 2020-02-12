@@ -2927,6 +2927,16 @@ TEST(BasicEndToEndTest, testPartitionedReceiveAsyncFailedConsumer) {
     client.shutdown();
 }
 
+static void expectTimeoutOnRecv(Consumer &consumer) {
+    Message msg;
+    Result res = consumer.receive(msg, 100);
+    if (res != ResultTimeout) {
+        LOG_ERROR("Received a msg when not expecting to id(" << msg.getMessageId() << ") "
+                                                             << msg.getDataAsString());
+    }
+    ASSERT_EQ(ResultTimeout, res);
+}
+
 void testNegativeAcks(const std::string &topic, bool batchingEnabled) {
     Client client(lookupUrl);
     Consumer consumer;
@@ -2948,14 +2958,24 @@ void testNegativeAcks(const std::string &topic, bool batchingEnabled) {
 
     producer.flush();
 
+    std::vector<MessageId> toNeg;
     for (int i = 0; i < 10; i++) {
         Message msg;
         consumer.receive(msg);
 
         LOG_INFO("Received message " << msg.getDataAsString());
         ASSERT_EQ(msg.getDataAsString(), "test-" + std::to_string(i));
-        consumer.negativeAcknowledge(msg);
+        toNeg.push_back(msg.getMessageId());
     }
+    // No more messages expected
+    expectTimeoutOnRecv(consumer);
+
+    PulsarFriend::setNegativeAckEnabled(consumer, false);
+    // negatively acknowledge all at once
+    for (auto &&msgId : toNeg) {
+        consumer.negativeAcknowledge(msgId);
+    }
+    PulsarFriend::setNegativeAckEnabled(consumer, true);
 
     for (int i = 0; i < 10; i++) {
         Message msg;
@@ -2968,9 +2988,7 @@ void testNegativeAcks(const std::string &topic, bool batchingEnabled) {
     }
 
     // No more messages expected
-    Message msg;
-    Result res = consumer.receive(msg, 100);
-    ASSERT_EQ(ResultTimeout, res);
+    expectTimeoutOnRecv(consumer);
 
     client.shutdown();
 }

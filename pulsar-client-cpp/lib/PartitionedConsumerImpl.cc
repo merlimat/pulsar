@@ -478,4 +478,11 @@ void PartitionedConsumerImpl::seekAsync(uint64_t timestamp, ResultCallback callb
     callback(ResultOperationNotSupported);
 }
 
+void PartitionedConsumerImpl::setNegativeAcknowledgeEnabledForTesting(bool enabled) {
+    Lock lock(mutex_);
+    for (auto&& c : consumers_) {
+        c->setNegativeAcknowledgeEnabledForTesting(enabled);
+    }
+}
+
 }  // namespace pulsar
