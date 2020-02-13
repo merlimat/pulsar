@@ -3,6 +3,7 @@ before_script:
   - git config user.name "Streamlio CI"
   - git config user.email "ssg-streamlio@splunk.com"
   - ulimit -c unlimited
+  - export MAVEN_OPTS="-Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=yyyy-MM-dd'T'HH:mm:ss.SSSZ -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO"
 
 cache:
   paths:
@@ -88,7 +89,7 @@ checkin_unit:
     - branch-2.5-streamlio
     - /^release-.*$/
   script:
-    - mvn -fae -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install -DtestForkCount=1 -DtestReuseFork=false
+    - mvn -fae -B --show-version -ntp install -DtestForkCount=1 -DtestReuseFork=false
   after_script:
     - tar zcf test-results.tgz */target/surefire-reports/
     - echo "[START_TEST_SUMMARY]"
@@ -114,7 +115,7 @@ checkin_cpp:
     - branch-2.5-streamlio
     - /^release-.*$/
   script:
-    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp package -DskipTests
+    - mvn -B --show-version -ntp package -DskipTests
     - /bin/bash -c "cd pulsar-client-cpp && cmake . -DCMAKE_BUILD_TYPE=Debug && make check-format && make -j8"
     - /bin/bash -c "cd pulsar-client-cpp && ./run-unit-tests.sh"
   after_script:
@@ -139,5 +140,5 @@ release_artifacts:
   only:
     - /^release-.*$/
   script:
-    - mvn -B -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO --show-version -ntp install -DskipTests
+    - mvn -B --show-version -ntp install -DskipTests
     - ./release_maven.sh
