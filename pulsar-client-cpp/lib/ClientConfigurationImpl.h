@@ -34,7 +34,7 @@ struct ClientConfigurationImpl {
     std::string tlsTrustCertsFilePath;
     bool tlsAllowInsecureConnection;
     unsigned int statsIntervalInSeconds;
-    LoggerFactoryPtr loggerFactory;
+    std::unique_ptr<LoggerFactory> loggerFactory;
     bool validateHostName;
 
     ClientConfigurationImpl()
@@ -49,6 +49,8 @@ struct ClientConfigurationImpl {
           statsIntervalInSeconds(600),  // 10 minutes
           loggerFactory(),
           validateHostName(false) {}
+
+    std::unique_ptr<LoggerFactory> takeLogger() { return std::move(loggerFactory); }
 };
 }  // namespace pulsar
 
