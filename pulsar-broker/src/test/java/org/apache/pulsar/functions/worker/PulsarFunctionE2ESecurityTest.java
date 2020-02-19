@@ -273,7 +273,7 @@ public class PulsarFunctionE2ESecurityTest {
         return functionConfig;
     }
 
-    @Test
+    @Ignore // PLSR-276
     public void testAuthorizationWithAnonymousUser() throws Exception {
 
         final String replNamespace = TENANT + "/" + NAMESPACE;
