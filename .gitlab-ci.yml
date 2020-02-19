@@ -89,7 +89,7 @@ checkin_unit:
     - branch-2.5-streamlio
     - /^release-.*$/
   script:
-    - mvn -fae -B --show-version -ntp install -DtestForkCount=1 -DtestReuseFork=false
+    - timeout 170m mvn -fae -B --show-version -ntp install -DtestForkCount=1 -DtestReuseFork=false
   after_script:
     - tar zcf test-results.tgz */target/surefire-reports/
     - echo "[START_TEST_SUMMARY]"
