@@ -18,6 +18,7 @@
  */
 package org.apache.pulsar.broker.auth;
 
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
@@ -212,9 +213,6 @@ public abstract class MockedPulsarServiceBaseTest {
         pulsar.start();
         conf.setAuthorizationEnabled(isAuthorizationEnabled);
 
-        Compactor spiedCompactor = spy(pulsar.getCompactor());
-        doReturn(spiedCompactor).when(pulsar).getCompactor();
-
         return pulsar;
     }
 
@@ -227,6 +225,10 @@ public abstract class MockedPulsarServiceBaseTest {
         doReturn(namespaceServiceSupplier).when(pulsar).getNamespaceServiceProvider();
 
         doReturn(sameThreadOrderedSafeExecutor).when(pulsar).getOrderedExecutor();
+
+        doAnswer((invocation) -> {
+                return spy(invocation.callRealMethod());
+            }).when(pulsar).newCompactor();
     }
 
     public static MockZooKeeper createMockZooKeeper() throws Exception {
