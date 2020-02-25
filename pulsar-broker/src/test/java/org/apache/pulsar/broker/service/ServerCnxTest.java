@@ -112,7 +112,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 /**
@@ -340,7 +339,7 @@ public class ServerCnxTest {
         channel.finish();
     }
 
-    @Ignore // PLSR-254 Test(timeOut = 30000)
+    @Test(timeOut = 30000)
     public void testConnectCommandWithAuthenticationPositive() throws Exception {
         AuthenticationService authenticationService = mock(AuthenticationService.class);
         AuthenticationProvider authenticationProvider = mock(AuthenticationProvider.class);
