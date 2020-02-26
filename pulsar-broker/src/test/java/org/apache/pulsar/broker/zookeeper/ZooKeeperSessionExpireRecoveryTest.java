@@ -26,8 +26,8 @@ import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.common.policies.data.ClusterData;
 import org.apache.zookeeper.KeeperException.Code;
 import org.apache.zookeeper.MockZooKeeper;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 import org.slf4j.Logger;
@@ -38,13 +38,13 @@ import com.google.common.collect.Sets;
 public class ZooKeeperSessionExpireRecoveryTest extends MockedPulsarServiceBaseTest {
     private static final Logger log = LoggerFactory.getLogger(ZooKeeperSessionExpireRecoveryTest.class);
 
-    @BeforeClass
+    @BeforeMethod
     @Override
     protected void setup() throws Exception {
         super.internalSetup();
     }
 
-    @AfterClass
+    @AfterMethod
     @Override
     protected void cleanup() throws Exception {
         super.internalCleanup();
