@@ -86,6 +86,7 @@ import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.policies.data.loadbalancer.LocalBrokerData;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException.Code;
+import org.apache.zookeeper.MockZooKeeper;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.mockito.ArgumentCaptor;
@@ -93,7 +94,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class AdminTest extends MockedPulsarServiceBaseTest {
+    private static final Logger log = LoggerFactory.getLogger(AdminTest.class);
+
     private final String configClusterName = "use";
     private ConfigurationCacheService configurationCache;
     private Clusters clusters;
@@ -317,7 +323,10 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
         }
 
         // Test zk failures
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET_CHILDREN
+                    && path.equals("/admin/clusters");
+            });
         configurationCache.clustersListCache().clear();
         try {
             clusters.getClusters();
@@ -326,7 +335,11 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.CREATE
+                    && path.equals("/admin/clusters/test");
+            });
+
         try {
             clusters.createCluster("test", new ClusterData("http://broker.messaging.test.example.com"));
             fail("should have failed");
@@ -334,7 +347,11 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET
+                    && path.equals("/admin/clusters/test");
+            });
+
         try {
             clusters.updateCluster("test", new ClusterData("http://broker.messaging.test.example.com"));
             fail("should have failed");
@@ -342,7 +359,11 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET
+                    && path.equals("/admin/clusters/test");
+            });
+
         try {
             clusters.getCluster("test");
             fail("should have failed");
@@ -350,7 +371,11 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failAfter(0, Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET_CHILDREN
+                    && path.equals("/admin/policies");
+            });
+
         try {
             clusters.deleteCluster("use");
             fail("should have failed");
@@ -358,7 +383,10 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failAfter(1, Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET
+                    && path.equals("/admin/clusters/use/namespaceIsolationPolicies");
+            });
         try {
             clusters.deleteCluster("use");
             fail("should have failed");
@@ -434,7 +462,10 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
         }
 
         // Test zk failures
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET_CHILDREN
+                    && path.equals("/admin/policies");
+            });
         try {
             properties.getTenants();
             fail("should have failed");
@@ -442,7 +473,10 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET
+                    && path.equals("/admin/policies/my-tenant");
+            });
         try {
             properties.getTenantAdmin("my-tenant");
             fail("should have failed");
@@ -450,7 +484,10 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET
+                    && path.equals("/admin/policies/my-tenant");
+            });
         try {
             properties.updateTenant("my-tenant", newPropertyAdmin);
             fail("should have failed");
@@ -458,7 +495,10 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.CREATE
+                    && path.equals("/admin/policies/test");
+            });
         try {
             properties.createTenant("test", tenantInfo);
             fail("should have failed");
@@ -466,7 +506,10 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
             assertEquals(e.getResponse().getStatus(), Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
 
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.GET_CHILDREN
+                    && path.equals("/admin/policies/my-tenant");
+            });
         try {
             properties.deleteTenant("my-tenant");
             fail("should have failed");
@@ -475,7 +518,11 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
         }
 
         properties.createTenant("error-property", tenantInfo);
-        mockZookKeeper.failAfter(2, Code.SESSIONEXPIRED);
+
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.DELETE
+                    && path.equals("/admin/policies/error-property");
+            });
         try {
             properties.deleteTenant("error-property");
             fail("should have failed");

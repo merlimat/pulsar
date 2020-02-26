@@ -82,6 +82,7 @@ import org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedCursorInfo;
 import org.apache.bookkeeper.mledger.proto.MLDataFormats.PositionInfo;
 import org.apache.bookkeeper.test.MockedBookKeeperTestCase;
 import org.apache.zookeeper.KeeperException.Code;
+import org.apache.zookeeper.MockZooKeeper;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
@@ -1097,7 +1098,11 @@ public class ManagedCursorTest extends MockedBookKeeperTestCase {
         ManagedLedger ledger = factory.open("my_test_ledger");
 
         bkc.failAfter(1, BKException.Code.NotEnoughBookiesException);
-        zkc.failNow(Code.SESSIONEXPIRED);
+        zkc.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return path.equals("/managed-ledgers/my_test_ledger/c1")
+                    && op == MockZooKeeper.Op.CREATE;
+            });
+
         try {
             ledger.openCursor("c1");
             fail("should have failed");

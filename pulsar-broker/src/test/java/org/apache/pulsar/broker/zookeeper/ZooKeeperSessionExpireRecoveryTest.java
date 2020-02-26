@@ -25,14 +25,18 @@ import org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.common.policies.data.ClusterData;
 import org.apache.zookeeper.KeeperException.Code;
+import org.apache.zookeeper.MockZooKeeper;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
 public class ZooKeeperSessionExpireRecoveryTest extends MockedPulsarServiceBaseTest {
+    private static final Logger log = LoggerFactory.getLogger(ZooKeeperSessionExpireRecoveryTest.class);
 
     @BeforeClass
     @Override
@@ -49,13 +53,16 @@ public class ZooKeeperSessionExpireRecoveryTest extends MockedPulsarServiceBaseT
     /**
      * Verify we are able to recover when receiving a SessionExpired event on global ZK session
      */
-    @Ignore // PLSR-295
+    @Test
     public void testSessionExpired() throws Exception {
         admin.clusters().createCluster("my-cluster", new ClusterData("test-url"));
 
         assertTrue(Sets.newHashSet(admin.clusters().getClusters()).contains("my-cluster"));
 
-        mockZookKeeper.failNow(Code.SESSIONEXPIRED);
+        mockZookKeeper.failConditional(Code.SESSIONEXPIRED, (op, path) -> {
+                return op == MockZooKeeper.Op.CREATE
+                    && path.equals("/admin/clusters/my-cluster-2");
+            });
 
         assertTrue(Sets.newHashSet(admin.clusters().getClusters()).contains("my-cluster"));
 
