@@ -18,6 +18,9 @@
  */
 package org.apache.pulsar.broker.service.persistent;
 
+import static org.apache.pulsar.broker.cache.ConfigurationCacheService.POLICIES;
+import static org.apache.pulsar.broker.web.PulsarWebResource.path;
+
 import com.carrotsearch.hppc.ObjectObjectHashMap;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -97,6 +100,7 @@ import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.common.api.proto.PulsarApi;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandSubscribe.InitialPosition;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandSubscribe.SubType;
+import org.apache.pulsar.common.naming.NamespaceName;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.policies.data.BacklogQuota;
 import org.apache.pulsar.common.policies.data.ConsumerStats;
@@ -209,7 +213,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
         this.replicators = new ConcurrentOpenHashMap<>(16, 1);
         USAGE_COUNT_UPDATER.set(this, 0);
 
-        initializeDispatchRateLimiterIfNeeded(Optional.empty());
+        initializeDispatchRateLimiterIfNeeded(getPolicies(brokerService, topic));
 
         this.compactedTopic = new CompactedTopicImpl(brokerService.pulsar().getBookKeeperClient());
 
@@ -270,11 +274,11 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
             // dispatch rate limiter for topic
             if (!dispatchRateLimiter.isPresent() && DispatchRateLimiter
                     .isDispatchRateNeeded(brokerService, policies, topic, Type.TOPIC)) {
-                this.dispatchRateLimiter = Optional.of(new DispatchRateLimiter(this, Type.TOPIC));
+                this.dispatchRateLimiter = Optional.of(new DispatchRateLimiter(this, Type.TOPIC, policies));
             }
             if (!subscribeRateLimiter.isPresent() && SubscribeRateLimiter
                     .isDispatchRateNeeded(brokerService, policies, topic)) {
-                this.subscribeRateLimiter = Optional.of(new SubscribeRateLimiter(this));
+                this.subscribeRateLimiter = Optional.of(new SubscribeRateLimiter(this, policies));
             }
 
             // dispatch rate limiter for each subscription
@@ -1701,7 +1705,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
         schemaValidationEnforced = data.schema_validation_enforced;
 
         initializeDispatchRateLimiterIfNeeded(Optional.ofNullable(data));
-        
+
         this.updateMaxPublishRate(data);
 
         producers.values().forEach(producer -> {
@@ -2013,5 +2017,20 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
 
     public CompactedTopic getCompactedTopic() {
         return compactedTopic;
+    }
+
+    public static Optional<Policies> getPolicies(BrokerService brokerService, String topicName) {
+        final NamespaceName namespace = TopicName.get(topicName).getNamespaceObject();
+        final String path = path(POLICIES, namespace.toString());
+        Optional<Policies> policies = Optional.empty();
+        try {
+            policies = brokerService.pulsar().getConfigurationCache()
+                .policiesCache().getAsync(path).get(
+                        brokerService.pulsar().getConfiguration().getZooKeeperOperationTimeoutSeconds(),
+                        TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.warn("Failed to get message-rate for {} ", topicName, e);
+        }
+        return policies;
     }
 }

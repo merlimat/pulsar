@@ -34,6 +34,9 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -84,6 +87,15 @@ public abstract class ZooKeeperCache implements Watcher {
     protected final AsyncLoadingCache<String, Set<String>> childrenCache;
     protected final AsyncLoadingCache<String, Boolean> existsCache;
     private final OrderedExecutor executor;
+    private final ForkJoinPool cacheExecutor = new ForkJoinPool(
+            4, (pool) -> {
+                ForkJoinWorkerThread t = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                t.setName("zk-cache-fj-" + t.getPoolIndex());
+                return t;
+            },
+            (thread, exception) -> {
+                LOG.error("Uncaught exception in thread {}", thread.getName(), exception);
+            }, false);
     private final OrderedExecutor backgroundExecutor = OrderedExecutor.newBuilder().name("zk-cache-background").numThreads(2).build();
     private boolean shouldShutdownExecutor;
     private final int zkOperationTimeoutSeconds;
@@ -98,19 +110,22 @@ public abstract class ZooKeeperCache implements Watcher {
         this.shouldShutdownExecutor = false;
 
         this.dataCache = Caffeine.newBuilder()
-                .recordStats()
-                .expireAfterWrite(5, TimeUnit.MINUTES)
-                .buildAsync((key, executor1) -> null);
+            .recordStats()
+            .executor(cacheExecutor)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .buildAsync((key, executor1) -> null);
 
         this.childrenCache = Caffeine.newBuilder()
-                .recordStats()
-                .expireAfterWrite(5, TimeUnit.MINUTES)
-                .buildAsync((key, executor1) -> null);
+            .recordStats()
+            .executor(cacheExecutor)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .buildAsync((key, executor1) -> null);
 
         this.existsCache = Caffeine.newBuilder()
-                .recordStats()
-                .expireAfterWrite(5, TimeUnit.MINUTES)
-                .buildAsync((key, executor1) -> null);
+            .recordStats()
+            .executor(cacheExecutor)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .buildAsync((key, executor1) -> null);
 
         CacheMetricsCollector.CAFFEINE.addCache(cacheName + "-data", dataCache);
         CacheMetricsCollector.CAFFEINE.addCache(cacheName + "-children", childrenCache);
@@ -490,5 +505,6 @@ public abstract class ZooKeeperCache implements Watcher {
         }
 
         this.backgroundExecutor.shutdown();
+        this.cacheExecutor.shutdown();
     }
 }

@@ -111,7 +111,8 @@ public class PersistentReplicator extends AbstractReplicator implements Replicat
             topic.getBrokerService().pulsar().getConfiguration().getDispatcherMaxReadBatchSize());
         producerQueueThreshold = (int) (producerQueueSize * 0.9);
 
-        this.initializeDispatchRateLimiterIfNeeded(Optional.empty());
+        this.initializeDispatchRateLimiterIfNeeded(
+            PersistentTopic.getPolicies(topic.getBrokerService(), topic.getName()));
 
         startProducer();
     }
@@ -651,7 +652,7 @@ public class PersistentReplicator extends AbstractReplicator implements Replicat
     public void initializeDispatchRateLimiterIfNeeded(Optional<Policies> policies) {
         if (!dispatchRateLimiter.isPresent() && DispatchRateLimiter
             .isDispatchRateNeeded(topic.getBrokerService(), policies, topic.getName(), Type.REPLICATOR)) {
-            this.dispatchRateLimiter = Optional.of(new DispatchRateLimiter(topic, Type.REPLICATOR));
+            this.dispatchRateLimiter = Optional.of(new DispatchRateLimiter(topic, Type.REPLICATOR, policies));
         }
     }
 

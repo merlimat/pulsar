@@ -121,7 +121,8 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
                 .getMaxUnackedMessagesPerSubscription();
         this.isDelayedDeliveryEnabled = topic.getBrokerService().pulsar().getConfiguration()
                 .isDelayedDeliveryEnabled();
-        this.initializeDispatchRateLimiterIfNeeded(Optional.empty());
+
+        initializeDispatchRateLimiterIfNeeded(PersistentTopic.getPolicies(topic.getBrokerService(), topic.getName()));
     }
 
     @Override
@@ -718,7 +719,7 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
     public void initializeDispatchRateLimiterIfNeeded(Optional<Policies> policies) {
         if (!dispatchRateLimiter.isPresent() && DispatchRateLimiter
                 .isDispatchRateNeeded(topic.getBrokerService(), policies, topic.getName(), Type.SUBSCRIPTION)) {
-            this.dispatchRateLimiter = Optional.of(new DispatchRateLimiter(topic, Type.SUBSCRIPTION));
+            this.dispatchRateLimiter = Optional.of(new DispatchRateLimiter(topic, Type.SUBSCRIPTION, policies));
         }
     }
 
