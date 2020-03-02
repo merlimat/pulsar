@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+sleep 10s
+
+JVMS=$(pgrep java)
+while [ $? = 0 ]; do
+    date >> process-debug.log
+    ps -ef >> process-debug.log
+    for j in $JVMS; do
+        echo Process $j >> process-debug.log
+        jstack $j >> process-debug.log
+    done
+    df -h >> process-debug.log
+    sleep 10m
+    JVMS=$(pgrep java)
+done

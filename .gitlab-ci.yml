@@ -89,8 +89,10 @@ checkin_unit:
     - branch-2.5-streamlio
     - /^release-.*$/
   script:
+    - dev/monitor-mvn &
     - timeout 170m mvn -fae -B --show-version -ntp install -DtestForkCount=1 -DtestReuseFork=false
   after_script:
+    - date
     - tar zcf test-results.tgz */target/surefire-reports/
     - echo "[START_TEST_SUMMARY]"
     - build/testsummary.py */target/surefire-reports/TEST-*.xml
@@ -99,6 +101,7 @@ checkin_unit:
   artifacts:
     paths:
       - test-results.tgz
+      - process-debug.log
     expire_in: 100 days
     when: always
     reports:
