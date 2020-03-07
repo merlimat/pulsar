@@ -93,7 +93,7 @@ public class NonPersistentTopics extends PersistentTopics {
             @PathParam("topic") @Encoded String encodedTopic,
             @QueryParam("authoritative") @DefaultValue("false") boolean authoritative) {
         validateTopicName(property, cluster, namespace, encodedTopic);
-        validateAdminOperationOnTopic(authoritative);
+        validateReadOperationOnTopic(authoritative);
         Topic topic = getTopicReference(topicName);
         return ((NonPersistentTopic) topic).getStats();
     }
