@@ -40,16 +40,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.bookkeeper.bookie.Bookie;
 import org.apache.bookkeeper.bookie.BookieException;
+import org.apache.bookkeeper.bookie.BookieResources;
 import org.apache.bookkeeper.bookie.storage.ldb.DbLedgerStorage;
 import org.apache.bookkeeper.client.BookKeeperTestClient;
 import org.apache.bookkeeper.common.allocator.PoolingPolicy;
 import org.apache.bookkeeper.conf.AbstractConfiguration;
 import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
+import org.apache.bookkeeper.meta.MetadataBookieDriver;
 import org.apache.bookkeeper.metastore.InMemoryMetaStore;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.proto.BookieServer;
 import org.apache.bookkeeper.replication.AutoRecoveryMain;
+import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.commons.io.FileUtils;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -207,7 +210,7 @@ public abstract class BookKeeperClusterTestCase {
         tmpDirs.add(f);
         f.delete();
         f.mkdir();
-        
+
         int port = 0;
         return newServerConfiguration(port, zkUtil.getZooKeeperConnectString(), f, new File[] { f }, ledgerRootPath);
     }
@@ -435,7 +438,9 @@ public abstract class BookKeeperClusterTestCase {
      *
      */
     protected BookieServer startBookie(ServerConfiguration conf, String ledgerRootPath) throws Exception {
-        BookieServer server = new BookieServer(conf);
+        BookieServer server = new BookieServer(conf,
+                BookieResources.createMetadataDriver(conf, NullStatsLogger.INSTANCE),
+                NullStatsLogger.INSTANCE);
         bsConfs.add(conf);
         bs.add(server);
 
@@ -467,9 +472,11 @@ public abstract class BookKeeperClusterTestCase {
      * isAutoRecoveryEnabled is true.
      */
     protected BookieServer startBookie(ServerConfiguration conf, final Bookie b) throws Exception {
-        BookieServer server = new BookieServer(conf) {
+        BookieServer server = new BookieServer(conf, BookieResources.createMetadataDriver(conf, NullStatsLogger.INSTANCE),
+                NullStatsLogger.INSTANCE) {
             @Override
-            protected Bookie newBookie(ServerConfiguration conf, ByteBufAllocator allocator)
+            protected Bookie newBookie(ServerConfiguration conf, MetadataBookieDriver metadataBookieDriver,
+                    ByteBufAllocator allocator)
                     throws IOException, KeeperException, InterruptedException, BookieException {
                 return b;
             }

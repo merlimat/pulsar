@@ -111,7 +111,7 @@ checkin_unit:
 checkin_cpp:
   image: apachepulsar/pulsar-build:latest
   stage: ci
-  timeout: 120 mins
+  timeout: 180 mins
   only:
     - merge_requests
     - branch-2.4-streamlio

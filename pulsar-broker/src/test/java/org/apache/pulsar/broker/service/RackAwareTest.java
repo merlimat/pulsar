@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.bookkeeper.bookie.BookieResources;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.BookKeeper.DigestType;
 import org.apache.bookkeeper.client.LedgerHandle;
@@ -70,7 +71,9 @@ public class RackAwareTest extends BrokerBkEnsemblesTests {
             String addr = String.format("10.0.0.%d", i + 1);
             conf.setAdvertisedAddress(addr);
 
-            BookieServer bs = new BookieServer(conf, NullStatsLogger.INSTANCE);
+            BookieServer bs = new BookieServer(conf,
+                    BookieResources.createMetadataDriver(conf, NullStatsLogger.INSTANCE),
+                    NullStatsLogger.INSTANCE);
 
             bs.start();
             bookies.add(bs);

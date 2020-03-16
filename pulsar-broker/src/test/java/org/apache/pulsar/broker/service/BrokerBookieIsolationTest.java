@@ -34,6 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.bookkeeper.bookie.Bookie;
+import org.apache.bookkeeper.bookie.BookieImpl;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.api.LedgerMetadata;
 import org.apache.bookkeeper.meta.LedgerManager;
@@ -201,7 +202,7 @@ public class BrokerBookieIsolationTest {
         PersistentTopic topic4 = (PersistentTopic) createTopicAndPublish(pulsarClient, ns4, "topic1", totalPublish);
 
         Bookie bookie1 = bookies[0].getBookie();
-        Field ledgerManagerField = Bookie.class.getDeclaredField("ledgerManager");
+        Field ledgerManagerField = BookieImpl.class.getDeclaredField("ledgerManager");
         ledgerManagerField.setAccessible(true);
         LedgerManager ledgerManager = (LedgerManager) ledgerManagerField.get(bookie1);
 
@@ -331,7 +332,7 @@ public class BrokerBookieIsolationTest {
         PersistentTopic topic3 = (PersistentTopic) createTopicAndPublish(pulsarClient, ns3, "topic1", totalPublish);
 
         Bookie bookie1 = bookies[0].getBookie();
-        Field ledgerManagerField = Bookie.class.getDeclaredField("ledgerManager");
+        Field ledgerManagerField = BookieImpl.class.getDeclaredField("ledgerManager");
         ledgerManagerField.setAccessible(true);
         LedgerManager ledgerManager = (LedgerManager) ledgerManagerField.get(bookie1);
 
