@@ -34,8 +34,11 @@ release_alpine3.8_image_playground:
     - eval $(creds-helper docker --eval ${PLAYGROUND_DOCKER_PATH})
     - ./pulsar-client-cpp/docker/alpine/build-alpine-image.sh
     - export POM_PROJECT_VERSION=$(python src/get-project-version.py)
-    - docker tag pulsar-alpine3.8:${POM_PROJECT_VERSION} ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${POM_PROJECT_VERSION}
-    - docker push ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${POM_PROJECT_VERSION}
+    - CUR_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    - NEW_VERSION=$(echo $CUR_VERSION | sed 's/\([0-9]*\.[0-9]\.[0-9]\).*/\1.SPLK.'$CI_JOB_ID'/')
+    - echo "Docker TAG ${NEW_VERSION}"
+    - docker tag pulsar-alpine3.8:${POM_PROJECT_VERSION} ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${NEW_VERSION}
+    - docker push ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${NEW_VERSION}
   when: manual
 
 release_alpine3.8_image_production:
@@ -47,8 +50,11 @@ release_alpine3.8_image_production:
     - eval $(creds-helper docker --eval ${PRODUCTION_DOCKER_PATH})
     - ./pulsar-client-cpp/docker/alpine/build-alpine-image.sh
     - export POM_PROJECT_VERSION=$(python src/get-project-version.py)
-    - docker tag pulsar-alpine3.8:${POM_PROJECT_VERSION} ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${POM_PROJECT_VERSION}
-    - docker push ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${POM_PROJECT_VERSION}
+    - CUR_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    - NEW_VERSION=$(echo $CUR_VERSION | sed 's/\([0-9]*\.[0-9]\.[0-9]\).*/\1.SPLK.'$CI_JOB_ID'/')
+    - echo "Docker TAG ${NEW_VERSION}"
+    - docker tag pulsar-alpine3.8:${POM_PROJECT_VERSION} ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${NEW_VERSION}
+    - docker push ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${NEW_VERSION}
   when: manual
 
 # == Python Build Job Start
