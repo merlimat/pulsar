@@ -91,8 +91,6 @@ checkin_unit:
   timeout: 180 mins
   only:
     - merge_requests
-    - branch-2.4-streamlio
-    - branch-2.5-streamlio
   script:
     - dev/monitor-mvn &
     - timeout 170m mvn -fae -B --show-version -ntp install -DtestForkCount=1 -DtestReuseFork=false
@@ -119,8 +117,6 @@ checkin_cpp:
   timeout: 180 mins
   only:
     - merge_requests
-    - branch-2.4-streamlio
-    - branch-2.5-streamlio
   script:
     - mvn -B --show-version -ntp package -DskipTests
     - /bin/bash -c "cd pulsar-client-cpp && cmake . -DCMAKE_BUILD_TYPE=Debug && make check-format && make -j8"
