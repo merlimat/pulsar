@@ -1915,6 +1915,11 @@ public class PersistentTopicsBase extends AdminResource {
             }
 
             admin.topics().getStatsAsync(topicName.getPartition(0).toString()).thenAccept(stats -> {
+                if (stats.subscriptions.isEmpty()) {
+                    result.complete(null);
+                    return;
+                }
+
                 stats.subscriptions.keySet().forEach(subscription -> {
                     List<CompletableFuture<Void>> subscriptionFutures = new ArrayList<>();
                     for (int i = partitionMetadata.partitions; i < numPartitions; i++) {
