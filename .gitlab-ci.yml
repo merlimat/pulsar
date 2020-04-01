@@ -25,7 +25,7 @@ stages:
 
 # Deploy alpine image to docker repo Build Job Start
 
-release_alpine_image:
+release_alpine3.11_image_playground:
   image: aahmedse/maven:3.6.1-jdk-8-dind
   stage: deploy-manual
   cache: {}
@@ -35,14 +35,25 @@ release_alpine_image:
     - ./pulsar-client-cpp/docker/alpine/build-alpine-image.sh
     - export POM_PROJECT_VERSION=$(python src/get-project-version.py)
     - CUR_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-    - NEW_VERSION=$(echo $CUR_VERSION | sed 's/\([0-9]*\.[0-9]\.[0-9]\).*/\1.SPLK.'$CI_JOB_ID'/')
+    - NEW_VERSION=$(echo $CUR_VERSION | sed 's/\([0-9]*\.[0-9]\.[0-9]\).*/\1.SPLK.'$CI_PIPELINE_IID'/')
     - echo "Docker TAG ${NEW_VERSION}"
-    # Push to playground
-    - docker tag pulsar-alpine3.11:${POM_PROJECT_VERSION} ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.11:${NEW_VERSION}
+    - docker tag pulsar-alpine3.11:${POM_PROJECT_VERSION} ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${NEW_VERSION}
     - docker push ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.11:${NEW_VERSION}
-    # Push to prod
+  when: manual
+
+release_alpine3.11_image_production:
+  image: aahmedse/maven:3.6.1-jdk-8-dind
+  stage: deploy-manual
+  cache: {}
+  script:
+    - creds-helper init
     - eval $(creds-helper docker --eval ${PRODUCTION_DOCKER_PATH})
-    - docker tag pulsar-alpine3.11:${POM_PROJECT_VERSION} ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.11:${NEW_VERSION}
+    - ./pulsar-client-cpp/docker/alpine/build-alpine-image.sh
+    - export POM_PROJECT_VERSION=$(python src/get-project-version.py)
+    - CUR_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    - NEW_VERSION=$(echo $CUR_VERSION | sed 's/\([0-9]*\.[0-9]\.[0-9]\).*/\1.SPLK.'$CI_PIPELINE_IID'/')
+    - echo "Docker TAG ${NEW_VERSION}"
+    - docker tag pulsar-alpine3.11:${POM_PROJECT_VERSION} ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${NEW_VERSION}
     - docker push ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.11:${NEW_VERSION}
   when: manual
 
