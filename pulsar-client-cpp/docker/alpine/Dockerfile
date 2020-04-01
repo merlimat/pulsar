@@ -95,7 +95,7 @@ ADD . pulsar/
 
 RUN cd pulsar/pulsar-client-cpp &&  \
        cmake .  -DBUILD_TESTS=OFF \
-          -DBUILD_PYTHON_WRAPPER=ON
+          -DBUILD_PYTHON_WRAPPER=ON \
           -DCMAKE_BUILD_TYPE=Release \
           -DLINK_STATIC=ON  \
           -DPYTHON_INCLUDE_DIR=/usr/include/python3.8 \
