@@ -25,7 +25,7 @@ ROOT_DIR=$(git rev-parse --show-toplevel)
 
 PROJECT_VERSION=$(python $ROOT_DIR/src/get-project-version.py)
 
-IMAGE_NAME=pulsar-alpine3.8:$PROJECT_VERSION
+IMAGE_NAME=pulsar-alpine3.11:$PROJECT_VERSION
 
 echo "==== Building image $IMAGE_NAME"
 

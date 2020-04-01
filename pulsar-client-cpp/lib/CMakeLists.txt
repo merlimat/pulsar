@@ -58,11 +58,13 @@ if (WIN32)
 endif()
 
 add_library(pulsarShared SHARED ${PULSAR_SOURCES})
-set_target_properties(pulsarShared PROPERTIES OUTPUT_NAME ${LIB_NAME_SHARED} VERSION ${LIBRARY_VERSION})
+set_property(TARGET pulsarShared PROPERTY OUTPUT_NAME ${LIB_NAME_SHARED})
+set_property(TARGET pulsarShared PROPERTY VERSION ${LIBRARY_VERSION})
 target_link_libraries(pulsarShared ${COMMON_LIBS} ${CMAKE_DL_LIBS})
 
 add_library(pulsarStatic STATIC ${PULSAR_SOURCES})
-set_target_properties(pulsarStatic PROPERTIES OUTPUT_NAME ${LIB_NAME} VERSION ${LIBRARY_VERSION})
+set_property(TARGET pulsarStatic PROPERTY OUTPUT_NAME ${LIB_NAME})
+set_property(TARGET pulsarStatic PROPERTY VERSION ${LIBRARY_VERSION})
 target_compile_definitions(pulsarStatic PRIVATE PULSAR_STATIC)
 
 if (MSVC)
@@ -75,7 +77,7 @@ endif()
 # required dependencies
 if (LINK_STATIC)
     if (MSVC)
-        
+
         # This function is to remove either "debug" or "optimized" library names
         # out of the COMMON_LIBS list and return the sanitized list of libraries
         function(remove_libtype LIBLIST LIBTYPE OUTLIST)
