@@ -23,40 +23,6 @@ stages:
   - ci
   - deploy
 
-# Deploy alpine image to docker repo Build Job Start
-
-release_alpine3.11_image_playground:
-  image: aahmedse/maven:3.6.1-jdk-8-dind
-  stage: deploy-manual
-  cache: {}
-  script:
-    - creds-helper init
-    - eval $(creds-helper docker --eval ${PLAYGROUND_DOCKER_PATH})
-    - ./pulsar-client-cpp/docker/alpine/build-alpine-image.sh
-    - export POM_PROJECT_VERSION=$(python src/get-project-version.py)
-    - CUR_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-    - NEW_VERSION=$(echo $CUR_VERSION | sed 's/\([0-9]*\.[0-9]\.[0-9]\).*/\1.SPLK.'$CI_PIPELINE_IID'/')
-    - echo "Docker TAG ${NEW_VERSION}"
-    - docker tag pulsar-alpine3.11:${POM_PROJECT_VERSION} ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${NEW_VERSION}
-    - docker push ${PLAYGROUND_DOCKER_REGISTRY}/maas/pulsar-alpine3.11:${NEW_VERSION}
-  when: manual
-
-release_alpine3.11_image_production:
-  image: aahmedse/maven:3.6.1-jdk-8-dind
-  stage: deploy-manual
-  cache: {}
-  script:
-    - creds-helper init
-    - eval $(creds-helper docker --eval ${PRODUCTION_DOCKER_PATH})
-    - ./pulsar-client-cpp/docker/alpine/build-alpine-image.sh
-    - export POM_PROJECT_VERSION=$(python src/get-project-version.py)
-    - CUR_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-    - NEW_VERSION=$(echo $CUR_VERSION | sed 's/\([0-9]*\.[0-9]\.[0-9]\).*/\1.SPLK.'$CI_PIPELINE_IID'/')
-    - echo "Docker TAG ${NEW_VERSION}"
-    - docker tag pulsar-alpine3.11:${POM_PROJECT_VERSION} ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.8:${NEW_VERSION}
-    - docker push ${PRODUCTION_DOCKER_REGISTRY}/maas/pulsar-alpine3.11:${NEW_VERSION}
-  when: manual
-
 # == Python Build Job Start
 
 release_pypi_manylinux3.7:
@@ -145,3 +111,33 @@ release_artifacts:
   script:
     - mvn -B --show-version -ntp install -DskipTests
     - ./release_maven.sh
+
+release_alpine_apk:
+  image: apachepulsar/pulsar-build:alpine-3.11
+  stage: deploy
+  cache: {}
+  only:
+    - /^release-.*$/
+  script:
+    - ./pulsar-client-cpp/pkg/apk/build-apk.sh
+    - VERSION=$(python3 src/get-project-version.py | sed -E 's/-[a-z]+-/./' | sed -E 's/.[A-Z]+././')
+    - URL=https://repo.splunk.com/artifactory/maven-splunk/com/splunk/pulsar/pulsar-client-alpine
+    - CREDENTIALS="-u $STREAMLIO_ARTIFACTORY_USERNAME:$STREAMLIO_ARTIFACTORY_PASSWORD"
+    - DIST_DIR=./pulsar-client-cpp/pkg/apk/pkg/x86_64/
+    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/apache-pulsar-client-${VERSION}-r0.apk \
+        ${URL}/${VERSION}/apache-pulsar-client-${VERSION}-r0.apk
+    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/apache-pulsar-client-dev-${VERSION}-r0.apk \
+        ${URL}/${VERSION}/apache-pulsar-client-dev-${VERSION}-r0.apk
+    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/APKINDEX.tar.gz ${URL}/${VERSION}/APKINDEX.tar.gz
+
+release_alpine_python_wheel:
+  image: apachepulsar/pulsar-build:alpine-3.11
+  stage: deploy
+  cache: {}
+  only:
+    - /^release-.*$/
+  script:
+    - export USE_FULL_POM_NAME=True
+    - export NAME_POSTFIX='-alpine'
+    - ./pulsar-client-cpp/docker/alpine/build-wheel-file-within-docker.sh
+    - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}"./pulsar-client-cpp/python/dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"

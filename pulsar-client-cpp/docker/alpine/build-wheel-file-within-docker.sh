@@ -20,7 +20,9 @@
 
 set -e -x
 
-cd /pulsar/pulsar-client-cpp
+ROOT_DIR=$(git rev-parse --show-toplevel)
+cd $ROOT_DIR/pulsar-client-cpp
+
 cmake .  -DBUILD_TESTS=OFF \
           -DBUILD_PYTHON_WRAPPER=ON \
           -DCMAKE_BUILD_TYPE=Release \
