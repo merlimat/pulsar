@@ -25,7 +25,8 @@ RUN apk update \
     && apk add --no-cache \
     cmake make build-base curl \
     python3-dev \
-    perl linux-headers bash
+    perl linux-headers bash \
+    alpine-sdk
 
 ####################################
 # These dependencies can be found in Ubuntu but they're not compiled with -fPIC,
@@ -68,7 +69,7 @@ RUN curl -O -L  https://github.com/google/protobuf/releases/download/v3.11.3/pro
 RUN curl -O -L  https://github.com/curl/curl/releases/download/curl-7_61_0/curl-7.61.0.tar.gz && \
     tar xvfz curl-7.61.0.tar.gz && \
     cd curl-7.61.0 && \
-    CFLAGS=-fPIC ./configure --with-ssl=/usr/ssl/ && \
+    CFLAGS=-fPIC ./configure && \
     make -j8 && make install && \
     rm -rf /curl-7.61.0.tar.gz /curl-7.61.0
 
@@ -91,20 +92,5 @@ RUN curl -L https://github.com/google/snappy/archive/1.1.8.tar.gz --output snapp
 
 RUN pip3 install wheel
 
-ADD . pulsar/
-
-RUN cd pulsar/pulsar-client-cpp &&  \
-       cmake .  -DBUILD_TESTS=OFF \
-          -DBUILD_PYTHON_WRAPPER=ON \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DLINK_STATIC=ON  \
-          -DPYTHON_INCLUDE_DIR=/usr/include/python3.8 \
-          -DPYTHON_LIBRARY=/usr/lib/python3.8 && \
-       make -j8 _pulsar && \
-       make install
-
-RUN cd pulsar/pulsar-client-cpp/python && \
-      pip3 install wheel && \
-      python3 setup.py bdist_wheel && \
-      pip3 install --no-cache-dir dist/*.whl
-RUN apk del buildpkgs
+RUN adduser pulsar -D && \
+    addgroup pulsar abuild

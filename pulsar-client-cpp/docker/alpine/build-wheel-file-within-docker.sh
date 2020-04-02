@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,17 +18,17 @@
 # under the License.
 #
 
-# Build Alpine Image with pulsar python3 and cpp client libraries
+set -e -x
 
-set -e
+cd /pulsar/pulsar-client-cpp
+cmake .  -DBUILD_TESTS=OFF \
+          -DBUILD_PYTHON_WRAPPER=ON \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DLINK_STATIC=ON  \
+          -DPYTHON_INCLUDE_DIR=/usr/include/python3.8 \
+          -DPYTHON_LIBRARY=/usr/lib/python3.8
 
-ROOT_DIR=$(git rev-parse --show-toplevel)
+make -j2 _pulsar
 
-IMAGE_NAME=${IMAGE_NAME:-apachepulsar/pulsar-build:alpine-3.11}
-
-echo "==== Building image $IMAGE_NAME"
-
-cd $ROOT_DIR/pulsar-client-cpp/docker/alpine
-docker build -t $IMAGE_NAME -f $ROOT_DIR/pulsar-client-cpp/docker/alpine/Dockerfile .
-
-echo "==== Successfully built image $IMAGE_NAME"
+cd python
+python3 setup.py bdist_wheel

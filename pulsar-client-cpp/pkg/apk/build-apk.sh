@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,17 +18,24 @@
 # under the License.
 #
 
-# Build Alpine Image with pulsar python3 and cpp client libraries
+set -e -x
 
-set -e
+cd /pulsar
+export SRC_ROOT_DIR=$(git rev-parse --show-toplevel)
+cd $SRC_ROOT_DIR/pulsar-client-cpp/pkg/apk
 
-ROOT_DIR=$(git rev-parse --show-toplevel)
+VERSION=`python3 $SRC_ROOT_DIR/src/get-project-version.py`
+# Sanitize the version string
+export POM_VERSION=`echo $VERSION sed -E 's/-[a-z]+-/./' | sed -E 's/.[A-Z]+././'`
 
-IMAGE_NAME=${IMAGE_NAME:-apachepulsar/pulsar-build:alpine-3.11}
+abuild-keygen -a -i -n
+chmod 755 ~
+chmod 755 ~/.abuild
+chmod 644 ~/.abuild/*
 
-echo "==== Building image $IMAGE_NAME"
+mkdir -p /root/packages
+chmod 777 /root/packages
 
-cd $ROOT_DIR/pulsar-client-cpp/docker/alpine
-docker build -t $IMAGE_NAME -f $ROOT_DIR/pulsar-client-cpp/docker/alpine/Dockerfile .
+sudo -E -u pulsar abuild -r
 
-echo "==== Successfully built image $IMAGE_NAME"
+mv /root/packages/pkg .
