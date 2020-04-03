@@ -138,4 +138,4 @@ release_alpine_python_wheel:
     - export USE_FULL_POM_NAME=True
     - export NAME_POSTFIX='-alpine'
     - ./pulsar-client-cpp/docker/alpine/build-wheel-file-within-docker.sh
-    - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}"./pulsar-client-cpp/python/dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"
+    - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}" ./pulsar-client-cpp/python/dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"
