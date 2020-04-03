@@ -25,6 +25,7 @@ RUN apk update \
     && apk add --no-cache \
     cmake make build-base curl \
     python3-dev \
+    libffi-dev \
     perl linux-headers bash \
     alpine-sdk
 
@@ -88,7 +89,6 @@ RUN curl -L https://github.com/google/snappy/archive/1.1.8.tar.gz --output snapp
     CXXFLAGS="-fPIC -O3" cmake . && \
     make -j8 && make install && \
     rm -rf /snappy-1.1.8 /snappy-1.1.8.tar.gz
-
 
 RUN pip3 install wheel twine
 
