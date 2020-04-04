@@ -139,3 +139,17 @@ release_alpine_python_wheel:
     - export NAME_POSTFIX='-alpine'
     - ./pulsar-client-cpp/docker/alpine/build-wheel-file-within-docker.sh
     - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}" ./pulsar-client-cpp/python/dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"
+
+release_alpine38_python_wheel:
+  image: apachepulsar/pulsar-build:alpine-3.8
+  stage: deploy
+  cache: {}
+  only:
+    - /^release-.*$/
+  script:
+    - export USE_FULL_POM_NAME=True
+    - export NAME_POSTFIX='-alpine'
+    - export PYTHON_INCLUDE_DIR=/usr/include/python3.6m
+    - export PYTHON_LIBRARY=/usr/lib/python3.6
+    - ./pulsar-client-cpp/docker/alpine/build-wheel-file-within-docker.sh
+    - twine upload --verbose --skip-existing --repository-url "${PYPI_URL}" ./pulsar-client-cpp/python/dist/*.whl -u "${STREAMLIO_ARTIFACTORY_USERNAME}" -p "${STREAMLIO_ARTIFACTORY_PASSWORD}"

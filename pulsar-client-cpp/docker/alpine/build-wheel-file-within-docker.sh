@@ -22,13 +22,15 @@ set -e -x
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
 cd $ROOT_DIR/pulsar-client-cpp
+PYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR:-/usr/include/python3.8}
+PYTHON_LIBRARY=${PYTHON_LIBRARY:-/usr/lib/python3.8}
 
 cmake .  -DBUILD_TESTS=OFF \
           -DBUILD_PYTHON_WRAPPER=ON \
           -DCMAKE_BUILD_TYPE=Release \
           -DLINK_STATIC=ON  \
-          -DPYTHON_INCLUDE_DIR=/usr/include/python3.8 \
-          -DPYTHON_LIBRARY=/usr/lib/python3.8
+          -DPYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR} \
+          -DPYTHON_LIBRARY=${PYTHON_LIBRARY}
 
 make -j2 _pulsar
 
