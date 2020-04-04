@@ -121,7 +121,11 @@ public class TopicStats {
             }
         } else {
             for (String subscription : stats.subscriptions.keySet()) {
-                this.subscriptions.get(subscription).add(stats.subscriptions.get(subscription));
+                final SubscriptionStats thisSubStats = this.subscriptions.get(subscription);
+                final SubscriptionStats otherSubStats = stats.subscriptions.get(subscription);
+                if (thisSubStats != null && otherSubStats != null) {
+                    thisSubStats.add(otherSubStats);
+                }
             }
         }
         if (this.replication.size() != stats.replication.size()) {
