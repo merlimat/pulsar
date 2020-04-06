@@ -124,9 +124,9 @@ release_alpine_apk:
     - URL=https://repo.splunk.com/artifactory/maven-splunk/com/splunk/pulsar/pulsar-client-alpine
     - CREDENTIALS="-u $STREAMLIO_ARTIFACTORY_USERNAME:$STREAMLIO_ARTIFACTORY_PASSWORD"
     - DIST_DIR=./pulsar-client-cpp/pkg/apk/pkg/x86_64/
-    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/apache-pulsar-client-${VERSION}-r0.apk "${URL}/${VERSION}/apache-pulsar-client-${VERSION}-r0.apk"
-    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/apache-pulsar-client-dev-${VERSION}-r0.apk "${URL}/${VERSION}/apache-pulsar-client-dev-${VERSION}-r0.apk"
-    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/APKINDEX.tar.gz "${URL}/${VERSION}/APKINDEX.tar.gz"
+    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/apache-pulsar-client-${VERSION}-r0.apk "${URL}/${VERSION}/x86_64/apache-pulsar-client-${VERSION}-r0.apk"
+    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/apache-pulsar-client-dev-${VERSION}-r0.apk "${URL}/${VERSION}/x86_64/apache-pulsar-client-dev-${VERSION}-r0.apk"
+    - curl ${CREDENTIALS} --upload-file ${DIST_DIR}/APKINDEX.tar.gz "${URL}/${VERSION}/x86_64/APKINDEX.tar.gz"
 
 release_alpine_python_wheel:
   image: apachepulsar/pulsar-build:alpine-3.11
