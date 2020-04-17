@@ -59,6 +59,7 @@ import javax.ws.rs.core.Response.Status;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.ConfigHelper;
 import org.apache.pulsar.broker.PulsarServerException;
 import org.apache.pulsar.broker.PulsarService;
@@ -144,8 +145,8 @@ public class AdminApiTest extends MockedPulsarServiceBaseTest {
     @Override
     public void setup() throws Exception {
         conf.setLoadBalancerEnabled(true);
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
         conf.setMessageExpiryCheckIntervalInMinutes(1);

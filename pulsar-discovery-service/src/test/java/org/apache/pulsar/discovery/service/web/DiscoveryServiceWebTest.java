@@ -53,6 +53,7 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.bookkeeper.util.ZkUtils;
 import org.apache.pulsar.common.policies.data.BundlesData;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
@@ -135,7 +136,7 @@ public class DiscoveryServiceWebTest extends BaseZKStarterTest{
 
         // 1. start server
         ServiceConfig config = new ServiceConfig();
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         ServerManager server = new ServerManager(config);
         DiscoveryZooKeeperClientFactoryImpl.zk = mockZookKeeper;
         Map<String, String> params = new TreeMap<>();
@@ -189,8 +190,8 @@ public class DiscoveryServiceWebTest extends BaseZKStarterTest{
 
         // 1. start server with tls enable
         ServiceConfig config = new ServiceConfig();
-        config.setWebServicePort(Optional.of(0));
-        config.setWebServicePortTls(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         config.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         config.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
         ServerManager server = new ServerManager(config);

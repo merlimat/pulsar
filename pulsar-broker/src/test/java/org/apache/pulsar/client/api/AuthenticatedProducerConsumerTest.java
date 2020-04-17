@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.InternalServerErrorException;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.authentication.AuthenticationProviderBasic;
 import org.apache.pulsar.broker.authentication.AuthenticationProviderTls;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -72,8 +73,8 @@ public class AuthenticatedProducerConsumerTest extends ProducerConsumerBase {
         conf.setAuthenticationEnabled(true);
         conf.setAuthorizationEnabled(true);
 
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setTlsTrustCertsFilePath(TLS_TRUST_CERT_FILE_PATH);
         conf.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);

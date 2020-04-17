@@ -58,6 +58,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.pulsar</groupId>
+            <artifactId>pulsar-zookeeper-utils</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pulsar</groupId>
             <artifactId>managed-ledger</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>

@@ -60,8 +60,8 @@ public class ProxyPublishConsumeTlsTest extends TlsProducerConsumerBase {
 //        super.internalSetUpForNamespace();
 //
 //        WebSocketProxyConfiguration config = new WebSocketProxyConfiguration();
-//        config.setWebServicePort(Optional.of(0));
-//        config.setWebServicePortTls(Optional.of(0));
+//        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+//        config.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
 //        config.setBrokerClientTlsEnabled(true);
 //        config.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
 //        config.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);

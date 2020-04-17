@@ -43,6 +43,7 @@ import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
 import org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.LedgerInfo;
 import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.proto.BookieServer;
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.bookkeeper.versioning.Versioned;
 import org.apache.pulsar.broker.ManagedLedgerClientFactory;
 import org.apache.pulsar.broker.PulsarService;
@@ -143,9 +144,9 @@ public class BrokerBookieIsolationTest {
         ServiceConfiguration config = new ServiceConfiguration();
         config.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());
         config.setClusterName(cluster);
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config.setBrokerServicePort(Optional.of(0));
+        config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
         config.setAdvertisedAddress("localhost");
         config.setBookkeeperClientIsolationGroups(brokerBookkeeperClientIsolationGroups);
 
@@ -201,10 +202,7 @@ public class BrokerBookieIsolationTest {
         PersistentTopic topic3 = (PersistentTopic) createTopicAndPublish(pulsarClient, ns3, "topic1", totalPublish);
         PersistentTopic topic4 = (PersistentTopic) createTopicAndPublish(pulsarClient, ns4, "topic1", totalPublish);
 
-        Bookie bookie1 = bookies[0].getBookie();
-        Field ledgerManagerField = BookieImpl.class.getDeclaredField("ledgerManager");
-        ledgerManagerField.setAccessible(true);
-        LedgerManager ledgerManager = (LedgerManager) ledgerManagerField.get(bookie1);
+        LedgerManager ledgerManager = bkEnsemble.getLocalBookies()[0].getLedgerManager();
 
         // namespace: ns1
         ManagedLedgerImpl ml = (ManagedLedgerImpl) topic1.getManagedLedger();
@@ -276,9 +274,9 @@ public class BrokerBookieIsolationTest {
         ServiceConfiguration config = new ServiceConfiguration();
         config.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());
         config.setClusterName(cluster);
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config.setBrokerServicePort(Optional.of(0));
+        config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
         config.setAdvertisedAddress("localhost");
         config.setBookkeeperClientIsolationGroups(brokerBookkeeperClientIsolationGroups);
 
@@ -331,10 +329,7 @@ public class BrokerBookieIsolationTest {
         PersistentTopic topic2 = (PersistentTopic) createTopicAndPublish(pulsarClient, ns2, "topic1", totalPublish);
         PersistentTopic topic3 = (PersistentTopic) createTopicAndPublish(pulsarClient, ns3, "topic1", totalPublish);
 
-        Bookie bookie1 = bookies[0].getBookie();
-        Field ledgerManagerField = BookieImpl.class.getDeclaredField("ledgerManager");
-        ledgerManagerField.setAccessible(true);
-        LedgerManager ledgerManager = (LedgerManager) ledgerManagerField.get(bookie1);
+        LedgerManager ledgerManager = bkEnsemble.getLocalBookies()[0].getLedgerManager();
 
         // namespace: ns1
         ManagedLedgerImpl ml = (ManagedLedgerImpl) topic1.getManagedLedger();
@@ -398,9 +393,9 @@ public class BrokerBookieIsolationTest {
         ServiceConfiguration config = new ServiceConfiguration();
         config.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());
         config.setClusterName(cluster);
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config.setBrokerServicePort(Optional.of(0));
+        config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
         config.setAdvertisedAddress("localhost");
         config.setBookkeeperClientIsolationGroups(brokerBookkeeperClientIsolationGroups);
 

@@ -59,6 +59,7 @@ import java.util.regex.Pattern;
 
 import lombok.ToString;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.ServiceConfigurationUtils;
@@ -161,11 +162,11 @@ public class PulsarFunctionE2ETest {
         config.setClusterName("use");
         Set<String> superUsers = Sets.newHashSet("superUser");
         config.setSuperUserRoles(superUsers);
-        config.setWebServicePort(Optional.of(0));
-        config.setWebServicePortTls(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config.setBrokerServicePort(Optional.of(0));
-        config.setBrokerServicePortTls(Optional.of(0));
+        config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
         config.setLoadManagerClassName(SimpleLoadManagerImpl.class.getName());
         config.setTlsAllowInsecureConnection(true);
         config.setAdvertisedAddress("localhost");

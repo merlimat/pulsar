@@ -48,6 +48,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.client.api.ProducerConsumerBase;
 import org.apache.pulsar.common.policies.data.BacklogQuota;
 import org.apache.pulsar.common.stats.Metrics;
@@ -86,7 +87,7 @@ public class ProxyPublishConsumeTest extends ProducerConsumerBase {
         super.producerBaseSetup();
 
         WebSocketProxyConfiguration config = new WebSocketProxyConfiguration();
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         config.setClusterName("test");
         config.setConfigurationStoreServers("dummy-zk-servers");
         service = spy(new WebSocketService(config));

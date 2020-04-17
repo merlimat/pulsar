@@ -51,6 +51,7 @@ import org.apache.bookkeeper.mledger.ManagedLedgerConfig;
 import org.apache.bookkeeper.mledger.ManagedLedgerException;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerFactoryImpl;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.service.BrokerServiceException.PersistenceException;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.client.admin.BrokerStats;
@@ -463,8 +464,8 @@ public class BrokerServiceTest extends BrokerTestBase {
         final String subName = "newSub";
 
         conf.setAuthenticationEnabled(false);
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
         restartBroker();
@@ -545,8 +546,8 @@ public class BrokerServiceTest extends BrokerTestBase {
 
         conf.setAuthenticationEnabled(true);
         conf.setAuthenticationProviders(providers);
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
         conf.setTlsAllowInsecureConnection(true);
@@ -607,8 +608,8 @@ public class BrokerServiceTest extends BrokerTestBase {
 
         conf.setAuthenticationEnabled(true);
         conf.setAuthenticationProviders(providers);
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
         conf.setTlsAllowInsecureConnection(false);
@@ -668,8 +669,8 @@ public class BrokerServiceTest extends BrokerTestBase {
 
         conf.setAuthenticationEnabled(true);
         conf.setAuthenticationProviders(providers);
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
         conf.setTlsAllowInsecureConnection(false);

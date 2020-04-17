@@ -101,6 +101,14 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.pulsar</groupId>
+      <artifactId>pulsar-zookeeper-utils</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <classifier>tests</classifier>
+    </dependency>
+
     <!-- we excluded the transitive dependencies above to make it work for standalone.
          however it will cause test failures. bring following dependencies back for testing.
          all these should be gone once we introduce NAR package for offloaders. -->

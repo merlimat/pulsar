@@ -56,6 +56,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.MockedBookKeeperClientFactory;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
@@ -292,10 +293,10 @@ public class WebServiceTest {
 
         ServiceConfiguration config = new ServiceConfiguration();
         config.setAdvertisedAddress("localhost");
-        config.setBrokerServicePort(Optional.of(0));
-        config.setWebServicePort(Optional.of(0));
+        config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         if (enableTls) {
-            config.setWebServicePortTls(Optional.of(0));
+            config.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         }
         config.setClientLibraryVersionCheckEnabled(enableFilter);
         config.setAuthenticationEnabled(enableAuth);

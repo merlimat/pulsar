@@ -43,7 +43,6 @@ import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.proto.BookieServer;
 import org.apache.bookkeeper.replication.AutoRecoveryMain;
 import org.apache.bookkeeper.stats.StatsProvider;
-import org.apache.bookkeeper.bookie.BookieResources;
 import org.apache.bookkeeper.common.util.ReflectionUtils;
 import org.apache.bookkeeper.util.DirectMemoryUtils;
 import org.apache.commons.configuration.ConfigurationException;
@@ -55,6 +54,7 @@ import org.apache.pulsar.common.allocator.PulsarByteBufAllocator;
 import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.functions.worker.WorkerConfig;
 import org.apache.pulsar.functions.worker.WorkerService;
+import org.apache.pulsar.zookeeper.LocalBookkeeperEnsemble;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -240,9 +240,8 @@ public class PulsarBrokerStarter {
             if (starterArguments.runBookie) {
                 checkNotNull(bookieConfig, "No ServerConfiguration for Bookie");
                 checkNotNull(bookieStatsProvider, "No Stats Provider for Bookie");
-                bookieServer = new BookieServer(bookieConfig,
-                        BookieResources.createMetadataDriver(bookieConfig, bookieStatsProvider.getStatsLogger("")),
-                        bookieStatsProvider.getStatsLogger(""));
+                bookieServer = LocalBookkeeperEnsemble.newBookieServer(bookieConfig,
+                        bookieStatsProvider.getStatsLogger("")).getBookieServer();
             } else {
                 bookieServer = null;
             }

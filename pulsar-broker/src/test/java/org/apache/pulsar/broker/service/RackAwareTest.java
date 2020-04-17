@@ -34,6 +34,7 @@ import org.apache.bookkeeper.net.BookieSocketAddress;
 import org.apache.bookkeeper.proto.BookieServer;
 import org.apache.bookkeeper.stats.NullStatsLogger;
 import org.apache.pulsar.common.policies.data.BookieInfo;
+import org.apache.pulsar.zookeeper.LocalBookkeeperEnsemble;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -71,9 +72,7 @@ public class RackAwareTest extends BrokerBkEnsemblesTests {
             String addr = String.format("10.0.0.%d", i + 1);
             conf.setAdvertisedAddress(addr);
 
-            BookieServer bs = new BookieServer(conf,
-                    BookieResources.createMetadataDriver(conf, NullStatsLogger.INSTANCE),
-                    NullStatsLogger.INSTANCE);
+            BookieServer bs = LocalBookkeeperEnsemble.newBookieServer(conf).getBookieServer();
 
             bs.start();
             bookies.add(bs);

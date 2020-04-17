@@ -20,6 +20,7 @@ package org.apache.pulsar.broker.transaction.coordinator;
 
 import java.util.Optional;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.PulsarTransactionCoordinatorMetadataSetup;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
@@ -61,10 +62,10 @@ public class TransactionMetaStoreTestBase {
         // start brokers
         for (int i = 0; i < BROKER_COUNT; i++) {
             ServiceConfiguration config = new ServiceConfiguration();
-            config.setBrokerServicePort(Optional.of(0));
+            config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
             config.setClusterName("my-cluster");
             config.setAdvertisedAddress("localhost");
-            config.setWebServicePort(Optional.of(0));
+            config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
             config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
             config.setDefaultNumberOfNamespaceBundles(1);
             config.setLoadBalancerEnabled(false);

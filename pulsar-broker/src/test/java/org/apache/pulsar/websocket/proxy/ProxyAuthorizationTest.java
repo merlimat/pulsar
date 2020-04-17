@@ -29,6 +29,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest;
 import org.apache.pulsar.broker.authorization.AuthorizationService;
 import org.apache.pulsar.common.naming.TopicName;
@@ -61,7 +62,7 @@ public class ProxyAuthorizationTest extends MockedPulsarServiceBaseTest {
         config.setConfigurationStoreServers("dummy-zk-servers");
         config.setSuperUserRoles(superUser);
         config.setClusterName("c1");
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         service = spy(new WebSocketService(config));
         doReturn(mockZooKeeperClientFactory).when(service).getZooKeeperClientFactory();
         service.start();

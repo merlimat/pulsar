@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import java.lang.reflect.Method;
 import java.util.Set;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest;
 import org.apache.pulsar.common.policies.data.ClusterData;
 import org.apache.pulsar.common.policies.data.TenantInfo;

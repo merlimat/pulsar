@@ -40,6 +40,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.client.api.ProducerConsumerBase;
 import org.apache.pulsar.common.policies.data.BundlesData;
 import org.apache.pulsar.discovery.service.server.ServerManager;
@@ -79,7 +80,7 @@ public class DiscoveryServiceWebTest extends ProducerConsumerBase {
     public void testRedirectUrlWithServerStarted() throws Exception {
         // 1. start server
         ServiceConfig config = new ServiceConfig();
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         ServerManager server = new ServerManager(config);
         DiscoveryZooKeeperClientFactoryImpl.zk = mockZookKeeper;
         Map<String, String> params = new TreeMap<>();

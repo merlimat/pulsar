@@ -28,6 +28,7 @@ import java.util.Optional;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest;
@@ -58,8 +59,8 @@ public class BrokerAdminClientTlsAuthTest extends MockedPulsarServiceBaseTest {
     @BeforeMethod
     @Override
     public void setup() throws Exception {
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         buildConf(conf);
         super.internalSetup();
     }
@@ -112,10 +113,10 @@ public class BrokerAdminClientTlsAuthTest extends MockedPulsarServiceBaseTest {
 
         /***** Start Broker 2 ******/
         ServiceConfiguration conf = new ServiceConfiguration();
-        conf.setBrokerServicePort(Optional.of(0));
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePort(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setAdvertisedAddress("localhost");
         conf.setClusterName(this.conf.getClusterName());
         conf.setZookeeperServers("localhost:2181");

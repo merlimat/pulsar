@@ -34,6 +34,7 @@ import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.ServiceConfigurationUtils;
@@ -91,9 +92,9 @@ public class PulsarWorkerAssignmentTest {
         config.setClusterName("use");
         final Set<String> superUsers = Sets.newHashSet("superUser");
         config.setSuperUserRoles(superUsers);
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config.setBrokerServicePort(Optional.of(0));
+        config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
         config.setLoadManagerClassName(SimpleLoadManagerImpl.class.getName());
         config.setAdvertisedAddress("localhost");
 

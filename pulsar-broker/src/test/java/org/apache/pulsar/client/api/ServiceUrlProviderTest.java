@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.client.impl.ConsumerImpl;
 import org.apache.pulsar.client.impl.ProducerImpl;
@@ -103,8 +104,8 @@ public class ServiceUrlProviderTest extends ProducerConsumerBase {
                 .subscribe();
 
         PulsarService pulsarService1 = pulsar;
-        conf.setBrokerServicePort(Optional.of(0));
-        conf.setWebServicePort(Optional.of(0));
+        conf.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         restartBroker();
         PulsarService pulsarService2 = pulsar;
 

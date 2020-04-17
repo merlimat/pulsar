@@ -34,6 +34,7 @@ import java.util.Set;
 
 import javax.naming.AuthenticationException;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
 import org.apache.pulsar.broker.authentication.AuthenticationProvider;
@@ -211,8 +212,8 @@ public class ProxyAuthenticationTest extends ProducerConsumerBase {
 		// Step 2: Try to use proxy Client as a normal Client - expect exception
 		ProxyConfiguration proxyConfig = new ProxyConfiguration();
 		proxyConfig.setAuthenticationEnabled(true);
-		proxyConfig.setServicePort(Optional.of(0));
-		proxyConfig.setWebServicePort(Optional.of(0));
+		proxyConfig.setServicePort(Optional.of(PortAllocator.nextPort()));
+		proxyConfig.setWebServicePort(Optional.of(PortAllocator.nextPort()));
 		proxyConfig.setBrokerServiceURL(pulsar.getBrokerServiceUrl());
 
 		proxyConfig.setBrokerClientAuthenticationPlugin(BasicAuthentication.class.getName());

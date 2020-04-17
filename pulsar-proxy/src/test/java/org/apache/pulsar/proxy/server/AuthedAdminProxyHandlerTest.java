@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest;
 import org.apache.pulsar.broker.authentication.AuthenticationProviderTls;
 import org.apache.pulsar.broker.authentication.AuthenticationService;
@@ -62,8 +63,8 @@ public class AuthedAdminProxyHandlerTest extends MockedPulsarServiceBaseTest {
         // enable tls and auth&auth at broker
         conf.setAuthenticationEnabled(true);
         conf.setAuthorizationEnabled(true);
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setTlsTrustCertsFilePath(getTlsFile("ca.cert"));
         conf.setTlsCertificateFilePath(getTlsFile("broker.cert"));
         conf.setTlsKeyFilePath(getTlsFile("broker.key-pk8"));
@@ -77,10 +78,10 @@ public class AuthedAdminProxyHandlerTest extends MockedPulsarServiceBaseTest {
         // start proxy service
         proxyConfig.setAuthenticationEnabled(true);
         proxyConfig.setAuthorizationEnabled(true);
-        proxyConfig.setServicePort(Optional.of(0));
-        proxyConfig.setServicePortTls(Optional.of(0));
-        proxyConfig.setWebServicePort(Optional.of(0));
-        proxyConfig.setWebServicePortTls(Optional.of(0));
+        proxyConfig.setServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setServicePortTls(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         proxyConfig.setTlsEnabledWithBroker(true);
 
         // enable tls and auth&auth at proxy

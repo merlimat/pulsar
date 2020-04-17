@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.login.Configuration;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.shaded.com.google.common.collect.Maps;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -223,8 +224,8 @@ public class ProxySaslAuthenticationTest extends ProducerConsumerBase {
 
 		ProxyConfiguration proxyConfig = new ProxyConfiguration();
 		proxyConfig.setAuthenticationEnabled(true);
-		proxyConfig.setServicePort(Optional.of(0));
-		proxyConfig.setWebServicePort(Optional.of(0));
+		proxyConfig.setServicePort(Optional.of(PortAllocator.nextPort()));
+		proxyConfig.setWebServicePort(Optional.of(PortAllocator.nextPort()));
 		proxyConfig.setBrokerServiceURL(pulsar.getBrokerServiceUrl());
 		proxyConfig.setSaslJaasClientAllowedIds(".*" + localHostname + ".*");
 		proxyConfig.setSaslJaasServerSectionName("PulsarProxy");

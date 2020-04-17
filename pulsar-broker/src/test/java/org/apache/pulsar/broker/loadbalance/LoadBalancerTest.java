@@ -53,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.bookkeeper.util.ZkUtils;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
@@ -136,11 +137,11 @@ public class LoadBalancerTest {
             config.setClusterName("use");
             config.setAdvertisedAddress(localhost);
             config.setAdvertisedAddress("localhost");
-            config.setWebServicePort(Optional.of(0));
-            config.setBrokerServicePortTls(Optional.of(0));
-            config.setWebServicePortTls(Optional.of(0));
+            config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+            config.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+            config.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
             config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-            config.setBrokerServicePort(Optional.of(0));
+            config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
             config.setLoadManagerClassName(SimpleLoadManagerImpl.class.getName());
             config.setAdvertisedAddress(localhost+i);
             config.setLoadBalancerEnabled(false);

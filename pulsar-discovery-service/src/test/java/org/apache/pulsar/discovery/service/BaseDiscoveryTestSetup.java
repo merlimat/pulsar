@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.bookkeeper.util.ZkUtils;
 import org.apache.pulsar.discovery.service.server.ServiceConfig;
 import org.apache.pulsar.zookeeper.ZooKeeperClientFactory;
@@ -47,8 +48,8 @@ public class BaseDiscoveryTestSetup {
 
     protected void setup() throws Exception {
         config = new ServiceConfig();
-        config.setServicePort(Optional.of(0));
-        config.setServicePortTls(Optional.of(0));
+        config.setServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setServicePortTls(Optional.of(PortAllocator.nextPort()));
         config.setBindOnLocalhost(true);
 
         config.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);

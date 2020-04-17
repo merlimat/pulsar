@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.authentication.AuthenticationProviderTls;
 import org.apache.pulsar.broker.authentication.AuthenticationService;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -143,8 +144,8 @@ public class ProxyWithAuthorizationTest extends ProducerConsumerBase {
         conf.setAuthenticationEnabled(true);
         conf.setAuthorizationEnabled(true);
 
-        conf.setBrokerServicePortTls(Optional.of(0));
-        conf.setWebServicePortTls(Optional.of(0));
+        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         conf.setTlsTrustCertsFilePath(TLS_PROXY_TRUST_CERT_FILE_PATH);
         conf.setTlsCertificateFilePath(TLS_BROKER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_BROKER_KEY_FILE_PATH);
@@ -172,10 +173,10 @@ public class ProxyWithAuthorizationTest extends ProducerConsumerBase {
         proxyConfig.setBrokerServiceURL(pulsar.getBrokerServiceUrl());
         proxyConfig.setBrokerServiceURLTLS(pulsar.getBrokerServiceUrlTls());
 
-        proxyConfig.setServicePort(Optional.of(0));
-        proxyConfig.setServicePortTls(Optional.of(0));
-        proxyConfig.setWebServicePort(Optional.of(0));
-        proxyConfig.setWebServicePortTls(Optional.of(0));
+        proxyConfig.setServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setServicePortTls(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         proxyConfig.setTlsEnabledWithBroker(true);
 
         // enable tls and auth&auth at proxy
@@ -387,10 +388,10 @@ public class ProxyWithAuthorizationTest extends ProducerConsumerBase {
         proxyConfig.setBrokerServiceURL(pulsar.getBrokerServiceUrl());
         proxyConfig.setBrokerServiceURLTLS(pulsar.getBrokerServiceUrlTls());
 
-        proxyConfig.setServicePort(Optional.of(0));
-        proxyConfig.setServicePortTls(Optional.of(0));
-        proxyConfig.setWebServicePort(Optional.of(0));
-        proxyConfig.setWebServicePortTls(Optional.of(0));
+        proxyConfig.setServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setServicePortTls(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         proxyConfig.setTlsEnabledWithBroker(true);
 
         // enable tls and auth&auth at proxy

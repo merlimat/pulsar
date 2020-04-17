@@ -42,6 +42,7 @@ import java.util.function.Supplier;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.EnsemblePlacementPolicy;
 import org.apache.bookkeeper.client.PulsarMockBookKeeper;
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.bookkeeper.util.ZkUtils;
 import org.apache.pulsar.broker.BookKeeperClientFactory;
 import org.apache.pulsar.broker.PulsarService;
@@ -97,10 +98,10 @@ public abstract class MockedPulsarServiceBaseTest {
         this.conf.setZookeeperServers("localhost:2181");
         this.conf.setConfigurationStoreServers("localhost:3181");
         this.conf.setAllowAutoTopicCreationType("non-persistent");
-        this.conf.setBrokerServicePort(Optional.of(0));
-        this.conf.setBrokerServicePortTls(Optional.of(0));
-        this.conf.setWebServicePort(Optional.of(0));
-        this.conf.setWebServicePortTls(Optional.of(0));
+        this.conf.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        this.conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        this.conf.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        this.conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
     }
 
     protected final void internalSetup() throws Exception {
@@ -126,11 +127,11 @@ public abstract class MockedPulsarServiceBaseTest {
     }
 
     protected final void init() throws Exception {
-        this.conf.setBrokerServicePort(Optional.of(0));
-        this.conf.setBrokerServicePortTls(Optional.of(0));
+        this.conf.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        this.conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
         this.conf.setAdvertisedAddress("localhost");
-        this.conf.setWebServicePort(Optional.of(0));
-        this.conf.setWebServicePortTls(Optional.of(0));
+        this.conf.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        this.conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
 
         sameThreadOrderedSafeExecutor = new SameThreadOrderedSafeExecutor();
         bkExecutor = Executors.newSingleThreadExecutor(

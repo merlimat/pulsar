@@ -26,7 +26,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import java.lang.reflect.Constructor;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,7 +34,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiPredicate;
@@ -205,7 +203,7 @@ public class MockZooKeeper extends ZooKeeper {
 
     @Override
     public void create(final String path, final byte[] data, final List<ACL> acl, CreateMode createMode,
-            final StringCallback cb, final Object ctx) {
+                       final StringCallback cb, final Object ctx) {
 
 
         executor.execute(() -> {
@@ -247,13 +245,13 @@ public class MockZooKeeper extends ZooKeeper {
                 toNotifyCreate.forEach(
                         watcher -> watcher.process(
                                 new WatchedEvent(EventType.NodeCreated,
-                                                 KeeperState.SyncConnected,
-                                                 path)));
+                                        KeeperState.SyncConnected,
+                                        path)));
                 toNotifyParent.forEach(
                         watcher -> watcher.process(
                                 new WatchedEvent(EventType.NodeChildrenChanged,
-                                                 KeeperState.SyncConnected,
-                                                 parent)));
+                                        KeeperState.SyncConnected,
+                                        parent)));
             }
         });
 

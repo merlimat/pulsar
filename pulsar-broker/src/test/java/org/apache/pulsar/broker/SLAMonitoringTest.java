@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.namespace.NamespaceService;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
@@ -74,12 +75,12 @@ public class SLAMonitoringTest {
         // start brokers
         for (int i = 0; i < BROKER_COUNT; i++) {
             ServiceConfiguration config = new ServiceConfiguration();
-            config.setBrokerServicePort(Optional.of(0));
+            config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
             config.setClusterName("my-cluster");
             config.setAdvertisedAddress("localhost");
-            config.setWebServicePort(Optional.of(0));
+            config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
             config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-            config.setBrokerServicePort(Optional.of(0));
+            config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
             config.setDefaultNumberOfNamespaceBundles(1);
             config.setLoadBalancerEnabled(false);
             configurations[i] = config;

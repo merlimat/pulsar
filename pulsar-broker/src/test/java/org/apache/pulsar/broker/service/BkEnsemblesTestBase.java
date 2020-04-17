@@ -20,6 +20,7 @@ package org.apache.pulsar.broker.service;
 
 import java.util.Optional;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -68,9 +69,9 @@ public abstract class BkEnsemblesTestBase {
             config = new ServiceConfiguration();
             config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
             config.setAdvertisedAddress("localhost");
-            config.setWebServicePort(Optional.of(0));
+            config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
             config.setClusterName("usc");
-            config.setBrokerServicePort(Optional.of(0));
+            config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
             config.setAuthorizationEnabled(false);
             config.setAuthenticationEnabled(false);
             config.setManagedLedgerMaxEntriesPerLedger(5);

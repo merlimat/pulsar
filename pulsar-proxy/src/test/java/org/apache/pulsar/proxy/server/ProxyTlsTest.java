@@ -24,6 +24,7 @@ import static org.mockito.Mockito.doReturn;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest;
 import org.apache.pulsar.broker.authentication.AuthenticationService;
 import org.apache.pulsar.client.api.Consumer;
@@ -54,10 +55,10 @@ public class ProxyTlsTest extends MockedPulsarServiceBaseTest {
     protected void setup() throws Exception {
         internalSetup();
 
-        proxyConfig.setServicePort(Optional.of(0));
-        proxyConfig.setServicePortTls(Optional.of(0));
-        proxyConfig.setWebServicePort(Optional.of(0));
-        proxyConfig.setWebServicePortTls(Optional.of(0));
+        proxyConfig.setServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setServicePortTls(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
         proxyConfig.setTlsEnabledWithBroker(false);
         proxyConfig.setTlsCertificateFilePath(TLS_PROXY_CERT_FILE_PATH);
         proxyConfig.setTlsKeyFilePath(TLS_PROXY_KEY_FILE_PATH);

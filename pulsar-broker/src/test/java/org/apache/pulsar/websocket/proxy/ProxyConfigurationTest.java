@@ -24,6 +24,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Optional;
 
+import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.client.api.ProducerConsumerBase;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.websocket.WebSocketService;
@@ -36,13 +37,17 @@ import org.testng.annotations.Test;
 public class ProxyConfigurationTest extends ProducerConsumerBase {
     private WebSocketProxyConfiguration config;
 
+    public ProxyConfigurationTest() throws Exception {
+        super();
+    }
+
     @BeforeMethod
     public void setup() throws Exception {
         super.internalSetup();
         super.producerBaseSetup();
 
         config = new WebSocketProxyConfiguration();
-        config.setWebServicePort(Optional.of(0));
+        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
         config.setClusterName("test");
         config.setConfigurationStoreServers("dummy-zk-servers");
     }

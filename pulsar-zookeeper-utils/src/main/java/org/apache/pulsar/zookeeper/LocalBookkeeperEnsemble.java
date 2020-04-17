@@ -33,18 +33,23 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import org.apache.bookkeeper.bookie.BookieResources;
+import io.netty.buffer.ByteBufAllocator;
+import org.apache.bookkeeper.bookie.*;
 import org.apache.bookkeeper.bookie.BookieException.InvalidCookieException;
 import org.apache.bookkeeper.bookie.storage.ldb.DbLedgerStorage;
-import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.clients.StorageClientBuilder;
 import org.apache.bookkeeper.clients.admin.StorageAdminClient;
 import org.apache.bookkeeper.clients.config.StorageClientSettings;
@@ -55,15 +60,22 @@ import org.apache.bookkeeper.common.concurrent.FutureUtils;
 import org.apache.bookkeeper.common.util.Backoff;
 import org.apache.bookkeeper.common.util.Backoff.Jitter.Type;
 import org.apache.bookkeeper.conf.ServerConfiguration;
+import org.apache.bookkeeper.discover.RegistrationManager;
+import org.apache.bookkeeper.meta.LedgerManager;
+import org.apache.bookkeeper.meta.MetadataBookieDriver;
+import org.apache.bookkeeper.meta.exceptions.MetadataException;
 import org.apache.bookkeeper.proto.BookieServer;
 import org.apache.bookkeeper.replication.ReplicationException;
 import org.apache.bookkeeper.server.conf.BookieConfiguration;
 import org.apache.bookkeeper.stats.NullStatsLogger;
+import org.apache.bookkeeper.stats.StatsLogger;
 import org.apache.bookkeeper.stream.proto.NamespaceConfiguration;
 import org.apache.bookkeeper.stream.proto.NamespaceProperties;
 import org.apache.bookkeeper.stream.server.StreamStorageLifecycleComponent;
 import org.apache.bookkeeper.stream.storage.api.cluster.ClusterInitializer;
 import org.apache.bookkeeper.stream.storage.impl.cluster.ZkClusterInitializer;
+import org.apache.bookkeeper.tls.SecurityException;
+import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -160,8 +172,7 @@ public class LocalBookkeeperEnsemble {
 
     // BookKeeper variables
     String bkDataDirName;
-    BookieServer bs[];
-    ServerConfiguration bsConfs[];
+    LocalBookie localBookies[];
 
     // Stream/Table Storage
     StreamStorageLifecycleComponent streamStorage;
@@ -241,8 +252,7 @@ public class LocalBookkeeperEnsemble {
         LOG.info("Starting Bookie(s)");
         // Create Bookie Servers (B1, B2, B3)
 
-        bs = new BookieServer[numberOfBookies];
-        bsConfs = new ServerConfiguration[numberOfBookies];
+        localBookies = new LocalBookie[numberOfBookies];
 
         for (int i = 0; i < numberOfBookies; i++) {
 
@@ -255,6 +265,11 @@ public class LocalBookkeeperEnsemble {
             }
 
             int bookiePort = portManager.get();
+            if (bookiePort == 0) {
+                try (ServerSocket s = new ServerSocket(0)) {
+                    bookiePort = s.getLocalPort();
+                }
+            }
 
             // Ensure registration Z-nodes are cleared when standalone service is restarted ungracefully
             String registrationZnode = String.format("/ledgers/available/%s:%d", baseConf.getAdvertisedAddress(), bookiePort);
@@ -266,19 +281,17 @@ public class LocalBookkeeperEnsemble {
                 }
             }
 
-            bsConfs[i] = new ServerConfiguration(baseConf);
+            ServerConfiguration conf = new ServerConfiguration(baseConf);
             // override settings
-            bsConfs[i].setBookiePort(bookiePort);
-            bsConfs[i].setZkServers("127.0.0.1:" + zkPort);
-            bsConfs[i].setJournalDirName(bkDataDir.getPath());
-            bsConfs[i].setLedgerDirNames(new String[] { bkDataDir.getPath() });
-            bsConfs[i].setAllocatorPoolingPolicy(PoolingPolicy.UnpooledHeap);
-            bsConfs[i].setAllowEphemeralPorts(true);
+            conf.setBookiePort(bookiePort);
+            conf.setZkServers("127.0.0.1:" + zkPort);
+            conf.setJournalDirName(bkDataDir.getPath());
+            conf.setLedgerDirNames(new String[] { bkDataDir.getPath() });
+            conf.setAllocatorPoolingPolicy(PoolingPolicy.UnpooledHeap);
+            conf.setAllowEphemeralPorts(true);
 
             try {
-                bs[i] = new BookieServer(bsConfs[i],
-                        BookieResources.createMetadataDriver(bsConfs[i], NullStatsLogger.INSTANCE),
-                        NullStatsLogger.INSTANCE);
+                localBookies[i] = newBookieServer(conf);
             } catch (InvalidCookieException e) {
                 // InvalidCookieException can happen if the machine IP has changed
                 // Since we are running here a local bookie that is always accessed
@@ -291,14 +304,95 @@ public class LocalBookkeeperEnsemble {
                 new File(new File(bkDataDir, "current"), "VERSION").delete();
 
                 // Retry to start the bookie after cleaning the old left cookie
-                bs[i] = new BookieServer(bsConfs[i],
-                        BookieResources.createMetadataDriver(bsConfs[i], NullStatsLogger.INSTANCE),
-                        NullStatsLogger.INSTANCE);
+                localBookies[i] = newBookieServer(conf);
             }
-            bs[i].start();
+            localBookies[i].getBookieServer().start();
             LOG.debug("Local BK[{}] started (port: {}, data_directory: {})", i, bookiePort,
                     bkDataDir.getAbsolutePath());
         }
+    }
+
+    public static LocalBookie newBookieServer(ServerConfiguration config)
+            throws InterruptedException, BookieException, KeeperException, IOException,
+            SecurityException, ReplicationException.CompatibilityException,
+            ReplicationException.UnavailableException, MetadataException {
+        return newBookieServer(config, NullStatsLogger.INSTANCE);
+    }
+
+    public static LocalBookie newBookieServer(ServerConfiguration config, StatsLogger statsLogger)
+            throws InterruptedException, BookieException, KeeperException, IOException,
+            SecurityException, ReplicationException.CompatibilityException,
+            ReplicationException.UnavailableException, MetadataException {
+        if (Objects.isNull(statsLogger)) {
+            statsLogger = NullStatsLogger.INSTANCE;
+        }
+
+        final MetadataBookieDriver metadataBookieDriver =
+                BookieResources.createMetadataDriver(config, statsLogger);
+
+        final RegistrationManager registrationManager = metadataBookieDriver.createRegistrationManager();
+
+        final LedgerManager ledgerManager = metadataBookieDriver.getLedgerManagerFactory().newLedgerManager();
+        final ByteBufAllocator allocator = BookieResources.createAllocator(config);
+
+        final DiskChecker diskChecker = BookieResources.createDiskChecker(config);
+        LedgerDirsManager ledgerDirsManager = BookieResources.createLedgerDirsManager(
+                config, diskChecker, statsLogger);
+        LedgerDirsManager indexDirsManager = BookieResources.createIndexDirsManager(
+                config, diskChecker,  statsLogger, ledgerDirsManager);
+
+        // validate cookies
+        final CookieValidation cookieValidation =
+                new LegacyCookieValidation(config, registrationManager);
+        // this must run before the storage is created
+        cookieValidation.checkCookies(storageDirectoriesFromConfig(config));
+
+        LedgerStorage storage = BookieResources.createLedgerStorage(
+                config, ledgerManager, ledgerDirsManager, indexDirsManager, statsLogger, allocator);
+
+        final Bookie bookie = config.isForceReadOnlyBookie()
+                ? new ReadOnlyBookie(config, registrationManager, storage,
+                    diskChecker,
+                    ledgerDirsManager, indexDirsManager,
+                    statsLogger, allocator)
+                : new BookieImpl(config, registrationManager, storage,
+                    diskChecker,
+                    ledgerDirsManager, indexDirsManager,
+                    statsLogger, allocator);
+
+        BookieServer bs = new BookieServer(config, bookie, statsLogger, allocator);
+        return new LocalBookie(config, bs, storage, ledgerManager, registrationManager, metadataBookieDriver);
+    }
+
+    public static List<File> storageDirectoriesFromConfig(ServerConfiguration conf) throws IOException {
+        List<File> dirs = new ArrayList<>();
+
+        File[] journalDirs = conf.getJournalDirs();
+        if (journalDirs != null) {
+            for (File j : journalDirs) {
+                File cur = BookieImpl.getCurrentDirectory(j);
+                BookieImpl.checkDirectoryStructure(cur);
+                dirs.add(cur);
+            }
+        }
+
+        File[] ledgerDirs = conf.getLedgerDirs();
+        if (ledgerDirs != null) {
+            for (File l : ledgerDirs) {
+                File cur = BookieImpl.getCurrentDirectory(l);
+                BookieImpl.checkDirectoryStructure(cur);
+                dirs.add(cur);
+            }
+        }
+        File[] indexDirs = conf.getIndexDirs();
+        if (indexDirs != null) {
+            for (File i : indexDirs) {
+                File cur = BookieImpl.getCurrentDirectory(i);
+                BookieImpl.checkDirectoryStructure(cur);
+                dirs.add(cur);
+            }
+        }
+        return dirs;
     }
 
     public void runStreamStorage(CompositeConfiguration conf) throws Exception {
@@ -411,9 +505,9 @@ public class LocalBookkeeperEnsemble {
         }
     }
 
-    public void stopBK() {
+    public void stopBK() throws Exception {
         LOG.debug("Local ZK/BK stopping ...");
-        for (BookieServer bookie : bs) {
+        for (LocalBookie bookie : localBookies) {
             bookie.shutdown();
         }
     }
@@ -422,9 +516,7 @@ public class LocalBookkeeperEnsemble {
         for (int i = 0; i < numberOfBookies; i++) {
 
             try {
-                bs[i] = new BookieServer(bsConfs[i],
-                        BookieResources.createMetadataDriver(bsConfs[i], NullStatsLogger.INSTANCE),
-                        NullStatsLogger.INSTANCE);
+                localBookies[i] = newBookieServer(localBookies[i].getConfiguration());
             } catch (InvalidCookieException e) {
                 // InvalidCookieException can happen if the machine IP has changed
                 // Since we are running here a local bookie that is always accessed
@@ -434,15 +526,13 @@ public class LocalBookkeeperEnsemble {
                 }
 
                 // Also clean the on-disk cookie
-                new File(new File(bsConfs[i].getJournalDirNames()[0], "current"), "VERSION").delete();
+                new File(new File(localBookies[i].getConfiguration().getJournalDirNames()[0],
+                                  "current"), "VERSION").delete();
 
                 // Retry to start the bookie after cleaning the old left cookie
-                bs[i] = new BookieServer(bsConfs[i],
-                        BookieResources.createMetadataDriver(bsConfs[i], NullStatsLogger.INSTANCE),
-                        NullStatsLogger.INSTANCE);
-
+                localBookies[i] = newBookieServer(localBookies[i].getConfiguration());
             }
-            bs[i].start();
+            localBookies[i].getBookieServer().start();
         }
     }
 
@@ -453,7 +543,7 @@ public class LocalBookkeeperEnsemble {
         }
 
         LOG.debug("Local ZK/BK stopping ...");
-        for (BookieServer bookie : bs) {
+        for (LocalBookie bookie : localBookies) {
             bookie.shutdown();
         }
 
@@ -537,11 +627,52 @@ public class LocalBookkeeperEnsemble {
         return zks;
     }
 
+    public LocalBookie[] getLocalBookies() {
+        return localBookies;
+    }
+
     public BookieServer[] getBookies() {
-        return bs;
+        return Arrays.stream(localBookies).map(l -> l.getBookieServer()).toArray(BookieServer[]::new);
     }
 
     public int getZookeeperPort() {
         return zkPort;
+    }
+
+    public static class LocalBookie {
+                final ServerConfiguration conf;
+        final BookieServer bs;
+        final LedgerStorage storage;
+        final LedgerManager lm;
+        final RegistrationManager rm;
+        final MetadataBookieDriver metadataDriver;
+
+
+        LocalBookie(ServerConfiguration conf, BookieServer bs,
+                    LedgerStorage storage, LedgerManager lm,
+                    RegistrationManager rm, MetadataBookieDriver metadataDriver) {
+            this.conf = conf;
+            this.bs = bs;
+            this.lm = lm;
+            this.storage = storage;
+            this.rm = rm;
+            this.metadataDriver = metadataDriver;
+        }
+
+        public ServerConfiguration getConfiguration() { return conf; }
+        public LedgerManager getLedgerManager() { return lm; }
+        public BookieServer getBookieServer() { return bs; }
+
+        public void start() throws Exception {
+            bs.start();
+        }
+
+        public void shutdown() throws Exception {
+            bs.shutdown();
+            storage.shutdown();
+            lm.close();
+            rm.close();
+            metadataDriver.close();
+        }
     }
 }
