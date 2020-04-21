@@ -250,6 +250,13 @@ public class PersistentTopicsBase extends AdminResource {
 
     public void validateWriteOperationOnTopic(boolean authoritative) {
         validateTopicOwnership(topicName, authoritative);
+        validateWritePermissionOnTopic();
+    }
+
+    /**
+     * Check that client has produce permission on the topic, without enforcing topic ownership
+     */
+    private void validateWritePermissionOnTopic() {
         try {
             validateAdminAccessForTenant(topicName.getTenant());
         } catch (Exception e) {
@@ -431,7 +438,7 @@ public class PersistentTopicsBase extends AdminResource {
     }
 
     protected void internalCreatePartitionedTopic(int numPartitions) {
-        validateWriteOperationOnTopic(false);
+        validateWritePermissionOnTopic();
         if (numPartitions <= 0) {
             throw new RestException(Status.NOT_ACCEPTABLE, "Number of partitions should be more than 0");
         }
@@ -483,6 +490,7 @@ public class PersistentTopicsBase extends AdminResource {
     }
 
     protected void internalCreateNonPartitionedTopic(boolean authoritative) {
+        validateTopicOwnership(topicName, authoritative);
         validateWriteOperationOnTopic(authoritative);
         validateNonPartitionTopicName(topicName.getLocalName());
         if (topicName.isGlobal()) {
@@ -523,7 +531,7 @@ public class PersistentTopicsBase extends AdminResource {
      * @param numPartitions
      */
     protected void internalUpdatePartitionedTopic(int numPartitions, boolean updateLocalTopicOnly) {
-        validateWriteOperationOnTopic(false);
+        validateWritePermissionOnTopic();
         // Only do the validation if it's the first hop.
         if (!updateLocalTopicOnly) {
             validatePartitionTopicUpdate(topicName.getLocalName(), numPartitions);
