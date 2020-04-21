@@ -49,7 +49,6 @@ import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.bookkeeper.util.ZkUtils;
 import org.apache.pulsar.broker.BrokerData;
 import org.apache.pulsar.broker.BundleData;
@@ -143,13 +142,13 @@ public class ModularLoadManagerImplTest {
         ServiceConfiguration config1 = new ServiceConfiguration();
         config1.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());
         config1.setClusterName("use");
-        config1.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config1.setWebServicePort(Optional.of(0));
         config1.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
 
         config1.setAdvertisedAddress("localhost");
-        config1.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        config1.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
-        config1.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config1.setBrokerServicePort(Optional.of(0));
+        config1.setBrokerServicePortTls(Optional.of(0));
+        config1.setWebServicePortTls(Optional.of(0));
         pulsar1 = new PulsarService(config1);
         pulsar1.start();
 
@@ -161,12 +160,12 @@ public class ModularLoadManagerImplTest {
         ServiceConfiguration config2 = new ServiceConfiguration();
         config2.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());
         config2.setClusterName("use");
-        config2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config2.setWebServicePort(Optional.of(0));
         config2.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
         config2.setAdvertisedAddress("localhost");
-        config2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        config2.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
-        config2.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config2.setBrokerServicePort(Optional.of(0));
+        config2.setBrokerServicePortTls(Optional.of(0));
+        config2.setWebServicePortTls(Optional.of(0));
         pulsar2 = new PulsarService(config2);
         pulsar2.start();
 
@@ -591,9 +590,9 @@ public class ModularLoadManagerImplTest {
         ServiceConfiguration config = new ServiceConfiguration();
         config.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());
         config.setClusterName("use");
-        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setWebServicePort(Optional.of(0));
         config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setBrokerServicePort(Optional.of(0));
         PulsarService pulsar = new PulsarService(config);
         // create znode using different zk-session
         final String brokerZnode = LoadManager.LOADBALANCE_BROKERS_ROOT + "/" + pulsar.getAdvertisedAddress() + ":"

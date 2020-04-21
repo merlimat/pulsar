@@ -49,7 +49,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.bookkeeper.util.ZkUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.pulsar.broker.PulsarService;
@@ -122,12 +121,12 @@ public class SimpleLoadManagerImplTest {
         // Start broker 1
         ServiceConfiguration config1 = spy(new ServiceConfiguration());
         config1.setClusterName("use");
-        config1.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config1.setWebServicePort(Optional.of(0));
         config1.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config1.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        config1.setBrokerServicePort(Optional.of(0));
         config1.setLoadManagerClassName(SimpleLoadManagerImpl.class.getName());
-        config1.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
-        config1.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config1.setBrokerServicePortTls(Optional.of(0));
+        config1.setWebServicePortTls(Optional.of(0));
         config1.setAdvertisedAddress("localhost");
         pulsar1 = new PulsarService(config1);
         pulsar1.start();
@@ -140,12 +139,12 @@ public class SimpleLoadManagerImplTest {
         // Start broker 2
         ServiceConfiguration config2 = new ServiceConfiguration();
         config2.setClusterName("use");
-        config2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config2.setWebServicePort(Optional.of(0));
         config2.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        config2.setBrokerServicePort(Optional.of(0));
         config2.setLoadManagerClassName(SimpleLoadManagerImpl.class.getName());
-        config2.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
-        config2.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config2.setBrokerServicePortTls(Optional.of(0));
+        config2.setWebServicePortTls(Optional.of(0));
         config2.setAdvertisedAddress("localhost");
         pulsar2 = new PulsarService(config2);
         pulsar2.start();

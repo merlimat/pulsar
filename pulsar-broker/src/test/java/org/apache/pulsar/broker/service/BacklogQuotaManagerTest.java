@@ -32,7 +32,6 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.ConfigHelper;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
@@ -72,16 +71,16 @@ public class BacklogQuotaManagerTest {
 
 
             // start local bookie and zookeeper
-            bkEnsemble = new LocalBookkeeperEnsemble(3, 0, () -> PortAllocator.nextPort());
+            bkEnsemble = new LocalBookkeeperEnsemble(3, 0, () -> 0);
             bkEnsemble.start();
 
             // start pulsar service
             config = new ServiceConfiguration();
             config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
             config.setAdvertisedAddress("localhost");
-            config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+            config.setWebServicePort(Optional.of(0));
             config.setClusterName("usc");
-            config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+            config.setBrokerServicePort(Optional.of(0));
             config.setAuthorizationEnabled(false);
             config.setAuthenticationEnabled(false);
             config.setBacklogQuotaCheckIntervalInSeconds(TIME_TO_CHECK_BACKLOG_QUOTA);

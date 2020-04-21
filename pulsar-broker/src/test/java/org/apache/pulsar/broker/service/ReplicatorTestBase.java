@@ -113,15 +113,15 @@ public class ReplicatorTestBase {
         // independent config objects instead of referring to the same properties object
         config1.setClusterName("r1");
         config1.setAdvertisedAddress("localhost");
-        config1.setWebServicePort(Optional.of(PortAllocator.nextPort()));
-        config1.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config1.setWebServicePort(Optional.of(0));
+        config1.setWebServicePortTls(Optional.of(0));
         config1.setZookeeperServers("127.0.0.1:" + bkEnsemble1.getZookeeperPort());
         config1.setConfigurationStoreServers("127.0.0.1:" + globalZkS.getZookeeperPort() + "/foo");
         config1.setBrokerDeleteInactiveTopicsEnabled(isBrokerServicePurgeInactiveTopic());
         config1.setBrokerDeleteInactiveTopicsFrequencySeconds(
                 inSec(getBrokerServicePurgeInactiveFrequency(), TimeUnit.SECONDS));
-        config1.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        config1.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config1.setBrokerServicePort(Optional.of(0));
+        config1.setBrokerServicePortTls(Optional.of(0));
         config1.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         config1.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
         config1.setTlsTrustCertsFilePath(TLS_SERVER_CERT_FILE_PATH);
@@ -144,15 +144,15 @@ public class ReplicatorTestBase {
 
         config2.setClusterName("r2");
         config2.setAdvertisedAddress("localhost");
-        config2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
-        config2.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config2.setWebServicePort(Optional.of(0));
+        config2.setWebServicePortTls(Optional.of(0));
         config2.setZookeeperServers("127.0.0.1:" + bkEnsemble2.getZookeeperPort());
         config2.setConfigurationStoreServers("127.0.0.1:" + globalZkS.getZookeeperPort() + "/foo");
         config2.setBrokerDeleteInactiveTopicsEnabled(isBrokerServicePurgeInactiveTopic());
         config2.setBrokerDeleteInactiveTopicsFrequencySeconds(
                 inSec(getBrokerServicePurgeInactiveFrequency(), TimeUnit.SECONDS));
-        config2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        config2.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config2.setBrokerServicePort(Optional.of(0));
+        config2.setBrokerServicePortTls(Optional.of(0));
         config2.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         config2.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
         config2.setTlsTrustCertsFilePath(TLS_SERVER_CERT_FILE_PATH);
@@ -175,15 +175,15 @@ public class ReplicatorTestBase {
 
         config3.setClusterName("r3");
         config3.setAdvertisedAddress("localhost");
-        config3.setWebServicePort(Optional.of(PortAllocator.nextPort()));
-        config3.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config3.setWebServicePort(Optional.of(0));
+        config3.setWebServicePortTls(Optional.of(0));
         config3.setZookeeperServers("127.0.0.1:" + bkEnsemble3.getZookeeperPort());
         config3.setConfigurationStoreServers("127.0.0.1:" + globalZkS.getZookeeperPort() + "/foo");
         config3.setBrokerDeleteInactiveTopicsEnabled(isBrokerServicePurgeInactiveTopic());
         config3.setBrokerDeleteInactiveTopicsFrequencySeconds(
                 inSec(getBrokerServicePurgeInactiveFrequency(), TimeUnit.SECONDS));
-        config3.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        config3.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config3.setBrokerServicePort(Optional.of(0));
+        config3.setBrokerServicePortTls(Optional.of(0));
         config3.setTlsEnabled(true);
         config3.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         config3.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);

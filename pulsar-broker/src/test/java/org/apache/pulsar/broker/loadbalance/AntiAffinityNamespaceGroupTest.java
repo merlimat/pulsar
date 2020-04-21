@@ -108,9 +108,9 @@ public class AntiAffinityNamespaceGroupTest {
         ServiceConfiguration config1 = new ServiceConfiguration();
         config1.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());
         config1.setClusterName("use");
-        config1.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config1.setWebServicePort(Optional.of(0));
         config1.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config1.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        config1.setBrokerServicePort(Optional.of(0));
         config1.setFailureDomainsEnabled(true);
         config1.setLoadBalancerEnabled(true);
         config1.setAdvertisedAddress("localhost");
@@ -126,9 +126,9 @@ public class AntiAffinityNamespaceGroupTest {
         ServiceConfiguration config2 = new ServiceConfiguration();
         config2.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());
         config2.setClusterName("use");
-        config2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config2.setWebServicePort(Optional.of(0));
         config2.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
-        config2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+        config2.setBrokerServicePort(Optional.of(0));
         config2.setFailureDomainsEnabled(true);
         config2.setAdvertisedAddress("localhost");
         pulsar2 = new PulsarService(config2);

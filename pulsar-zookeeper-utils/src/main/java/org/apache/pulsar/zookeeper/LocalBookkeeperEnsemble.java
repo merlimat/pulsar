@@ -341,12 +341,6 @@ public class LocalBookkeeperEnsemble {
         LedgerDirsManager indexDirsManager = BookieResources.createIndexDirsManager(
                 config, diskChecker,  statsLogger, ledgerDirsManager);
 
-        // validate cookies
-        final CookieValidation cookieValidation =
-                new LegacyCookieValidation(config, registrationManager);
-        // this must run before the storage is created
-        cookieValidation.checkCookies(storageDirectoriesFromConfig(config));
-
         LedgerStorage storage = BookieResources.createLedgerStorage(
                 config, ledgerManager, ledgerDirsManager, indexDirsManager, statsLogger, allocator);
 

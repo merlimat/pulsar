@@ -18,9 +18,12 @@
  */
 package org.apache.pulsar.broker.service;
 
+import com.google.common.collect.Sets;
+
 import java.util.Optional;
 
-import org.apache.bookkeeper.test.PortAllocator;
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -30,10 +33,6 @@ import org.apache.pulsar.zookeeper.LocalBookkeeperEnsemble;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-
-import com.google.common.collect.Sets;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Test base for tests requires a bk ensemble.
@@ -69,9 +68,9 @@ public abstract class BkEnsemblesTestBase {
             config = new ServiceConfiguration();
             config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
             config.setAdvertisedAddress("localhost");
-            config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+            config.setWebServicePort(Optional.of(0));
             config.setClusterName("usc");
-            config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+            config.setBrokerServicePort(Optional.of(0));
             config.setAuthorizationEnabled(false);
             config.setAuthenticationEnabled(false);
             config.setManagedLedgerMaxEntriesPerLedger(5);

@@ -41,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.loadbalance.LoadManager;
@@ -883,13 +882,13 @@ public class NonPersistentTopicTest extends ProducerConsumerBase {
             ServiceConfiguration config1 = new ServiceConfiguration();
             config1.setClusterName(configClusterName);
             config1.setAdvertisedAddress("localhost");
-            config1.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+            config1.setWebServicePort(Optional.of(0));
             config1.setZookeeperServers("127.0.0.1:" + bkEnsemble1.getZookeeperPort());
             config1.setConfigurationStoreServers("127.0.0.1:" + globalZkS.getZookeeperPort() + "/foo");
             config1.setBrokerDeleteInactiveTopicsEnabled(isBrokerServicePurgeInactiveTopic());
             config1.setBrokerDeleteInactiveTopicsFrequencySeconds(
                     inSec(getBrokerServicePurgeInactiveFrequency(), TimeUnit.SECONDS));
-            config1.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+            config1.setBrokerServicePort(Optional.of(0));
             config1.setBacklogQuotaCheckIntervalInSeconds(TIME_TO_CHECK_BACKLOG_QUOTA);
             config1.setAllowAutoTopicCreationType("non-partitioned");
             pulsar1 = new PulsarService(config1);
@@ -907,14 +906,14 @@ public class NonPersistentTopicTest extends ProducerConsumerBase {
 
             config2 = new ServiceConfiguration();
             config2.setClusterName("r2");
-            config2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+            config2.setWebServicePort(Optional.of(0));
             config2.setAdvertisedAddress("localhost");
             config2.setZookeeperServers("127.0.0.1:" + bkEnsemble2.getZookeeperPort());
             config2.setConfigurationStoreServers("127.0.0.1:" + globalZkS.getZookeeperPort() + "/foo");
             config2.setBrokerDeleteInactiveTopicsEnabled(isBrokerServicePurgeInactiveTopic());
             config2.setBrokerDeleteInactiveTopicsFrequencySeconds(
                     inSec(getBrokerServicePurgeInactiveFrequency(), TimeUnit.SECONDS));
-            config2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+            config2.setBrokerServicePort(Optional.of(0));
             config2.setBacklogQuotaCheckIntervalInSeconds(TIME_TO_CHECK_BACKLOG_QUOTA);
             config2.setAllowAutoTopicCreationType("non-partitioned");
             pulsar2 = new PulsarService(config2);
@@ -932,14 +931,14 @@ public class NonPersistentTopicTest extends ProducerConsumerBase {
 
             config3 = new ServiceConfiguration();
             config3.setClusterName("r3");
-            config3.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+            config3.setWebServicePort(Optional.of(0));
             config3.setAdvertisedAddress("localhost");
             config3.setZookeeperServers("127.0.0.1:" + bkEnsemble3.getZookeeperPort());
             config3.setConfigurationStoreServers("127.0.0.1:" + globalZkS.getZookeeperPort() + "/foo");
             config3.setBrokerDeleteInactiveTopicsEnabled(isBrokerServicePurgeInactiveTopic());
             config3.setBrokerDeleteInactiveTopicsFrequencySeconds(
                     inSec(getBrokerServicePurgeInactiveFrequency(), TimeUnit.SECONDS));
-            config3.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+            config3.setBrokerServicePort(Optional.of(0));
             config3.setAllowAutoTopicCreationType("non-partitioned");
             pulsar3 = new PulsarService(config3);
             pulsar3.start();

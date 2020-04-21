@@ -28,7 +28,6 @@ import java.util.Set;
 
 import lombok.Cleanup;
 
-import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.authentication.AuthenticationService;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.ProducerConsumerBase;
@@ -104,8 +103,8 @@ public class ProxyForwardAuthDataTest extends ProducerConsumerBase {
         ProxyConfiguration proxyConfig = new ProxyConfiguration();
         proxyConfig.setAuthenticationEnabled(true);
 
-        proxyConfig.setServicePort(Optional.of(PortAllocator.nextPort()));
-        proxyConfig.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        proxyConfig.setServicePort(Optional.of(0));
+        proxyConfig.setWebServicePort(Optional.of(0));
         proxyConfig.setBrokerServiceURL(pulsar.getBrokerServiceUrl());
         proxyConfig.setBrokerClientAuthenticationPlugin(BasicAuthentication.class.getName());
         proxyConfig.setBrokerClientAuthenticationParameters(proxyAuthParams);

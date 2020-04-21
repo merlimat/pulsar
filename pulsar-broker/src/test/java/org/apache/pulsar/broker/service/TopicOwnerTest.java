@@ -19,7 +19,9 @@
 package org.apache.pulsar.broker.service;
 
 import com.google.common.collect.Sets;
-import org.apache.bookkeeper.test.PortAllocator;
+
+import java.util.Optional;
+
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -34,8 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.util.Optional;
 
 public class TopicOwnerTest {
 
@@ -57,10 +57,10 @@ public class TopicOwnerTest {
         // start brokers
         for (int i = 0; i < BROKER_COUNT; i++) {
             ServiceConfiguration config = new ServiceConfiguration();
-            config.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
+            config.setBrokerServicePort(Optional.of(0));
             config.setClusterName("my-cluster");
             config.setAdvertisedAddress("localhost");
-            config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+            config.setWebServicePort(Optional.of(0));
             config.setZookeeperServers("127.0.0.1" + ":" + bkEnsemble.getZookeeperPort());
             config.setDefaultNumberOfNamespaceBundles(1);
             config.setLoadBalancerEnabled(false);

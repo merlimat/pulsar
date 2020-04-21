@@ -66,7 +66,6 @@ import javax.net.ssl.TrustManager;
 
 import lombok.Cleanup;
 
-import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
@@ -144,8 +143,8 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
 
         /**** start broker-2 ****/
         ServiceConfiguration conf2 = new ServiceConfiguration();
-        conf2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        conf2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        conf2.setBrokerServicePort(Optional.of(0));
+        conf2.setWebServicePort(Optional.of(0));
         conf2.setAdvertisedAddress("localhost");
         conf2.setClusterName(conf.getClusterName());
         conf2.setZookeeperServers("localhost:2181");
@@ -223,8 +222,8 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
         final String property = "my-property2";
         ServiceConfiguration conf2 = new ServiceConfiguration();
         conf2.setAdvertisedAddress("localhost");
-        conf2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        conf2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        conf2.setBrokerServicePort(Optional.of(0));
+        conf2.setWebServicePort(Optional.of(0));
         conf2.setAdvertisedAddress("localhost");
         conf2.setClusterName(newCluster); // Broker2 serves newCluster
         conf2.setZookeeperServers("localhost:2181");
@@ -311,8 +310,8 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
         /**** start broker-2 ****/
         ServiceConfiguration conf2 = new ServiceConfiguration();
         conf2.setAdvertisedAddress("localhost");
-        conf2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        conf2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        conf2.setBrokerServicePort(Optional.of(0));
+        conf2.setWebServicePort(Optional.of(0));
         conf2.setAdvertisedAddress("localhost");
         conf2.setClusterName(pulsar.getConfiguration().getClusterName());
         conf2.setZookeeperServers("localhost:2181");
@@ -386,10 +385,10 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
         /**** start broker-2 ****/
         ServiceConfiguration conf2 = new ServiceConfiguration();
         conf2.setAdvertisedAddress("localhost");
-        conf2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        conf2.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
-        conf2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
-        conf2.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf2.setBrokerServicePort(Optional.of(0));
+        conf2.setBrokerServicePortTls(Optional.of(0));
+        conf2.setWebServicePort(Optional.of(0));
+        conf2.setWebServicePortTls(Optional.of(0));
         conf2.setAdvertisedAddress("localhost");
         conf2.setTlsAllowInsecureConnection(true);
         conf2.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
@@ -401,8 +400,8 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
         PulsarService pulsar2 = startBroker(conf2);
 
         // restart broker1 with tls enabled
-        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
-        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setBrokerServicePortTls(Optional.of(0));
+        conf.setWebServicePortTls(Optional.of(0));
         conf.setTlsAllowInsecureConnection(true);
         conf.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
@@ -481,7 +480,7 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
 
         // (1) start discovery service
         ServiceConfig config = new ServiceConfig();
-        config.setServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setServicePort(Optional.of(0));
         config.setBindOnLocalhost(true);
 
         @Cleanup
@@ -536,8 +535,8 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
         final String TLS_CLIENT_KEY_FILE_PATH = "./src/test/resources/certificate/client.key";
 
         // (1) restart broker1 with tls enabled
-        conf.setBrokerServicePortTls(Optional.of(PortAllocator.nextPort()));
-        conf.setWebServicePortTls(Optional.of(PortAllocator.nextPort()));
+        conf.setBrokerServicePortTls(Optional.of(0));
+        conf.setWebServicePortTls(Optional.of(0));
         conf.setTlsAllowInsecureConnection(true);
         conf.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         conf.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
@@ -546,8 +545,8 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
 
         // (2) start discovery service
         ServiceConfig config = new ServiceConfig();
-        config.setServicePort(Optional.of(PortAllocator.nextPort()));
-        config.setServicePortTls(Optional.of(PortAllocator.nextPort()));
+        config.setServicePort(Optional.of(0));
+        config.setServicePortTls(Optional.of(0));
         config.setBindOnLocalhost(true);
         config.setTlsCertificateFilePath(TLS_SERVER_CERT_FILE_PATH);
         config.setTlsKeyFilePath(TLS_SERVER_KEY_FILE_PATH);
@@ -601,7 +600,7 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
 
         // (1) start discovery service
         ServiceConfig config = new ServiceConfig();
-        config.setServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setServicePort(Optional.of(0));
         config.setBindOnLocalhost(true);
         // add Authentication Provider
         Set<String> providersClassNames = Sets.newHashSet(MockAuthenticationProvider.class.getName());
@@ -677,7 +676,7 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
 
         // (1) start discovery service
         ServiceConfig config = new ServiceConfig();
-        config.setServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setServicePort(Optional.of(0));
         config.setBindOnLocalhost(true);
         // set Authentication provider which fails authentication
         Set<String> providersClassNames = Sets.newHashSet(MockAuthenticationProviderFail.class.getName());
@@ -739,7 +738,7 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
 
         // (1) start discovery service
         ServiceConfig config = new ServiceConfig();
-        config.setServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setServicePort(Optional.of(0));
         config.setBindOnLocalhost(true);
         // set Authentication provider which returns "invalid" appid so, authorization fails
         Set<String> providersClassNames = Sets.newHashSet(MockAuthorizationProviderFail.class.getName());
@@ -824,8 +823,8 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
         // (1) Start broker-1
         ServiceConfiguration conf2 = new ServiceConfiguration();
         conf2.setAdvertisedAddress("localhost");
-        conf2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-        conf2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        conf2.setBrokerServicePort(Optional.of(0));
+        conf2.setWebServicePort(Optional.of(0));
         conf2.setAdvertisedAddress("localhost");
         conf2.setClusterName(conf.getClusterName());
         conf2.setZookeeperServers("localhost:2181");
@@ -927,8 +926,8 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase {
             // (1) Start broker-1
             ServiceConfiguration conf2 = new ServiceConfiguration();
             conf2.setAdvertisedAddress("localhost");
-            conf2.setBrokerServicePort(Optional.of(PortAllocator.nextPort()));
-            conf2.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+            conf2.setBrokerServicePort(Optional.of(0));
+            conf2.setWebServicePort(Optional.of(0));
             conf2.setAdvertisedAddress("localhost");
             conf2.setClusterName(conf.getClusterName());
             conf2.setLoadManagerClassName(ModularLoadManagerImpl.class.getName());

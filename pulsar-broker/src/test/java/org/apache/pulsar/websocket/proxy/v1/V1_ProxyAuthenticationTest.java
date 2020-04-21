@@ -37,7 +37,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.bookkeeper.test.PortAllocator;
 import org.apache.pulsar.client.api.v1.V1_ProducerConsumerBase;
 import org.apache.pulsar.websocket.WebSocketService;
 import org.apache.pulsar.websocket.proxy.SimpleConsumerSocket;
@@ -68,7 +67,7 @@ public class V1_ProxyAuthenticationTest extends V1_ProducerConsumerBase {
         super.producerBaseSetup();
 
         WebSocketProxyConfiguration config = new WebSocketProxyConfiguration();
-        config.setWebServicePort(Optional.of(PortAllocator.nextPort()));
+        config.setWebServicePort(Optional.of(0));
         config.setClusterName("use");
         config.setAuthenticationEnabled(true);
         // If this is not set, 500 error occurs.
