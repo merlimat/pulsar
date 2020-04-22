@@ -54,12 +54,14 @@ import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
 import org.apache.pulsar.broker.authentication.AuthenticationProvider;
 import org.apache.pulsar.broker.authentication.AuthenticationState;
+import org.apache.pulsar.broker.cache.ConfigurationCacheService;
 import org.apache.pulsar.broker.service.BrokerServiceException.ConsumerBusyException;
 import org.apache.pulsar.broker.service.BrokerServiceException.ServerMetadataException;
 import org.apache.pulsar.broker.service.BrokerServiceException.ServiceUnitNotReadyException;
 import org.apache.pulsar.broker.service.BrokerServiceException.TopicNotFoundException;
 import org.apache.pulsar.broker.service.schema.exceptions.IncompatibleSchemaException;
 import org.apache.pulsar.broker.service.schema.SchemaRegistryService;
+import org.apache.pulsar.broker.web.PulsarWebResource;
 import org.apache.pulsar.broker.web.RestException;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.impl.BatchMessageIdImpl;
@@ -67,6 +69,7 @@ import org.apache.pulsar.client.impl.ClientCnx;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 import org.apache.pulsar.common.api.AuthData;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandNewTxn;
+import org.apache.pulsar.common.policies.data.TenantInfo;
 import org.apache.pulsar.common.protocol.CommandUtils;
 import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.protocol.PulsarHandler;
@@ -731,8 +734,7 @@ public class ServerCnx extends PulsarHandler {
 
         CompletableFuture<Boolean> isProxyAuthorizedFuture;
         if (service.isAuthorizationEnabled() && originalPrincipal != null) {
-            isProxyAuthorizedFuture = service.getAuthorizationService().canConsumeAsync(topicName, authRole,
-                    authenticationData, subscribe.getSubscription());
+            isProxyAuthorizedFuture = canConsume(topicName, authRole, subscribe.getSubscription());
         } else {
             isProxyAuthorizedFuture = CompletableFuture.completedFuture(true);
         }
@@ -740,8 +742,8 @@ public class ServerCnx extends PulsarHandler {
             if (isProxyAuthorized) {
                 CompletableFuture<Boolean> authorizationFuture;
                 if (service.isAuthorizationEnabled()) {
-                    authorizationFuture = service.getAuthorizationService().canConsumeAsync(topicName,
-                            originalPrincipal != null ? originalPrincipal : authRole, authenticationData,
+                    authorizationFuture = canConsume(topicName,
+                            originalPrincipal != null ? originalPrincipal : authRole,
                             subscription);
                 } else {
                     authorizationFuture = CompletableFuture.completedFuture(true);
@@ -912,6 +914,37 @@ public class ServerCnx extends PulsarHandler {
             )).build();
     }
 
+    private CompletableFuture<Boolean> canProduce(TopicName topicName, String role) {
+        return computeAuthorizedFuture(topicName, role, null, true);
+    }
+
+    private CompletableFuture<Boolean> canConsume(TopicName topicName, String role, String subscription) {
+        return computeAuthorizedFuture(topicName, role, subscription, false);
+    }
+
+    private CompletableFuture<Boolean> computeAuthorizedFuture(TopicName topicName, String role, String subscription, boolean produce) {
+        String path = PulsarWebResource.path(ConfigurationCacheService.POLICIES, topicName.getTenant());
+        try {
+            TenantInfo tenantInfo = service.getPulsar().getConfigurationCache().propertiesCache().get(path)
+                    .orElseThrow(() -> new PulsarServerException.NotFoundException("Tenant does not exist"));
+            CompletableFuture<Boolean> isTenantAdminFuture = service.getAuthorizationService().isTenantAdmin(topicName.getTenant(), role, tenantInfo, authenticationData);
+            return isTenantAdminFuture.thenCompose(isTenantAdmin -> {
+                if (isTenantAdmin) { return CompletableFuture.completedFuture(true); }
+                else {
+                    if (produce) {
+                        return service.getAuthorizationService().canProduceAsync(topicName, role, authenticationData);
+                    } else {
+                        return service.getAuthorizationService().canConsumeAsync(topicName, role, authenticationData, subscription);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            CompletableFuture<Boolean> retval = new CompletableFuture();
+            retval.completeExceptionally(e);
+            return retval;
+        }
+    }
+
     @Override
     protected void handleProducer(final CommandProducer cmdProducer) {
         checkArgument(state == State.Connected);
@@ -941,8 +974,7 @@ public class ServerCnx extends PulsarHandler {
 
         CompletableFuture<Boolean> isProxyAuthorizedFuture;
         if (service.isAuthorizationEnabled() && originalPrincipal != null) {
-            isProxyAuthorizedFuture = service.getAuthorizationService().canProduceAsync(topicName,
-                    authRole, authenticationData);
+            isProxyAuthorizedFuture = canProduce(topicName, authRole);
         } else {
             isProxyAuthorizedFuture = CompletableFuture.completedFuture(true);
         }
@@ -950,8 +982,8 @@ public class ServerCnx extends PulsarHandler {
             if (isProxyAuthorized) {
                 CompletableFuture<Boolean> authorizationFuture;
                 if (service.isAuthorizationEnabled()) {
-                    authorizationFuture = service.getAuthorizationService().canProduceAsync(topicName,
-                            originalPrincipal != null ? originalPrincipal : authRole, authenticationData);
+                    authorizationFuture = canProduce(topicName,
+                            originalPrincipal != null ? originalPrincipal : authRole);
                 } else {
                     authorizationFuture = CompletableFuture.completedFuture(true);
                 }

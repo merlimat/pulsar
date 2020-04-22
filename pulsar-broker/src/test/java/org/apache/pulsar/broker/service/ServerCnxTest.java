@@ -21,6 +21,7 @@ package org.apache.pulsar.broker.service;
 import static org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest.createMockBookKeeper;
 import static org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest.createMockZooKeeper;
 import static org.apache.pulsar.broker.cache.ConfigurationCacheService.POLICIES;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.matches;
 import static org.mockito.Mockito.doAnswer;
@@ -80,6 +81,7 @@ import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.broker.service.schema.DefaultSchemaRegistryService;
 import org.apache.pulsar.broker.service.utils.ClientChannelHelper;
 import org.apache.pulsar.common.api.AuthData;
+import org.apache.pulsar.common.policies.data.TenantInfo;
 import org.apache.pulsar.common.protocol.ByteBufPair;
 import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.protocol.Commands.ChecksumType;
@@ -171,6 +173,11 @@ public class ServerCnxTest {
         ZooKeeperDataCache<Policies> zkDataCache = mock(ZooKeeperDataCache.class);
         doReturn(Optional.empty()).when(zkDataCache).get(any());
         doReturn(zkDataCache).when(configCacheService).policiesCache();
+        ZooKeeperDataCache<TenantInfo> zooKeeperDataCache = mock(ZooKeeperDataCache.class);
+        doReturn(zooKeeperDataCache).when(configCacheService).propertiesCache();
+        TenantInfo tenantInfo = new TenantInfo();
+        tenantInfo.setAllowedClusters(Collections.singleton("use"));
+        doReturn(Optional.of(tenantInfo)).when(zooKeeperDataCache).get(anyString());
         doReturn(configCacheService).when(pulsar).getConfigurationCache();
 
         LocalZooKeeperCacheService zkCache = mock(LocalZooKeeperCacheService.class);
@@ -537,6 +544,7 @@ public class ServerCnxTest {
         Field providerField = AuthorizationService.class.getDeclaredField("provider");
         providerField.setAccessible(true);
         PulsarAuthorizationProvider authorizationProvider = spy(new PulsarAuthorizationProvider(svcConfig, configCacheService));
+
         providerField.set(authorizationService, authorizationProvider);
         doReturn(authorizationService).when(brokerService).getAuthorizationService();
         doReturn(true).when(brokerService).isAuthorizationEnabled();
@@ -1193,6 +1201,8 @@ public class ServerCnxTest {
     public void testSubscribeCommandWithAuthorizationPositive() throws Exception {
         AuthorizationService authorizationService = mock(AuthorizationService.class);
         doReturn(CompletableFuture.completedFuture(true)).when(authorizationService).canConsumeAsync(Mockito.any(),
+                Mockito.any(), Mockito.any(), Mockito.any());
+        doReturn(CompletableFuture.completedFuture(false)).when(authorizationService).isTenantAdmin(Mockito.any(),
                 Mockito.any(), Mockito.any(), Mockito.any());
         doReturn(authorizationService).when(brokerService).getAuthorizationService();
         doReturn(true).when(brokerService).isAuthenticationEnabled();
