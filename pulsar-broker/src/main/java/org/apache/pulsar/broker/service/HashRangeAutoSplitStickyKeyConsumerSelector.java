@@ -81,10 +81,8 @@ public class HashRangeAutoSplitStickyKeyConsumerSelector implements StickyKeyCon
 
     @Override
     public Consumer select(byte[] stickyKey) {
-        return select(Murmur3_32Hash.getInstance().makeHash(stickyKey));
-    }
+        int hash = Murmur3_32Hash.getInstance().makeHash(stickyKey);
 
-    public Consumer select(int hash) {
         rwLock.readLock().lock();
         try {
             if (hashRing.isEmpty()) {
