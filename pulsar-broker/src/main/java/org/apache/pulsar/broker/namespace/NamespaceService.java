@@ -18,9 +18,40 @@
  */
 package org.apache.pulsar.broker.namespace;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.pulsar.broker.admin.AdminResource.PARTITIONED_TOPIC_PATH_ZNODE;
+import static org.apache.pulsar.broker.cache.ConfigurationCacheService.POLICIES;
+import static org.apache.pulsar.broker.cache.LocalZooKeeperCacheService.LOCAL_POLICIES_ROOT;
+import static org.apache.pulsar.broker.web.PulsarWebResource.joinPath;
+import static org.apache.pulsar.common.naming.NamespaceBundleFactory.getBundlesData;
+import static org.apache.pulsar.common.util.Codec.decode;
+
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
+
 import io.netty.channel.EventLoopGroup;
+
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
@@ -69,35 +100,6 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.Code;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.URI;
-import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.pulsar.broker.admin.AdminResource.PARTITIONED_TOPIC_PATH_ZNODE;
-import static org.apache.pulsar.broker.cache.ConfigurationCacheService.POLICIES;
-import static org.apache.pulsar.broker.cache.LocalZooKeeperCacheService.LOCAL_POLICIES_ROOT;
-import static org.apache.pulsar.broker.web.PulsarWebResource.joinPath;
-import static org.apache.pulsar.common.naming.NamespaceBundleFactory.getBundlesData;
-import static org.apache.pulsar.common.util.Codec.decode;
 
 /**
  * The <code>NamespaceService</code> provides resource ownership lookup as well as resource ownership claiming services
@@ -537,13 +539,19 @@ public class NamespaceService {
         return Optional.of(lookupAddress);
     }
 
-    public void unloadNamespaceBundle(NamespaceBundle bundle) throws Exception {
+    public CompletableFuture<Void> unloadNamespaceBundle(NamespaceBundle bundle) {
         // unload namespace bundle
-        unloadNamespaceBundle(bundle, 5, TimeUnit.MINUTES);
+        return unloadNamespaceBundle(bundle, 5, TimeUnit.MINUTES);
     }
 
-    public void unloadNamespaceBundle(NamespaceBundle bundle, long timeout, TimeUnit timeoutUnit) throws Exception {
-        checkNotNull(ownershipCache.getOwnedBundle(bundle)).handleUnloadRequest(pulsar, timeout, timeoutUnit);
+    public CompletableFuture<Void> unloadNamespaceBundle(NamespaceBundle bundle, int timeout, TimeUnit timeoutUnit) {
+        // unload namespace bundle
+        OwnedBundle ob = ownershipCache.getOwnedBundle(bundle);
+        if (ob == null) {
+            return FutureUtil.failedFuture(new IllegalStateException("Bundle " + bundle + " is not currently owned"));
+        } else {
+            return ob.handleUnloadRequest(pulsar, timeout, timeoutUnit);
+        }
     }
 
     public CompletableFuture<Boolean> isNamespaceBundleOwned(NamespaceBundle bundle) {
@@ -724,36 +732,37 @@ public class NamespaceService {
                 return;
             }
 
+
             // success updateNamespaceBundles
-            try {
-                // disable old bundle in memory
-                getOwnershipCache().updateBundleState(bundle, false);
-
-                // update bundled_topic cache for load-report-generation
-                pulsar.getBrokerService().refreshTopicToStatsMaps(bundle);
-                loadManager.get().setLoadReportForceUpdateFlag();
-
-                if (unload) {
-                    // unload new split bundles
-                    r.forEach(splitBundle -> {
-                        try {
-                            unloadNamespaceBundle(splitBundle);
-                        } catch (Exception e) {
-                            LOG.warn("Failed to unload split bundle {}", splitBundle, e);
-                            throw new RuntimeException("Failed to unload split bundle " + splitBundle, e);
+            // disable old bundle in memory
+            getOwnershipCache().updateBundleState(bundle, false)
+                    .thenRun(() -> {
+                        // update bundled_topic cache for load-report-generation
+                        pulsar.getBrokerService().refreshTopicToStatsMaps(bundle);
+                        loadManager.get().setLoadReportForceUpdateFlag();
+                    })
+                    .thenCompose((v) -> {
+                        if (!unload) {
+                            // If we don't need to unload, then we're done here
+                            return CompletableFuture.completedFuture(null);
                         }
-                    });
-                }
 
-                unloadFuture.complete(null);
-            } catch (Exception e) {
-                String msg1 = format(
-                    "failed to disable bundle %s under namespace [%s] with error %s",
-                    bundle.getNamespaceObject().toString(), bundle.toString(), e.getMessage());
-                LOG.warn(msg1, e);
-                unloadFuture.completeExceptionally(new ServiceUnitNotReadyException(msg1));
-            }
-            return;
+                        // unload new split bundles
+                        List<CompletableFuture<Void>> futures = new ArrayList<>();
+                        r.forEach(splitBundle -> futures.add(unloadNamespaceBundle(splitBundle)));
+                        return FutureUtil.waitForAll(futures);
+                    })
+                    .thenRun(() -> {
+                        unloadFuture.complete(null);
+                    })
+                    .exceptionally(ex -> {
+                        String msg1 = format(
+                                "failed to disable bundle %s under namespace [%s] with error %s",
+                                bundle.getNamespaceObject().toString(), bundle.toString(), ex.getMessage());
+                        LOG.warn(msg1, ex);
+                        unloadFuture.completeExceptionally(new ServiceUnitNotReadyException(msg1));
+                        return null;
+                    });
         }, pulsar.getOrderedExecutor());
     }
 

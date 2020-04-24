@@ -430,11 +430,12 @@ public class Namespaces extends NamespacesBase {
     @Path("/{property}/{cluster}/{namespace}/{bundle}/unload")
     @ApiOperation(hidden = true, value = "Unload a namespace bundle")
     @ApiResponses(value = { @ApiResponse(code = 403, message = "Don't have admin permission") })
-    public void unloadNamespaceBundle(@PathParam("property") String property, @PathParam("cluster") String cluster,
+    public void unloadNamespaceBundle(@Suspended final AsyncResponse asyncResponse,
+            @PathParam("property") String property, @PathParam("cluster") String cluster,
             @PathParam("namespace") String namespace, @PathParam("bundle") String bundleRange,
             @QueryParam("authoritative") @DefaultValue("false") boolean authoritative) {
         validateNamespaceName(property, cluster, namespace);
-        internalUnloadNamespaceBundle(bundleRange, authoritative);
+        internalUnloadNamespaceBundle(asyncResponse, bundleRange, authoritative);
     }
 
     @PUT
@@ -469,7 +470,7 @@ public class Namespaces extends NamespacesBase {
         validateNamespaceName(property, cluster, namespace);
         return internalGetPublishRate();
     }
-    
+
     @POST
     @Path("/{property}/{cluster}/{namespace}/dispatchRate")
     @ApiOperation(hidden = true, value = "Set dispatch-rate throttling for all topics of the namespace")

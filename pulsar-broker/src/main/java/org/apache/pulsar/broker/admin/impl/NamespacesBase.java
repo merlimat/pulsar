@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
@@ -886,7 +887,7 @@ public abstract class NamespacesBase extends AdminResource {
     }
 
     @SuppressWarnings("deprecation")
-    public void internalUnloadNamespaceBundle(String bundleRange, boolean authoritative) {
+    public void internalUnloadNamespaceBundle(AsyncResponse asyncResponse, String bundleRange, boolean authoritative) {
         log.info("[{}] Unloading namespace bundle {}/{}", clientAppId(), namespaceName, bundleRange);
 
         validateSuperUserAccess();
@@ -919,6 +920,7 @@ public abstract class NamespacesBase extends AdminResource {
         if (!isBundleOwnedByAnyBroker(namespaceName, policies.bundles, bundleRange)) {
             log.info("[{}] Namespace bundle is not owned by any broker {}/{}", clientAppId(), namespaceName,
                     bundleRange);
+            asyncResponse.resume(Response.noContent().build());
             return;
         }
 
@@ -936,13 +938,16 @@ public abstract class NamespacesBase extends AdminResource {
                     e.getMessage());
         }
 
-        try {
-            pulsar().getNamespaceService().unloadNamespaceBundle(nsBundle);
-            log.info("[{}] Successfully unloaded namespace bundle {}", clientAppId(), nsBundle.toString());
-        } catch (Exception e) {
-            log.error("[{}] Failed to unload namespace bundle {}/{}", clientAppId(), namespaceName, bundleRange, e);
-            throw new RestException(e);
-        }
+        pulsar().getNamespaceService().unloadNamespaceBundle(nsBundle)
+                .thenRun(() -> {
+                    log.info("[{}] Successfully unloaded namespace bundle {}", clientAppId(), nsBundle.toString());
+                    asyncResponse.resume(Response.noContent().build());
+                }).exceptionally(ex -> {
+                    log.error("[{}] Failed to unload namespace bundle {}/{}", clientAppId(), namespaceName, bundleRange,
+                            ex);
+                    asyncResponse.resume(new RestException(ex));
+                    return null;
+                });
     }
 
     @SuppressWarnings("deprecation")

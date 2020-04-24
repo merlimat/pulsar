@@ -30,6 +30,7 @@ import static org.apache.pulsar.broker.web.PulsarWebResource.joinPath;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.AdaptiveRecvByteBufAllocator;
@@ -40,6 +41,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.util.concurrent.DefaultThreadFactory;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -55,19 +57,24 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
+
+import javax.ws.rs.core.Response;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+
 import org.apache.bookkeeper.common.util.OrderedExecutor;
 import org.apache.bookkeeper.common.util.OrderedScheduler;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.OpenLedgerCallback;
@@ -99,7 +106,6 @@ import org.apache.pulsar.broker.service.BrokerServiceException.PersistenceExcept
 import org.apache.pulsar.broker.service.BrokerServiceException.ServerMetadataException;
 import org.apache.pulsar.broker.service.BrokerServiceException.ServiceUnitNotReadyException;
 import org.apache.pulsar.broker.service.nonpersistent.NonPersistentTopic;
-import org.apache.pulsar.broker.service.persistent.DispatchRateLimiter;
 import org.apache.pulsar.broker.service.persistent.PersistentDispatcherMultipleConsumers;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.broker.stats.ClusterReplicationMetrics;
@@ -151,7 +157,6 @@ import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.ws.rs.core.Response;
 
 @Getter(AccessLevel.PUBLIC)
 @Setter(AccessLevel.PROTECTED)
@@ -619,7 +624,7 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
             serviceUnits.forEach(su -> {
                 if (su instanceof NamespaceBundle) {
                     try {
-                        pulsar.getNamespaceService().unloadNamespaceBundle((NamespaceBundle) su, 1, TimeUnit.MINUTES);
+                        pulsar.getNamespaceService().unloadNamespaceBundle((NamespaceBundle) su, 1, TimeUnit.MINUTES).get();
                     } catch (Exception e) {
                         log.warn("Failed to unload namespace bundle {}", su, e);
                     }
@@ -1240,14 +1245,29 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
         }
     }
 
+
+    public CompletableFuture<Integer> unloadServiceUnit(NamespaceBundle serviceUnit, int timeout, TimeUnit unit) {
+        CompletableFuture<Integer> future = unloadServiceUnit(serviceUnit);
+        ScheduledFuture<?> taskTimeout = executor().schedule(() -> {
+            if (!future.isDone()) {
+                log.warn("Unloading of {} has timed out", serviceUnit);
+                // Complete the future with no error
+                future.complete(0);
+            }
+        }, timeout, unit);
+
+        future.whenComplete( (r, ex) -> taskTimeout.cancel(true));
+        return future;
+    }
+
+
     /**
      * Unload all the topic served by the broker service under the given service unit
      *
      * @param serviceUnit
      * @return
      */
-    public CompletableFuture<Integer> unloadServiceUnit(NamespaceBundle serviceUnit) {
-        CompletableFuture<Integer> result = new CompletableFuture<Integer>();
+    private CompletableFuture<Integer> unloadServiceUnit(NamespaceBundle serviceUnit) {
         List<CompletableFuture<Void>> closeFutures = Lists.newArrayList();
         topics.forEach((name, topicFuture) -> {
             TopicName topicName = TopicName.get(name);
@@ -1258,12 +1278,7 @@ public class BrokerService implements Closeable, ZooKeeperCacheListener<Policies
                         .thenCompose(t -> t.isPresent() ? t.get().close() : CompletableFuture.completedFuture(null)));
             }
         });
-        CompletableFuture<Void> aggregator = FutureUtil.waitForAll(closeFutures);
-        aggregator.thenAccept(res -> result.complete(closeFutures.size())).exceptionally(ex -> {
-            result.completeExceptionally(ex);
-            return null;
-        });
-        return result;
+        return FutureUtil.waitForAll(closeFutures).thenApply(v -> closeFutures.size());
     }
 
     public AuthorizationService getAuthorizationService() {

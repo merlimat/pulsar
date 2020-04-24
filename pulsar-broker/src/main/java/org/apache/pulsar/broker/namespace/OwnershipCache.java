@@ -18,6 +18,14 @@
  */
 package org.apache.pulsar.broker.namespace;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
+import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,19 +43,13 @@ import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.stats.CacheMetricsCollector;
 import org.apache.pulsar.zookeeper.ZooKeeperCache;
 import org.apache.pulsar.zookeeper.ZooKeeperDataCache;
+import org.apache.zookeeper.AsyncCallback.StatCallback;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.AsyncCacheLoader;
-import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * This class provides a cache service for all the service unit ownership among the brokers. It provide a cache service
@@ -342,11 +344,41 @@ public class OwnershipCache {
      * @param bundle
      * @throws Exception
      */
-    public void disableOwnership(NamespaceBundle bundle) throws Exception {
+    public CompletableFuture<Void> disableOwnership(NamespaceBundle bundle) {
         String path = ServiceUnitZkUtils.path(bundle);
-        updateBundleState(bundle, false);
-        localZkCache.getZooKeeper().setData(path, jsonMapper.writeValueAsBytes(selfOwnerInfoDisabled), -1);
-        ownershipReadOnlyCache.invalidate(path);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        updateBundleState(bundle, false)
+                .thenRun(() -> {
+                    byte[] value;
+                    try {
+                        value = jsonMapper.writeValueAsBytes(selfOwnerInfoDisabled);
+                    } catch (JsonProcessingException e) {
+                        future.completeExceptionally(e);
+                        return;
+                    }
+
+                    localZkCache.getZooKeeper().setData(path, value, -1, new StatCallback() {
+                        @SuppressWarnings("deprecation")
+                        @Override
+                        public void processResult(int rc, String path, Object ctx, Stat stat) {
+                            if (rc == KeeperException.Code.OK.intValue()) {
+                                ownershipReadOnlyCache.invalidate(path);
+                                future.complete(null);
+                            } else {
+                                future.completeExceptionally(KeeperException.create(rc));
+                            }
+                        }
+                    }, null);
+                })
+                .exceptionally(ex -> {
+                    LOG.warn("Failed to update state on namespace bundle {}: {}", bundle, ex.getMessage(), ex);
+                    future.completeExceptionally(ex);
+                    return null;
+                });
+
+        return future;
     }
 
     /**
@@ -355,12 +387,14 @@ public class OwnershipCache {
      * @param bundle
      * @throws Exception
      */
-    public void updateBundleState(NamespaceBundle bundle, boolean isActive) throws Exception {
+    public CompletableFuture<Void> updateBundleState(NamespaceBundle bundle, boolean isActive) {
         String path = ServiceUnitZkUtils.path(bundle);
         // Disable owned instance in local cache
         CompletableFuture<OwnedBundle> f = ownedBundlesCache.getIfPresent(path);
         if (f != null && f.isDone() && !f.isCompletedExceptionally()) {
-            f.join().setActive(isActive);
+            return f.thenAccept(ob -> ob.setActive(isActive));
+        } else {
+            return CompletableFuture.completedFuture(null);
         }
     }
 
