@@ -646,9 +646,7 @@ public class ModularLoadManagerImpl implements ModularLoadManager, ZooKeeperCach
                             .canSplitBundle(namespaceBundleFactory.getBundle(namespaceName, bundleRange))) {
                         continue;
                     }
-                    log.info("Load-manager splitting bundle {} and unloading {}", bundleName, unloadSplitBundles);
-                    pulsar.getAdminClient().namespaces().splitNamespaceBundle(namespaceName, bundleRange,
-                            unloadSplitBundles);
+
                     // Make sure the same bundle is not selected again.
                     loadData.getBundleData().remove(bundleName);
                     localData.getLastStats().remove(bundleName);
@@ -656,6 +654,11 @@ public class ModularLoadManagerImpl implements ModularLoadManager, ZooKeeperCach
                     this.pulsar.getNamespaceService().getNamespaceBundleFactory()
                             .invalidateBundleCache(NamespaceName.get(namespaceName));
                     deleteBundleDataFromZookeeper(bundleName);
+
+                    log.info("Load-manager splitting bundle {} and unloading {}", bundleName, unloadSplitBundles);
+                    pulsar.getAdminClient().namespaces().splitNamespaceBundle(namespaceName, bundleRange,
+                            unloadSplitBundles);
+
                     log.info("Successfully split namespace bundle {}", bundleName);
                 } catch (Exception e) {
                     log.error("Failed to split namespace bundle {}", bundleName, e);
