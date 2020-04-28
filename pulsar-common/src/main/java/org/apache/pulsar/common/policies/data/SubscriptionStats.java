@@ -64,7 +64,7 @@ public class SubscriptionStats {
     /** List of connected consumers on this subscription w/ their stats. */
     public List<ConsumerStats> consumers;
 
-    /** Tells whether this subscription is durable or ephemeral (eg.: from a reader) */
+    /** Tells whether this subscription is durable or ephemeral (eg.: from a reader). */
     public boolean isDurable;
 
     /** Mark that the subscription state is kept in sync across different regions. */
