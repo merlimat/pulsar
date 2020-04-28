@@ -963,6 +963,7 @@ public class PersistentSubscription implements Subscription {
         subStats.msgBacklog = getNumberOfEntriesInBacklog();
         subStats.msgRateExpired = expiryMonitor.getMessageExpiryRate();
         subStats.isReplicated = isReplicated();
+        subStats.isDurable = cursor.isDurable();
         return subStats;
     }
 
