@@ -93,7 +93,7 @@ import org.testng.annotations.Test;
 public class ManagedCursorTest extends MockedBookKeeperTestCase {
 
     private static final Charset Encoding = Charsets.UTF_8;
-    
+
     @DataProvider(name = "useOpenRangeSet")
     public static Object[][] useOpenRangeSet() {
         return new Object[][] { { Boolean.TRUE }, { Boolean.FALSE } };
@@ -2983,6 +2983,31 @@ public class ManagedCursorTest extends MockedBookKeeperTestCase {
         assertEquals(c1.getMarkDeletedPosition(), positions[markDelete]);
         assertEquals(c1.getReadPosition(), positions[markDelete + 1]);
     }
-    
+
+    @Test
+    void testReadEntriesOrWaitWithMaxSize() throws Exception {
+        ManagedLedger ledger = factory.open("testReadEntriesOrWaitWithMaxSize");
+        ManagedCursor c = ledger.openCursor("c");
+
+        for (int i = 0; i < 20; i++) {
+            ledger.addEntry(new byte[1024]);
+        }
+
+        // First time, since we don't have info, we'll get 1 single entry
+        List<Entry> entries = c.readEntriesOrWait(10, 3 * 1024);
+        assertEquals(entries.size(), 1);
+        entries.forEach(e -> e.release());
+
+        // We should only return 3 entries, based on the max size
+        entries = c.readEntriesOrWait(10, 3 * 1024);
+        assertEquals(entries.size(), 3);
+        entries.forEach(e -> e.release());
+
+        // If maxSize is < avg, we should get 1 entry
+        entries = c.readEntriesOrWait(10, 5);
+        assertEquals(entries.size(), 1);
+        entries.forEach(e -> e.release());
+    }
+
     private static final Logger log = LoggerFactory.getLogger(ManagedCursorTest.class);
 }
