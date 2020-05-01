@@ -38,7 +38,6 @@ import org.apache.pulsar.broker.service.EntryBatchSizes;
 import org.apache.pulsar.broker.service.SendMessageInfo;
 import org.apache.pulsar.broker.service.StickyKeyConsumerSelector;
 import org.apache.pulsar.broker.service.Subscription;
-import org.apache.pulsar.broker.service.persistent.PersistentDispatcherMultipleConsumers.ReadType;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandSubscribe.SubType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +47,13 @@ public class PersistentStickyKeyDispatcherMultipleConsumers extends PersistentDi
     private final StickyKeyConsumerSelector selector;
 
     private boolean isDispatcherStuckOnReplays = false;
+
+    /**
+     * When a consumer joins, it will be added to this map with the current read position.
+     * This means that, in order to preserve ordering, new consumers can only receive old
+     * messages, until the mark-delete position will move past this point.
+     */
+    private final Map<Consumer, PositionImpl> recentlyJoinedConsumers = new HashMap<>();
 
     PersistentStickyKeyDispatcherMultipleConsumers(PersistentTopic topic, ManagedCursor cursor,
            Subscription subscription, StickyKeyConsumerSelector selector) {
@@ -59,12 +65,19 @@ public class PersistentStickyKeyDispatcherMultipleConsumers extends PersistentDi
     public synchronized void addConsumer(Consumer consumer) throws BrokerServiceException {
         super.addConsumer(consumer);
         selector.addConsumer(consumer);
+
+        if (consumerList.size() > 1) {
+            // If this was the 1st consumer, we don't need to do anything special
+            recentlyJoinedConsumers.put(consumer, (PositionImpl) cursor.getReadPosition());
+        }
     }
 
     @Override
     public synchronized void removeConsumer(Consumer consumer) throws BrokerServiceException {
         super.removeConsumer(consumer);
         selector.removeConsumer(consumer);
+
+        recentlyJoinedConsumers.remove(consumer);
     }
 
     private static final FastThreadLocal<Map<Consumer, List<Entry>>> localGroupedEntries = new FastThreadLocal<Map<Consumer, List<Entry>>>() {
@@ -108,15 +121,17 @@ public class PersistentStickyKeyDispatcherMultipleConsumers extends PersistentDi
             List<Entry> entriesWithSameKey = current.getValue();
             int entriesWithSameKeyCount = entriesWithSameKey.size();
 
-            int messagesForC = Math.min(entriesWithSameKeyCount, consumer.getAvailablePermits());
+            int maxMessagesForC = Math.min(entriesWithSameKeyCount, consumer.getAvailablePermits());
             if (log.isDebugEnabled()) {
                 log.debug("[{}] select consumer {} with messages num {}, read type is {}",
-                        name, consumer.consumerName(), messagesForC, readType);
+                        name, consumer.consumerName(), maxMessagesForC, readType);
             }
+
+            List<Entry> subList = getEntryForConsumer(consumer, entriesWithSameKey, maxMessagesForC);
+            int messagesForC = subList.size();
 
             if (messagesForC > 0) {
                 // remove positions first from replay list first : sendMessages recycles entries
-                List<Entry> subList = entriesWithSameKey.subList(0, messagesForC);
                 if (readType == ReadType.Replay) {
                     for (int i = 0; i < messagesForC; i++) {
                         Entry entry = entriesWithSameKey.get(i);
@@ -171,6 +186,48 @@ public class PersistentStickyKeyDispatcherMultipleConsumers extends PersistentDi
             // The solution here is to move on and read next batch of messages which might hopefully contain
             // also keys meant for other consumers.
             isDispatcherStuckOnReplays = true;
+            readMoreEntries();
+        }
+    }
+
+    private List<Entry> getEntryForConsumer(Consumer consumer, List<Entry> entries, int maxMessages) {
+        if (maxMessages == 0) {
+            return Collections.emptyList();
+        }
+
+        PositionImpl maxReadPosition = recentlyJoinedConsumers.get(consumer);
+        if (maxReadPosition == null) {
+            // The consumer has not recently joined, so we can send all messages
+            return entries.subList(0, maxMessages);
+        }
+
+        PositionImpl markDeletePosition = (PositionImpl) cursor.getMarkDeletedPosition();
+
+        if (maxReadPosition.compareTo(markDeletePosition.getNext()) <= 0) {
+            // At this point, all the old messages were already consumed and this consumer
+            // is now ready to receive any message
+            recentlyJoinedConsumers.remove(consumer);
+            return entries.subList(0, maxMessages);
+        }
+
+        // Here, the consumer is one that has recently joined, so we can only send messages that were
+        // published before it has joined.
+        for (int i = 0; i < maxMessages; i++) {
+            if (((PositionImpl) entries.get(i).getPosition()).compareTo(maxReadPosition) >= 0) {
+                // We have already crossed the divider line. All messages in the list are now
+                // newer than what we can currently dispatch to this consumer
+                return entries.subList(0, i);
+            }
+        }
+
+        return entries.subList(0, maxMessages);
+    }
+
+    @Override
+    public synchronized void acknowledgementWasProcessed() {
+        if (!recentlyJoinedConsumers.isEmpty()) {
+            // After we process acks, we need to check whether the mark-delete position was advanced and we can finally
+            // read more messages. It's safe to call readMoreEntries() multiple times.
             readMoreEntries();
         }
     }

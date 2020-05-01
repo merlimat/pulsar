@@ -41,8 +41,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -459,6 +457,48 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
 
         for (PulsarClient c : clients) {
             c.close();
+        }
+    }
+
+    @Test
+    public void testOrderingWhenAddingConsumers() throws Exception {
+        this.conf.setSubscriptionKeySharedEnable(true);
+        String topic = "testOrderingWhenAddingConsumers-" + UUID.randomUUID();
+
+        @Cleanup
+        Producer<Integer> producer = createProducer(topic, false);
+
+        @Cleanup
+        Consumer<Integer> c1 = createConsumer(topic);
+
+        for (int i = 0; i < 10; i++) {
+            producer.newMessage()
+                    .key(String.valueOf(random.nextInt(NUMBER_OF_KEYS)))
+                    .value(i)
+                    .send();
+        }
+
+        // All the already published messages will be pre-fetched by C1.
+
+        // Adding a new consumer.
+        @Cleanup
+        Consumer<Integer> c2 = createConsumer(topic);
+
+        for (int i = 10; i < 20; i++) {
+            producer.newMessage()
+                    .key(String.valueOf(random.nextInt(NUMBER_OF_KEYS)))
+                    .value(i)
+                    .send();
+        }
+
+        // Closing c1, would trigger all messages to go to c2
+        c1.close();
+
+        for (int i = 0; i < 20; i++) {
+            Message<Integer> msg = c2.receive();
+            assertEquals(msg.getValue().intValue(), i);
+
+            c2.acknowledge(msg);
         }
     }
 

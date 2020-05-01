@@ -391,6 +391,9 @@ public class PersistentSubscription implements Subscription {
             // Notify all consumer that the end of topic was reached
             dispatcher.getConsumers().forEach(Consumer::reachedEndOfTopic);
         }
+
+        // Signal the dispatchers to give chance to take extra actions
+        dispatcher.acknowledgementWasProcessed();
     }
 
     /**
