@@ -20,6 +20,8 @@ package org.apache.pulsar.broker.service.persistent;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -1192,6 +1194,11 @@ public class PersistentSubscription implements Subscription {
         if (snapshotCache != null) {
             snapshotCache.addNewSnapshot(snapshot);
         }
+    }
+
+    @VisibleForTesting
+    public ManagedCursor getCursor() {
+        return cursor;
     }
 
     private static final Logger log = LoggerFactory.getLogger(PersistentSubscription.class);

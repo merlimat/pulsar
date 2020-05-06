@@ -66,8 +66,9 @@ public class PersistentStickyKeyDispatcherMultipleConsumers extends PersistentDi
         super.addConsumer(consumer);
         selector.addConsumer(consumer);
 
-        if (consumerList.size() > 1) {
-            // If this was the 1st consumer, we don't need to do anything special
+        // If this was the 1st consumer, or if all the messages are already acked, then we
+        // don't need to do anything special
+        if (consumerList.size() > 1 && cursor.getNumberOfEntriesSinceFirstNotAckedMessage() > 1) {
             recentlyJoinedConsumers.put(consumer, (PositionImpl) cursor.getReadPosition());
         }
     }
@@ -177,7 +178,7 @@ public class PersistentStickyKeyDispatcherMultipleConsumers extends PersistentDi
             }
         }
 
-        if (totalMessagesSent == 0) {
+        if (totalMessagesSent == 0 && recentlyJoinedConsumers.isEmpty()) {
             // This means, that all the messages we've just read cannot be dispatched right now.
             // This condition can only happen when:
             //  1. We have consumers ready to accept messages (otherwise the would not haven been triggered)
@@ -185,6 +186,11 @@ public class PersistentStickyKeyDispatcherMultipleConsumers extends PersistentDi
             //
             // The solution here is to move on and read next batch of messages which might hopefully contain
             // also keys meant for other consumers.
+            //
+            // We do it unless that are "recently joined consumers". In that case, we would be looking
+            // ahead in the stream while the new consumers are not ready to accept the new messages,
+            // therefore would be most likely only increase the distance between read-position and mark-delete
+            // position.
             isDispatcherStuckOnReplays = true;
             readMoreEntries();
         }
