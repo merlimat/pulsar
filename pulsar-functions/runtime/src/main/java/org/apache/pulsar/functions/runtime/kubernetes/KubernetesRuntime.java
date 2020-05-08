@@ -144,6 +144,7 @@ public class KubernetesRuntime implements Runtime {
     private final AuthenticationConfig authConfig;
     private Integer grpcPort;
     private Integer metricsPort;
+    private String narExtractionDirectory;
     private final Optional<KubernetesManifestCustomizer> manifestCustomizer;
 
     KubernetesRuntime(AppsV1Api appsClient,
@@ -175,6 +176,7 @@ public class KubernetesRuntime implements Runtime {
                       boolean authenticationEnabled,
                       Integer grpcPort,
                       Integer metricsPort,
+                      String narExtractionDirectory,
                       Optional<KubernetesManifestCustomizer> manifestCustomizer) throws Exception {
         this.appsClient = appsClient;
         this.coreClient = coreClient;
@@ -216,6 +218,7 @@ public class KubernetesRuntime implements Runtime {
 
         this.grpcPort = grpcPort;
         this.metricsPort = metricsPort;
+        this.narExtractionDirectory = narExtractionDirectory;
 
         this.processArgs = new LinkedList<>();
         this.processArgs.addAll(RuntimeUtils.getArgsBeforeCmd(instanceConfig, extraDependenciesDir));
@@ -242,7 +245,8 @@ public class KubernetesRuntime implements Runtime {
                         installUserCodeDependencies,
                         pythonDependencyRepository,
                         pythonExtraDependencyRepository,
-                        metricsPort));
+                        metricsPort,
+                        narExtractionDirectory));
 
         doChecks(instanceConfig.getFunctionDetails());
     }

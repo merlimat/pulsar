@@ -48,6 +48,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import org.apache.pulsar.common.nar.NarClassLoader;
 import org.apache.pulsar.functions.runtime.kubernetes.KubernetesRuntimeFactoryConfig;
 import org.apache.pulsar.functions.runtime.process.ProcessRuntimeFactoryConfig;
 import org.apache.pulsar.functions.runtime.thread.ThreadRuntimeFactory;
@@ -133,6 +134,11 @@ public class WorkerConfig implements Serializable, PulsarConfiguration {
         doc = "The path to the location to locate builtin connectors"
     )
     private String connectorsDirectory = "./connectors";
+    @FieldContext(
+            category = CATEGORY_CONNECTORS,
+            doc = "The directory where nar packages are extractors"
+    )
+    private String narExtractionDirectory = NarClassLoader.DEFAULT_NAR_EXTRACTION_DIR;
     @FieldContext(
         category = CATEGORY_FUNC_METADATA_MNG,
         doc = "The pulsar topic used for storing function metadata"

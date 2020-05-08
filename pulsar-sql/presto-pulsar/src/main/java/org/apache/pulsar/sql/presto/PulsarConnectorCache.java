@@ -130,7 +130,8 @@ public class PulsarConnectorCache {
                 checkNotNull(conf.getOffloadersDirectory(),
                         "Offloader driver is configured to be '%s' but no offloaders directory is configured.",
                         conf.getManagedLedgerOffloadDriver());
-                this.offloaderManager = OffloaderUtils.searchForOffloaders(conf.getOffloadersDirectory());
+                this.offloaderManager = OffloaderUtils.searchForOffloaders(conf.getOffloadersDirectory(),
+                        conf.getNarExtractionDirectory());
                 LedgerOffloaderFactory offloaderFactory = this.offloaderManager.getOffloaderFactory(
                         conf.getManagedLedgerOffloadDriver());
 

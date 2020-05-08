@@ -134,6 +134,7 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
 
     private final ClassLoader instanceClassLoader;
     private ClassLoader functionClassLoader;
+    private String narExtractionDirectory;
 
     public JavaInstanceRunnable(InstanceConfig instanceConfig,
                                 FunctionCacheManager fnCache,
@@ -141,7 +142,8 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
                                 PulsarClient pulsarClient,
                                 String stateStorageServiceUrl,
                                 SecretsProvider secretsProvider,
-                                CollectorRegistry collectorRegistry) {
+                                CollectorRegistry collectorRegistry,
+                                String narExtractionDirectory) {
         this.instanceConfig = instanceConfig;
         this.fnCache = fnCache;
         this.jarFile = jarFile;
@@ -149,6 +151,7 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
         this.stateStorageServiceUrl = stateStorageServiceUrl;
         this.secretsProvider = secretsProvider;
         this.collectorRegistry = collectorRegistry;
+        this.narExtractionDirectory = narExtractionDirectory;
         this.metricsLabels = new String[]{
                 instanceConfig.getFunctionDetails().getTenant(),
                 String.format("%s/%s", instanceConfig.getFunctionDetails().getTenant(),
@@ -309,7 +312,7 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
             fnCache.registerFunctionInstanceWithArchive(
                 instanceConfig.getFunctionId(),
                 instanceConfig.getInstanceName(),
-                jarFile);
+                jarFile, narExtractionDirectory);
         } catch (FileNotFoundException e) {
             // create the function class loader
             fnCache.registerFunctionInstance(

@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.apache.pulsar.common.configuration.FieldContext;
+import org.apache.pulsar.common.nar.NarClassLoader;
 
 import java.util.Map;
 
@@ -135,4 +136,9 @@ public class KubernetesRuntimeFactoryConfig {
       doc = "The port inside the function pod on which prometheus metrics are exposed"
     )
     private Integer metricsPort = 9094;
+
+    @FieldContext(
+            doc = "The directory inside  the function pod where nar packages will be extracted"
+    )
+    private String narExtractionDirectory = NarClassLoader.DEFAULT_NAR_EXTRACTION_DIR;
 }
