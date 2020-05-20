@@ -2494,6 +2494,24 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         setFieldValue(ManagedLedgerImpl.class, ledger, "currentLedger", null);
     }
 
+    @Test
+    public void deleteWithoutOpen() throws Exception {
+        ManagedLedger ledger = factory.open("my_test_ledger");
+
+        ledger.addEntry("dummy-entry-1".getBytes(Encoding));
+        assertEquals(ledger.getNumberOfEntries(), 1);
+        ledger.close();
+
+        factory.delete("my_test_ledger");
+
+        try {
+            factory.open("my_test_ledger", new ManagedLedgerConfig().setCreateIfMissing(false));
+            fail("Should have failed");
+        } catch (ManagedLedgerNotFoundException e) {
+            // Expected
+        }
+    }
+
     private void setFieldValue(Class clazz, Object classObj, String fieldName, Object fieldValue) throws Exception {
         Field field = clazz.getDeclaredField(fieldName);
         field.setAccessible(true);

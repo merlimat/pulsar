@@ -38,6 +38,7 @@ public class ManagedLedgerInfo {
         public Long entries;
         public Long size;
         public Long timestamp;
+        public boolean isOffloaded;
     }
 
     public static class CursorInfo {

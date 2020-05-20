@@ -23,6 +23,7 @@ import static org.apache.bookkeeper.mledger.ManagedLedgerException.getManagedLed
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -40,14 +41,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.EnsemblePlacementPolicy;
+import org.apache.bookkeeper.client.BKException.Code;
 import org.apache.bookkeeper.common.util.OrderedExecutor;
 import org.apache.bookkeeper.common.util.OrderedScheduler;
 import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
+import org.apache.bookkeeper.mledger.AsyncCallbacks.DeleteLedgerCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ManagedLedgerInfoCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.OpenLedgerCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.OpenReadOnlyCursorCallback;
@@ -55,6 +60,7 @@ import org.apache.bookkeeper.mledger.ManagedLedger;
 import org.apache.bookkeeper.mledger.ManagedLedgerConfig;
 import org.apache.bookkeeper.mledger.ManagedLedgerException;
 import org.apache.bookkeeper.mledger.ManagedLedgerException.MetaStoreException;
+import org.apache.bookkeeper.mledger.ManagedLedgerException.MetadataNotFoundException;
 import org.apache.bookkeeper.mledger.ManagedLedgerFactory;
 import org.apache.bookkeeper.mledger.ManagedLedgerFactoryConfig;
 import org.apache.bookkeeper.mledger.ManagedLedgerFactoryMXBean;
@@ -76,7 +82,6 @@ import org.apache.bookkeeper.mledger.proto.MLDataFormats.MessageRange;
 import org.apache.bookkeeper.mledger.util.Futures;
 import org.apache.bookkeeper.zookeeper.ZooKeeperClient;
 import org.apache.pulsar.common.util.DateFormatter;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -520,6 +525,7 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                     ledgerInfo.ledgerId = pbLedgerInfo.getLedgerId();
                     ledgerInfo.entries = pbLedgerInfo.hasEntries() ? pbLedgerInfo.getEntries() : null;
                     ledgerInfo.size = pbLedgerInfo.hasSize() ? pbLedgerInfo.getSize() : null;
+                    ledgerInfo.isOffloaded = pbLedgerInfo.hasOffloadContext();
                     info.ledgers.add(ledgerInfo);
                 }
 
@@ -605,6 +611,134 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                 callback.getInfoFailed(e, ctx);
             }
         });
+    }
+
+    @Override
+    public void delete(String name) throws InterruptedException, ManagedLedgerException {
+        class Result {
+            ManagedLedgerException e = null;
+        }
+        final Result r = new Result();
+        final CountDownLatch latch = new CountDownLatch(1);
+        asyncDelete(name, new DeleteLedgerCallback() {
+            @Override
+            public void deleteLedgerComplete(Object ctx) {
+                latch.countDown();
+            }
+
+            @Override
+            public void deleteLedgerFailed(ManagedLedgerException exception, Object ctx) {
+                r.e = exception;
+                latch.countDown();
+            }
+        }, null);
+
+        latch.await();
+
+        if (r.e != null) {
+            throw r.e;
+        }
+    }
+
+    @Override
+    public void asyncDelete(String name, DeleteLedgerCallback callback, Object ctx) {
+        CompletableFuture<ManagedLedgerImpl> future = ledgers.get(name);
+        if (future == null) {
+            // Managed ledger does not exist and we're not currently trying to open it
+            deleteManagedLedger(name, callback, ctx);
+        } else {
+            future.thenAccept(ml -> {
+                // If it's open, delete in the normal way
+                ml.asyncDelete(callback, ctx);
+            }).exceptionally(ex -> {
+                // If it's failing to get open, just delete from metadata
+                return null;
+            });
+        }
+    }
+
+    /**
+     * Delete all managed ledger resources and metadata
+     */
+    void deleteManagedLedger(String managedLedgerName, DeleteLedgerCallback callback, Object ctx) {
+        // Read the managed ledger metadata from store
+        asyncGetManagedLedgerInfo(managedLedgerName, new ManagedLedgerInfoCallback() {
+            @Override
+            public void getInfoComplete(ManagedLedgerInfo info, Object ctx) {
+                BookKeeper bkc = getBookKeeper();
+
+                // First delete all cursors resources
+                List<CompletableFuture<Void>> futures = info.cursors.entrySet().stream()
+                        .map(e -> deleteCursor(bkc, managedLedgerName, e.getKey(), e.getValue()))
+                        .collect(Collectors.toList());
+                Futures.waitForAll(futures).thenRun(() -> {
+                    deleteManagedLedgerData(bkc, managedLedgerName, info, callback, ctx);
+                }).exceptionally(ex -> {
+                    callback.deleteLedgerFailed(new ManagedLedgerException(ex), ctx);
+                    return null;
+                });
+            }
+
+            @Override
+            public void getInfoFailed(ManagedLedgerException exception, Object ctx) {
+                callback.deleteLedgerFailed(exception, ctx);
+            }
+        }, ctx);
+    }
+
+    private void deleteManagedLedgerData(BookKeeper bkc, String managedLedgerName, ManagedLedgerInfo info,
+            DeleteLedgerCallback callback, Object ctx) {
+        Futures.waitForAll(info.ledgers.stream()
+                .filter(li -> !li.isOffloaded)
+                .map(li -> bkc.newDeleteLedgerOp().withLedgerId(li.ledgerId).execute())
+                .collect(Collectors.toList()))
+                .thenRun(() -> {
+                    // Delete the metadata
+                    store.removeManagedLedger(managedLedgerName, new MetaStoreCallback<Void>() {
+                        @Override
+                        public void operationComplete(Void result, Stat stat) {
+                            callback.deleteLedgerComplete(ctx);
+                        }
+
+                        @Override
+                        public void operationFailed(MetaStoreException e) {
+                            callback.deleteLedgerFailed(new ManagedLedgerException(e), ctx);
+                        }
+                    });
+                }).exceptionally(ex -> {
+                    callback.deleteLedgerFailed(new ManagedLedgerException(ex), ctx);
+                    return null;
+                });
+    }
+
+    private CompletableFuture<Void> deleteCursor(BookKeeper bkc, String managedLedgerName, String cursorName, CursorInfo cursor) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        CompletableFuture<Void> cursorLedgerDeleteFuture;
+
+        // Delete the cursor ledger if present
+        if (cursor.cursorsLedgerId != -1) {
+            cursorLedgerDeleteFuture = bkc.newDeleteLedgerOp().withLedgerId(cursor.cursorsLedgerId).execute();
+        } else {
+            cursorLedgerDeleteFuture = CompletableFuture.completedFuture(null);
+        }
+
+        cursorLedgerDeleteFuture.thenRun(() -> {
+            store.asyncRemoveCursor(managedLedgerName, cursorName, new MetaStoreCallback<Void>() {
+                @Override
+                public void operationComplete(Void result, Stat stat) {
+                    future.complete(null);
+                }
+
+                @Override
+                public void operationFailed(MetaStoreException e) {
+                   future.completeExceptionally(e);
+                }
+            });
+        });
+
+
+
+        return future;
     }
 
     public MetaStore getMetaStore() {
