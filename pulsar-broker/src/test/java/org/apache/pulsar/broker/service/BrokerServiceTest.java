@@ -21,6 +21,7 @@ package org.apache.pulsar.broker.service;
 import static org.apache.pulsar.broker.cache.LocalZooKeeperCacheService.LOCAL_POLICIES_ROOT;
 import static org.apache.pulsar.broker.web.PulsarWebResource.joinPath;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.testng.Assert.assertEquals;
@@ -778,7 +779,7 @@ public class BrokerServiceTest extends BrokerTestBase {
 
         // try to create topic which should fail as bundle is disable
         CompletableFuture<Optional<Topic>> futureResult = pulsar.getBrokerService()
-                .loadOrCreatePersistentTopic(topicName, true);
+                .loadOrCreatePersistentTopic(topicName, true, false);
 
         try {
             futureResult.get();
@@ -815,7 +816,7 @@ public class BrokerServiceTest extends BrokerTestBase {
         // create topic will fail to get managedLedgerConfig
         CompletableFuture<ManagedLedgerConfig> failedManagedLedgerConfig = new CompletableFuture<>();
         failedManagedLedgerConfig.completeExceptionally(new NullPointerException("failed to peristent policy"));
-        doReturn(failedManagedLedgerConfig).when(service).getManagedLedgerConfig(any());
+        doReturn(failedManagedLedgerConfig).when(service).getManagedLedgerConfig(any(), anyBoolean(), anyBoolean());
 
         CompletableFuture<Void> topicCreation = new CompletableFuture<Void>();
 
@@ -858,7 +859,7 @@ public class BrokerServiceTest extends BrokerTestBase {
         // create topic will fail to get managedLedgerConfig
         CompletableFuture<ManagedLedgerConfig> failedManagedLedgerConfig = new CompletableFuture<>();
         failedManagedLedgerConfig.complete(new ManagedLedgerConfig());
-        doReturn(failedManagedLedgerConfig).when(service).getManagedLedgerConfig(any());
+        doReturn(failedManagedLedgerConfig).when(service).getManagedLedgerConfig(any(), anyBoolean(), anyBoolean());
 
         CompletableFuture<Void> topicCreation = new CompletableFuture<Void>();
         // fail managed-ledger future

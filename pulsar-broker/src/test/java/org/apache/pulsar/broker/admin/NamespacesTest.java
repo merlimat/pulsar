@@ -1146,25 +1146,25 @@ public class NamespacesTest extends MockedPulsarServiceBaseTest {
         // assert we get the default which indicates it will fall back to default
         assertEquals(-1, admin.namespaces().getOffloadThreshold(namespace));
         // the ledger config should have the expected value
-        ManagedLedgerConfig ledgerConf = pulsar.getBrokerService().getManagedLedgerConfig(topicName).get();
+        ManagedLedgerConfig ledgerConf = pulsar.getBrokerService().getManagedLedgerConfig(topicName, true, false).get();
         assertEquals(ledgerConf.getOffloadAutoTriggerSizeThresholdBytes(), 1);
 
         // set an override for the namespace
         admin.namespaces().setOffloadThreshold(namespace, 100);
         assertEquals(100, admin.namespaces().getOffloadThreshold(namespace));
-        ledgerConf = pulsar.getBrokerService().getManagedLedgerConfig(topicName).get();
+        ledgerConf = pulsar.getBrokerService().getManagedLedgerConfig(topicName, true, false).get();
         assertEquals(ledgerConf.getOffloadAutoTriggerSizeThresholdBytes(), 100);
 
         // set another negative value to disable
         admin.namespaces().setOffloadThreshold(namespace, -2);
         assertEquals(-2, admin.namespaces().getOffloadThreshold(namespace));
-        ledgerConf = pulsar.getBrokerService().getManagedLedgerConfig(topicName).get();
+        ledgerConf = pulsar.getBrokerService().getManagedLedgerConfig(topicName, true, false).get();
         assertEquals(ledgerConf.getOffloadAutoTriggerSizeThresholdBytes(), -2);
 
         // set back to -1 and fall back to default
         admin.namespaces().setOffloadThreshold(namespace, -1);
         assertEquals(-1, admin.namespaces().getOffloadThreshold(namespace));
-        ledgerConf = pulsar.getBrokerService().getManagedLedgerConfig(topicName).get();
+        ledgerConf = pulsar.getBrokerService().getManagedLedgerConfig(topicName, true, false).get();
         assertEquals(ledgerConf.getOffloadAutoTriggerSizeThresholdBytes(), 1);
 
         // cleanup

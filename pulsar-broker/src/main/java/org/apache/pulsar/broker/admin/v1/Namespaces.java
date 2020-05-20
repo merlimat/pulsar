@@ -37,6 +37,7 @@ import org.apache.pulsar.common.policies.data.Policies;
 import org.apache.pulsar.common.policies.data.PublishRate;
 import org.apache.pulsar.common.policies.data.RetentionPolicies;
 import org.apache.pulsar.common.policies.data.SubscriptionAuthMode;
+import org.apache.pulsar.common.policies.data.TopicLifecyclePolicies;
 import org.apache.pulsar.common.policies.data.SchemaAutoUpdateCompatibilityStrategy;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
@@ -595,6 +596,21 @@ public class Namespaces extends NamespacesBase {
     }
 
     @POST
+    @Path("/{tenant}/{cluster}/{namespace}/topicLifecycle")
+    @ApiOperation(value = "Set the topic lifecycle configuration for all the topics on a namespace.")
+    @ApiResponses(value = { @ApiResponse(code = 403, message = "Don't have admin permission"),
+            @ApiResponse(code = 404, message = "Namespace does not exist"),
+            @ApiResponse(code = 409, message = "Concurrent modification"),
+            @ApiResponse(code = 400, message = "Invalid persistence policies") })
+    public void setTopicsLifeCycle(@PathParam("tenant") String tenant,
+            @PathParam("cluster") String cluster,
+            @PathParam("namespace") String namespace,
+            TopicLifecyclePolicies lifecyclePolicies) {
+        validateNamespaceName(tenant, cluster, namespace);
+        internalSetTopicLifecycle(lifecyclePolicies);
+    }
+
+    @POST
     @Path("/{property}/{cluster}/{namespace}/persistence/bookieAffinity")
     @ApiOperation(hidden = true, value = "Set the bookie-affinity-group to namespace-local policy.")
     @ApiResponses(value = { @ApiResponse(code = 403, message = "Don't have admin permission"),
@@ -640,6 +656,18 @@ public class Namespaces extends NamespacesBase {
             @PathParam("cluster") String cluster, @PathParam("namespace") String namespace) {
         validateNamespaceName(property, cluster, namespace);
         return internalGetPersistence();
+    }
+
+    @GET
+    @Path("/{tenant}/{cluster}/{namespace}/topicLifecycle")
+    @ApiOperation(value = "Get the topic lifecycle configuration for a namespace.", response = TopicLifecyclePolicies.class)
+    @ApiResponses(value = { @ApiResponse(code = 403, message = "Don't have admin permission"),
+            @ApiResponse(code = 404, message = "Namespace does not exist"),
+            @ApiResponse(code = 409, message = "Concurrent modification") })
+    public TopicLifecyclePolicies getTopicLifeCyclePolicies(@PathParam("tenant") String tenant,
+            @PathParam("cluster") String cluster, @PathParam("namespace") String namespace) {
+        validateNamespaceName(tenant, cluster, namespace);
+        return internalGetTopicLifecycle();
     }
 
     @POST

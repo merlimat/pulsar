@@ -1003,7 +1003,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
     private CompletableFuture<Void> checkPersistencePolicies() {
         TopicName topicName = TopicName.get(topic);
         CompletableFuture<Void> future = new CompletableFuture<>();
-        brokerService.getManagedLedgerConfig(topicName).thenAccept(config -> {
+        brokerService.getManagedLedgerConfig(topicName, false, false).thenAccept(config -> {
             // update managed-ledger config and managed-cursor.markDeleteRate
             this.ledger.setConfig(config);
             future.complete(null);
@@ -1673,6 +1673,17 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
         try {
             Optional<Policies> policies = brokerService.pulsar().getConfigurationCache().policiesCache()
                     .get(AdminResource.path(POLICIES, name.getNamespace()));
+
+            if (policies.isPresent() && policies.get().topicLifecycle != null) {
+                if (policies.get().topicLifecycle.isAutoDeleteTopics() == false) {
+                    // Retain the topic is there is no auto-deletion
+                    return true;
+                }
+            } else if (brokerService.getPulsar().getConfiguration().isBrokerDeleteInactiveTopicsEnabled() == false) {
+                // Retain the topic is there is no auto-deletion
+                return true;
+            }
+
             // If no policies, the default is to have no retention and delete the inactive topic
             RetentionPolicies retentionPolicies = policies.map(p -> p.retention_policies).orElseGet(
                     () -> new RetentionPolicies(

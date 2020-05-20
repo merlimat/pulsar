@@ -41,6 +41,7 @@ import org.apache.pulsar.common.policies.data.SchemaAutoUpdateCompatibilityStrat
 import org.apache.pulsar.common.policies.data.SchemaCompatibilityStrategy;
 import org.apache.pulsar.common.policies.data.SubscribeRate;
 import org.apache.pulsar.common.policies.data.SubscriptionAuthMode;
+import org.apache.pulsar.common.policies.data.TopicLifecyclePolicies;
 
 /**
  * Admin interface for namespaces management
@@ -780,9 +781,67 @@ public interface Namespaces {
     PersistencePolicies getPersistence(String namespace) throws PulsarAdminException;
 
     /**
+     * Set the topic lifecycle configuration for all the topics on a namespace.
+     * <p>
+     * Request parameter example:
+     *
+     * <pre>
+     * <code>
+     * {
+     *     "autoCreateTopics" : true,
+     *     "autoDeleteTopics" : true
+     * }
+     * </code>
+     * </pre>
+     *
+     * @param namespace
+     *            Namespace name
+     * @param lifecyclePolicies
+     *            Topic lifecycle policies
+     *
+     * @throws NotAuthorizedException
+     *             Don't have admin permission
+     * @throws NotFoundException
+     *             Namespace does not exist
+     * @throws ConflictException
+     *             Concurrent modification
+     * @throws PulsarAdminException
+     *             Unexpected error
+     */
+    void setTopicLifeCycle(String namespace, TopicLifecyclePolicies lifecyclePolicies) throws PulsarAdminException;
+
+    /**
+     * Get the topic lifecycle configuration for a namespace.
+     * <p>
+     * Response example:
+     *
+     * <pre>
+     * <code>
+     * {
+     *     "autoCreateTopics" : true,
+     *     "autoDeleteTopics" : true
+     * }
+     * </code>
+     * </pre>
+     *
+     * @param namespace
+     *            Namespace name
+     *
+     * @throws NotAuthorizedException
+     *             Don't have admin permission
+     * @throws NotFoundException
+     *             Namespace does not exist
+     * @throws ConflictException
+     *             Concurrent modification
+     * @throws PulsarAdminException
+     *             Unexpected error
+     */
+    TopicLifecyclePolicies getTopicLifecycle(String namespace) throws PulsarAdminException;
+
+    /**
      * Set bookie affinity group for a namespace to isolate namespace write to bookies that are part of given affinity
      * group.
-     * 
+     *
      * @param namespace
      *            namespace name
      * @param bookieAffinityGroup
@@ -791,10 +850,10 @@ public interface Namespaces {
      */
     void setBookieAffinityGroup(String namespace, BookieAffinityGroupData bookieAffinityGroup)
             throws PulsarAdminException;
-    
+
     /**
      * Delete bookie affinity group configured for a namespace.
-     * 
+     *
      * @param namespace
      * @throws PulsarAdminException
      */
@@ -802,7 +861,7 @@ public interface Namespaces {
 
     /**
      * Get bookie affinity group configured for a namespace.
-     * 
+     *
      * @param namespace
      * @return
      * @throws PulsarAdminException

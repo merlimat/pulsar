@@ -48,6 +48,7 @@ import org.apache.pulsar.common.policies.data.SchemaAutoUpdateCompatibilityStrat
 import org.apache.pulsar.common.policies.data.SchemaCompatibilityStrategy;
 import org.apache.pulsar.common.policies.data.SubscribeRate;
 import org.apache.pulsar.common.policies.data.SubscriptionAuthMode;
+import org.apache.pulsar.common.policies.data.TopicLifecyclePolicies;
 import org.apache.pulsar.common.util.RelativeTimeUtil;
 
 @Parameters(commandDescription = "Operations about namespaces")
@@ -539,7 +540,7 @@ public class CmdNamespaces extends CmdBase {
         @Parameter(names = { "--relative-to-publish-rate",
                 "-rp" }, description = "dispatch rate relative to publish-rate (if publish-relative flag is enabled then broker will apply throttling value to (publish-rate + dispatch rate))\n", required = false)
         private boolean relativeToPublishRate = false;
-        
+
         @Override
         void run() throws PulsarAdminException {
             String namespace = validateNamespace(params);
@@ -773,6 +774,18 @@ public class CmdNamespaces extends CmdBase {
         }
     }
 
+    @Parameters(commandDescription = "Get the topic lifecycle policies for a namespace")
+    private class GetTopicLifecycle extends CliCommand {
+        @Parameter(description = "tenant/namespace\n", required = true)
+        private java.util.List<String> params;
+
+        @Override
+        void run() throws PulsarAdminException {
+            String namespace = validateNamespace(params);
+            print(admin.namespaces().getTopicLifecycle(namespace));
+        }
+    }
+
     @Parameters(commandDescription = "Set the persistence policies for a namespace")
     private class SetPersistence extends CliCommand {
         @Parameter(description = "tenant/namespace", required = true)
@@ -799,6 +812,26 @@ public class CmdNamespaces extends CmdBase {
             String namespace = validateNamespace(params);
             admin.namespaces().setPersistence(namespace, new PersistencePolicies(bookkeeperEnsemble,
                     bookkeeperWriteQuorum, bookkeeperAckQuorum, managedLedgerMaxMarkDeleteRate));
+        }
+    }
+
+    @Parameters(commandDescription = "Set the topic lifcycle policies for a namespace")
+    private class SetTopicLifecycle extends CliCommand {
+        @Parameter(description = "tenant/namespace", required = true)
+        private java.util.List<String> params;
+
+        @Parameter(names = { "-ac",
+                "--auto-create" }, description = "Auto-Create topics", required = true)
+        private boolean autoCreate;
+
+        @Parameter(names = { "-ad",
+                "--auto-delete" }, description = "Auto-Delete topics", required = true)
+        private boolean autoDelete;
+
+        @Override
+        void run() throws PulsarAdminException {
+            String namespace = validateNamespace(params);
+            admin.namespaces().setTopicLifeCycle(namespace, new TopicLifecyclePolicies(autoCreate, autoDelete));
         }
     }
 
@@ -1286,7 +1319,7 @@ public class CmdNamespaces extends CmdBase {
 
         jcommander.addCommand("get-retention", new GetRetention());
         jcommander.addCommand("set-retention", new SetRetention());
-        
+
         jcommander.addCommand("set-bookie-affinity-group", new SetBookieAffinityGroup());
         jcommander.addCommand("get-bookie-affinity-group", new GetBookieAffinityGroup());
         jcommander.addCommand("delete-bookie-affinity-group", new DeleteBookieAffinityGroup());
@@ -1303,7 +1336,7 @@ public class CmdNamespaces extends CmdBase {
 
         jcommander.addCommand("set-subscription-dispatch-rate", new SetSubscriptionDispatchRate());
         jcommander.addCommand("get-subscription-dispatch-rate", new GetSubscriptionDispatchRate());
-        
+
         jcommander.addCommand("set-publish-rate", new SetPublishRate());
         jcommander.addCommand("get-publish-rate", new GetPublishRate());
 

@@ -51,6 +51,7 @@ import org.apache.pulsar.common.policies.data.SchemaAutoUpdateCompatibilityStrat
 import org.apache.pulsar.common.policies.data.SchemaCompatibilityStrategy;
 import org.apache.pulsar.common.policies.data.SubscribeRate;
 import org.apache.pulsar.common.policies.data.SubscriptionAuthMode;
+import org.apache.pulsar.common.policies.data.TopicLifecyclePolicies;
 
 public class NamespacesImpl extends BaseResource implements Namespaces {
 
@@ -417,6 +418,18 @@ public class NamespacesImpl extends BaseResource implements Namespaces {
     }
 
     @Override
+    public void setTopicLifeCycle(String namespace, TopicLifecyclePolicies lifecyclePolicies)
+            throws PulsarAdminException {
+        try {
+            NamespaceName ns = NamespaceName.get(namespace);
+            WebTarget path = namespacePath(ns, "topicLifecycle");
+            request(path).post(Entity.entity(lifecyclePolicies, MediaType.APPLICATION_JSON), ErrorData.class);
+        } catch (Exception e) {
+            throw getApiException(e);
+        }
+    }
+
+    @Override
     public void setBookieAffinityGroup(String namespace, BookieAffinityGroupData bookieAffinityGroup) throws PulsarAdminException {
         try {
             NamespaceName ns = NamespaceName.get(namespace);
@@ -455,6 +468,17 @@ public class NamespacesImpl extends BaseResource implements Namespaces {
             NamespaceName ns = NamespaceName.get(namespace);
             WebTarget path = namespacePath(ns, "persistence");
             return request(path).get(PersistencePolicies.class);
+        } catch (Exception e) {
+            throw getApiException(e);
+        }
+    }
+
+    @Override
+    public TopicLifecyclePolicies getTopicLifecycle(String namespace) throws PulsarAdminException {
+        try {
+            NamespaceName ns = NamespaceName.get(namespace);
+            WebTarget path = namespacePath(ns, "topicLifecycle");
+            return request(path).get(TopicLifecyclePolicies.class);
         } catch (Exception e) {
             throw getApiException(e);
         }
@@ -547,7 +571,7 @@ public class NamespacesImpl extends BaseResource implements Namespaces {
         } catch (Exception e) {
             throw getApiException(e);
         }
-    
+
     }
 
     @Override
@@ -560,7 +584,7 @@ public class NamespacesImpl extends BaseResource implements Namespaces {
             throw getApiException(e);
         }
     }
-    
+
     @Override
     public void setDispatchRate(String namespace, DispatchRate dispatchRate) throws PulsarAdminException {
         try {

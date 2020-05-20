@@ -1031,7 +1031,7 @@ public class ServerCnx extends PulsarHandler {
 
                         log.info("[{}][{}] Creating producer. producerId={}", remoteAddress, topicName, producerId);
 
-                        service.getOrCreateTopic(topicName.toString()).thenAccept((Topic topic) -> {
+                        service.getOrCreateTopic(topicName.toString(), false /* forceCreation */).thenAccept((Topic topic) -> {
                             // Before creating producer, check if backlog quota exceeded
                             // on topic
                             if (topic.isBacklogQuotaExceeded(producerName)) {
@@ -1112,7 +1112,9 @@ public class ServerCnx extends PulsarHandler {
                             });
                         }).exceptionally(exception -> {
                             Throwable cause = exception.getCause();
-                            if (!(cause instanceof ServiceUnitNotReadyException)) {
+
+                            if (!(cause instanceof ServiceUnitNotReadyException)
+                                    && !(cause instanceof TopicNotFoundException)) {
                                 // Do not print stack traces for expected exceptions
                                 log.error("[{}] Failed to create topic {}", remoteAddress, topicName, exception);
                             }

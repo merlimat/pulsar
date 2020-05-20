@@ -45,6 +45,8 @@ public class Policies {
     public Map<String, SubscribeRate> clusterSubscribeRate = Maps.newHashMap();
     public PersistencePolicies persistence = null;
 
+    public TopicLifecyclePolicies topicLifecycle = null;
+
     // If set, it will override the broker settings for enabling deduplication
     public Boolean deduplicationEnabled = null;
     public Map<String, PublishRate> publishMaxMessageRate = Maps.newHashMap();

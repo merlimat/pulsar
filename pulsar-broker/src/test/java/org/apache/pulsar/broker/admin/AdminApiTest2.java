@@ -60,7 +60,9 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageRoutingMode;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.SubscriptionType;
+import org.apache.pulsar.client.api.PulsarClientException.TopicDoesNotExistException;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 import org.apache.pulsar.common.naming.TopicDomain;
 import org.apache.pulsar.common.naming.TopicName;
@@ -76,6 +78,7 @@ import org.apache.pulsar.common.policies.data.PersistencePolicies;
 import org.apache.pulsar.common.policies.data.PersistentTopicInternalStats;
 import org.apache.pulsar.common.policies.data.TopicStats;
 import org.apache.pulsar.common.policies.data.TenantInfo;
+import org.apache.pulsar.common.policies.data.TopicLifecyclePolicies;
 import org.apache.pulsar.common.policies.data.RetentionPolicies;
 import org.apache.pulsar.common.policies.data.SubscriptionStats;
 import org.testng.Assert;
@@ -350,7 +353,7 @@ public class AdminApiTest2 extends MockedPulsarServiceBaseTest {
             .create();
         Consumer<byte[]> consumer = pulsarClient.newConsumer().topic(topicName).subscriptionName("my-sub").subscribe();
 
-        PersistentTopic topic = (PersistentTopic) pulsar.getBrokerService().getOrCreateTopic(topicName).get();
+        PersistentTopic topic = (PersistentTopic) pulsar.getBrokerService().getOrCreateTopic(topicName, false /* forceCreation */).get();
         ManagedLedgerImpl managedLedger = (ManagedLedgerImpl) topic.getManagedLedger();
         ManagedCursorImpl cursor = (ManagedCursorImpl) managedLedger.getCursors().iterator().next();
 
@@ -947,5 +950,32 @@ public class AdminApiTest2 extends MockedPulsarServiceBaseTest {
         // Global cluster, if there, should be omitted from the results
         assertEquals(admin.namespaces().getNamespaceReplicationClusters(namespace),
                 Collections.singletonList(localCluster));
+    }
+
+    @Test
+    public void testAutoTopicCreationPerNamespace() throws Exception {
+        final String namespace = "prop-xyz/ns2-" + System.nanoTime();
+
+        admin.namespaces().createNamespace(namespace, Sets.newHashSet("test"));
+
+        // By default, topic will be auto-created
+        @Cleanup
+        Producer<byte[]> producer = pulsarClient.newProducer().topic(namespace + "/topic-1").create();
+
+        // Disable auto-creation
+        admin.namespaces().setTopicLifeCycle(namespace, new TopicLifecyclePolicies(false, false));
+
+        try {
+            pulsarClient.newProducer().topic(namespace + "/topic-2").create();
+            fail("Should have failed");
+        } catch (PulsarClientException e) {
+            // Expected
+        }
+
+        // Explicitely create the topic
+        admin.topics().createNonPartitionedTopic(namespace + "/topic-2");
+
+        @Cleanup
+        Producer<byte[]> producer2 = pulsarClient.newProducer().topic(namespace + "/topic-2").create();
     }
 }

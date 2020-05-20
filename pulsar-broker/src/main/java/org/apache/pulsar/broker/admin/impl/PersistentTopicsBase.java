@@ -512,7 +512,7 @@ public class PersistentTopicsBase extends AdminResource {
         }
 
         try {
-            Topic createdTopic = getOrCreateTopic(topicName);
+            Topic createdTopic = createTopic(topicName);
             log.info("[{}] Successfully created non-partitioned topic {}", clientAppId(), createdTopic);
     	} catch (Exception e) {
     		log.error("[{}] Failed to create non-partitioned topic {}", clientAppId(), topicName, e);
@@ -1404,7 +1404,7 @@ public class PersistentTopicsBase extends AdminResource {
         } else {
             validateAdminAccessForSubscriber(subscriptionName, authoritative);
 
-            PersistentTopic topic = (PersistentTopic) getOrCreateTopic(topicName);
+            PersistentTopic topic = (PersistentTopic) createTopic(topicName);
 
             if (topic.getSubscriptions().containsKey(subscriptionName)) {
                 asyncResponse.resume(new RestException(Status.CONFLICT, "Subscription already exists for topic"));
@@ -1593,7 +1593,8 @@ public class PersistentTopicsBase extends AdminResource {
                     return offlineTopicStats;
                 }
             }
-            final ManagedLedgerConfig config = pulsar().getBrokerService().getManagedLedgerConfig(topicName)
+            final ManagedLedgerConfig config = pulsar().getBrokerService()
+                    .getManagedLedgerConfig(topicName, false, false)
                     .get();
             ManagedLedgerOfflineBacklog offlineTopicBacklog = new ManagedLedgerOfflineBacklog(config.getDigestType(),
                     config.getPassword(), pulsar().getAdvertisedAddress(), false);
@@ -1844,8 +1845,8 @@ public class PersistentTopicsBase extends AdminResource {
         return new RestException(Status.NOT_FOUND, "Partitioned Topic not found");
     }
 
-    private Topic getOrCreateTopic(TopicName topicName) {
-        return pulsar().getBrokerService().getTopic(topicName.toString(), true).thenApply(Optional::get).join();
+    private Topic createTopic(TopicName topicName) {
+        return pulsar().getBrokerService().getOrCreateTopic(topicName.toString(), true /* forceCreation */).join();
     }
 
     /**
