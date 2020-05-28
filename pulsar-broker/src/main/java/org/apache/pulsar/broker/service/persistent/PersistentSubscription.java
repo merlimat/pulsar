@@ -56,9 +56,6 @@ import org.apache.pulsar.broker.service.BrokerServiceException.SubscriptionFence
 import org.apache.pulsar.broker.service.BrokerServiceException.SubscriptionInvalidCursorPosition;
 import org.apache.pulsar.broker.service.Consumer;
 import org.apache.pulsar.broker.service.Dispatcher;
-import org.apache.pulsar.broker.service.HashRangeAutoSplitStickyKeyConsumerSelector;
-import org.apache.pulsar.broker.service.HashRangeExclusiveStickyKeyConsumerSelector;
-import org.apache.pulsar.broker.service.StickyKeyConsumerSelector;
 import org.apache.pulsar.broker.service.Subscription;
 import org.apache.pulsar.broker.service.Topic;
 import org.apache.pulsar.common.api.proto.PulsarApi.CommandAck.AckType;
@@ -219,20 +216,7 @@ public class PersistentSubscription implements Subscription {
                     previousDispatcher = dispatcher;
                     KeySharedMeta ksm = consumer.getKeySharedMeta() != null ? consumer.getKeySharedMeta() : KeySharedMeta.getDefaultInstance();
 
-                    switch (ksm.getKeySharedMode()) {
-                        case STICKY:
-                            dispatcher = new PersistentStickyKeyDispatcherMultipleConsumers(topic, cursor, this,
-                                    new HashRangeExclusiveStickyKeyConsumerSelector());
-                            break;
-
-                        case AUTO_SPLIT:
-                        default:
-                            dispatcher = new PersistentStickyKeyDispatcherMultipleConsumers(topic, cursor, this,
-                                new HashRangeAutoSplitStickyKeyConsumerSelector(
-                                        topic.getBrokerService().getPulsar().getConfiguration()
-                                                .getSubscriptionKeySharedConsistentHashingReplicaPoints()));
-                            break;
-                    }
+                    dispatcher = new PersistentStickyKeyDispatcherMultipleConsumers(topic, cursor, this, ksm);
                 }
                 break;
             default:
