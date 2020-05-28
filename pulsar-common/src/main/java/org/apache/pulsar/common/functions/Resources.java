@@ -21,20 +21,12 @@ package org.apache.pulsar.common.functions;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Class representing resources, such as CPU, RAM, and disk size.
  */
-@Getter
-@Setter
 @Data
-@EqualsAndHashCode
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
@@ -42,10 +34,10 @@ public class Resources {
 
     private static final Resources DEFAULT = new Resources();
 
-    // Default cpu is 0.5 core
-    private Double cpu = 0.5d;
-    // Default memory is 256MB
-    private Long ram = 256 * (long) Math.pow(2, 20);
+    // Default cpu is 1 core
+    private Double cpu = 1d;
+    // Default memory is 1GB
+    private Long ram = 1073741824L;
     // Default disk is 10GB
     private Long disk = 10737418240L;
 

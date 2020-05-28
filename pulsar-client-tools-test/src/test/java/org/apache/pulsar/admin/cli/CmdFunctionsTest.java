@@ -64,7 +64,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.testng.IObjectFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.ObjectFactory;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 /**
@@ -577,7 +576,7 @@ public class CmdFunctionsTest {
     private static final String inputTopicName = TEST_NAME + "-input-topic";
     private static final String outputTopicName = TEST_NAME + "-output-topic";
 
-    @Ignore // PLSR-278
+    @Test
     public void testCreateFunctionWithCpu() throws Exception {
         String fnName = TEST_NAME + "-function";
         String inputTopicName = TEST_NAME + "-input-topic";
@@ -608,7 +607,7 @@ public class CmdFunctionsTest {
         verify(functions, times(1)).createFunctionWithUrl(any(FunctionConfig.class), anyString());
     }
 
-    @Ignore // PLSR-278
+    @Test
     public void testCreateFunctionWithRam() throws Exception {
         String fnName = TEST_NAME + "-function";
         String inputTopicName = TEST_NAME + "-input-topic";
@@ -639,7 +638,7 @@ public class CmdFunctionsTest {
         verify(functions, times(1)).createFunctionWithUrl(any(FunctionConfig.class), anyString());
     }
 
-    @Ignore // PLSR-278
+    @Test
     public void testCreateFunctionWithDisk() throws Exception {
         String fnName = TEST_NAME + "-function";
         String inputTopicName = TEST_NAME + "-input-topic";
@@ -671,7 +670,7 @@ public class CmdFunctionsTest {
     }
 
 
-    @Ignore // PLSR-278
+    @Test
     public void testUpdateFunctionWithCpu() throws Exception {
         String fnName = TEST_NAME + "-function";
         String inputTopicName = TEST_NAME + "-input-topic";
@@ -702,7 +701,7 @@ public class CmdFunctionsTest {
         verify(functions, times(1)).updateFunctionWithUrl(any(FunctionConfig.class), anyString(), eq(new UpdateOptions()));
     }
 
-    @Ignore // PLSR-278
+    @Test
     public void testUpdateFunctionWithRam() throws Exception {
         String fnName = TEST_NAME + "-function";
         String inputTopicName = TEST_NAME + "-input-topic";
@@ -733,7 +732,7 @@ public class CmdFunctionsTest {
         verify(functions, times(1)).updateFunctionWithUrl(any(FunctionConfig.class), anyString(), eq(new UpdateOptions()));
     }
 
-    @Ignore // PLSR-278
+    @Test
     public void testUpdateFunctionWithDisk() throws Exception {
         String fnName = TEST_NAME + "-function";
         String inputTopicName = TEST_NAME + "-input-topic";
@@ -764,7 +763,7 @@ public class CmdFunctionsTest {
         verify(functions, times(1)).updateFunctionWithUrl(any(FunctionConfig.class), anyString(), eq(new UpdateOptions()));
     }
 
-    @Ignore // PLSR-278
+    @Test
     public void testUpdateAuthData() throws Exception {
         String fnName = TEST_NAME + "-function";
         String inputTopicName = TEST_NAME + "-input-topic";
