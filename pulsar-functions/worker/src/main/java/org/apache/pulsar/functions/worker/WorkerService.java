@@ -67,6 +67,7 @@ public class WorkerService {
     private AuthorizationService authorizationService;
     private InterceptService interceptService;
     private ConnectorsManager connectorsManager;
+    private FunctionsManager functionsManager;
     private PulsarAdmin brokerAdmin;
     private PulsarAdmin functionAdmin;
     private final MetricsGenerator metricsGenerator;
@@ -163,13 +164,14 @@ public class WorkerService {
                     this.workerConfig, this.schedulerManager, this.client);
 
             this.connectorsManager = new ConnectorsManager(workerConfig);
+            this.functionsManager = new FunctionsManager(workerConfig);
 
             //create membership manager
             this.membershipManager = new MembershipManager(this, this.client, this.brokerAdmin);
 
             // create function runtime manager
             this.functionRuntimeManager = new FunctionRuntimeManager(
-                    this.workerConfig, this, this.dlogNamespace, this.membershipManager, connectorsManager, functionMetaDataManager);
+                this.workerConfig, this, this.dlogNamespace, this.membershipManager, connectorsManager, functionsManager, functionMetaDataManager);
 
             // Setting references to managers in scheduler
             this.schedulerManager.setFunctionMetaDataManager(this.functionMetaDataManager);

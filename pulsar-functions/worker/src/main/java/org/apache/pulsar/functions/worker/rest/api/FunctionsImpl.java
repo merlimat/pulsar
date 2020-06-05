@@ -18,29 +18,9 @@
  */
 package org.apache.pulsar.functions.worker.rest.api;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.pulsar.functions.auth.FunctionAuthUtils.getFunctionAuthData;
-import static org.apache.pulsar.functions.worker.WorkerUtils.isFunctionCodeBuiltin;
-import static org.apache.pulsar.functions.worker.rest.RestUtils.throwUnavailableException;
-
 import com.google.protobuf.ByteString;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-
 import lombok.extern.slf4j.Slf4j;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.pulsar.broker.authentication.AuthenticationDataHttps;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
 import org.apache.pulsar.broker.intercept.InterceptException;
@@ -51,7 +31,6 @@ import org.apache.pulsar.common.functions.Utils;
 import org.apache.pulsar.common.policies.data.ExceptionInformation;
 import org.apache.pulsar.common.policies.data.FunctionStatus;
 import org.apache.pulsar.functions.auth.FunctionAuthData;
-import org.apache.pulsar.functions.auth.FunctionAuthProvider;
 import org.apache.pulsar.functions.instance.InstanceUtils;
 import org.apache.pulsar.functions.proto.Function;
 import org.apache.pulsar.functions.proto.InstanceCommunication;
@@ -70,11 +49,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -698,11 +677,30 @@ public class FunctionsImpl extends ComponentImpl {
                                                                  final File componentPackageFile) throws IOException {
 
         // The rest end points take precedence over whatever is there in function config
+        Path archivePath = null;
         functionConfig.setTenant(tenant);
         functionConfig.setNamespace(namespace);
         functionConfig.setName(componentName);
         FunctionConfigUtils.inferMissingArguments(functionConfig);
-        ClassLoader clsLoader = FunctionConfigUtils.validate(functionConfig, componentPackageFile);
+
+        if (!StringUtils.isEmpty(functionConfig.getJar())) {
+            String builtinArchive = functionConfig.getJar();
+            if (builtinArchive.startsWith(org.apache.pulsar.common.functions.Utils.BUILTIN)) {
+                builtinArchive = builtinArchive.replaceFirst("^builtin://", "");
+            }
+            try {
+                archivePath = this.worker().getFunctionsManager().getFunctionArchive(builtinArchive);
+            } catch (Exception e) {
+                throw new IllegalArgumentException(String.format("No Function archive %s found", archivePath));
+            }
+        }
+        ClassLoader clsLoader  = null;
+        if(archivePath != null){
+            clsLoader = FunctionConfigUtils.validate(functionConfig, archivePath.toFile());
+        }
+        else{
+            clsLoader = FunctionConfigUtils.validate(functionConfig, componentPackageFile);
+        }
         return FunctionConfigUtils.convert(functionConfig, clsLoader);
 
     }

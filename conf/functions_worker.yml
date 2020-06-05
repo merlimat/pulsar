@@ -201,3 +201,4 @@ tlsCertRefreshCheckDurationSec: 300
 ########################
 
 connectorsDirectory: ./connectors
+functionsDirectory: ./functions
