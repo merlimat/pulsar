@@ -2008,28 +2008,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 return;
             }
 
-            // Non-durable cursors have to be moved forward when data is trimmed since they are not retain that data.
-            // This is to make sure that the `consumedEntries` counter is correctly updated with the number of skipped
-            // entries and the stats are reported correctly.
-            long firstNonDeletedLedger = ledgers
-                    .ceilingKey(ledgersToDelete.get(ledgersToDelete.size() - 1).getLedgerId() + 1);
-            PositionImpl highestPositionToDelete = new PositionImpl(firstNonDeletedLedger, -1);
-
-            cursors.forEach(cursor -> {
-                if (highestPositionToDelete.compareTo((PositionImpl) cursor.getMarkDeletedPosition()) > 0) {
-                    cursor.asyncMarkDelete(highestPositionToDelete, new MarkDeleteCallback() {
-                        @Override
-                        public void markDeleteComplete(Object ctx) {
-                        }
-
-                        @Override
-                        public void markDeleteFailed(ManagedLedgerException exception, Object ctx) {
-                            log.warn("[{}] Failed to mark delete while trimming data ledgers: {}", name,
-                                    exception.getMessage());
-                        }
-                    }, null);
-                }
-            });
+            advanceNonDurableCursors(ledgersToDelete);
 
             // Update metadata
             for (LedgerInfo ls : ledgersToDelete) {
@@ -2087,6 +2066,37 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 }
             });
         }
+    }
+
+    /**
+     * Non-durable cursors have to be moved forward when data is trimmed since they are not retain that data.
+     * This is to make sure that the `consumedEntries` counter is correctly updated with the number of skipped
+     * entries and the stats are reported correctly.
+     */
+    private void advanceNonDurableCursors(List<LedgerInfo> ledgersToDelete) {
+        if (ledgersToDelete.isEmpty()) {
+            return;
+        }
+
+        long firstNonDeletedLedger = ledgers
+                .ceilingKey(ledgersToDelete.get(ledgersToDelete.size() - 1).getLedgerId() + 1);
+        PositionImpl highestPositionToDelete = new PositionImpl(firstNonDeletedLedger, -1);
+
+        cursors.forEach(cursor -> {
+            if (highestPositionToDelete.compareTo((PositionImpl) cursor.getMarkDeletedPosition()) > 0) {
+                cursor.asyncMarkDelete(highestPositionToDelete, new MarkDeleteCallback() {
+                    @Override
+                    public void markDeleteComplete(Object ctx) {
+                    }
+
+                    @Override
+                    public void markDeleteFailed(ManagedLedgerException exception, Object ctx) {
+                        log.warn("[{}] Failed to mark delete while trimming data ledgers: {}", name,
+                                exception.getMessage());
+                    }
+                }, null);
+            }
+        });
     }
 
     /**
