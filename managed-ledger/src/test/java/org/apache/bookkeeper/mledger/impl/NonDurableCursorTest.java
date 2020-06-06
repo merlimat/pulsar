@@ -28,6 +28,8 @@ import static org.testng.Assert.fail;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -653,6 +655,44 @@ public class NonDurableCursorTest extends MockedBookKeeperTestCase {
 
         nonCursor1.markDelete(p3);
         assertEquals(p3, ledger.getCursors().getSlowestReaderPosition());
+
+        ledger.close();
+    }
+
+    @Test
+    public void testBacklogStatsWhenDroppingData() throws Exception {
+        ManagedLedger ledger = factory.open("testBacklogStatsWhenDroppingData",
+                new ManagedLedgerConfig().setMaxEntriesPerLedger(1));
+        ManagedCursor c1 = ledger.openCursor("c1");
+        ManagedCursor nonDurableCursor = ledger.newNonDurableCursor(PositionImpl.earliest);
+
+        assertEquals(nonDurableCursor.getNumberOfEntries(), 0);
+        assertEquals(nonDurableCursor.getNumberOfEntriesInBacklog(), 0);
+
+        List<Position> positions = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            positions.add(ledger.addEntry(("entry-" + i).getBytes(UTF_8)));
+        }
+
+        assertEquals(nonDurableCursor.getNumberOfEntries(), 10);
+        assertEquals(nonDurableCursor.getNumberOfEntriesInBacklog(), 10);
+
+        c1.markDelete(positions.get(4));
+        assertEquals(c1.getNumberOfEntries(), 5);
+        assertEquals(c1.getNumberOfEntriesInBacklog(), 5);
+
+        // Since the durable cursor has moved, the data will be trimmed in background
+        Thread.sleep(1000);
+
+        assertEquals(nonDurableCursor.getNumberOfEntries(), 6);
+        assertEquals(nonDurableCursor.getNumberOfEntriesInBacklog(), 6);
+
+        c1.close();
+        ledger.deleteCursor(c1.getName());
+
+        Thread.sleep(1000);
+        assertEquals(nonDurableCursor.getNumberOfEntries(), 1);
+        assertEquals(nonDurableCursor.getNumberOfEntriesInBacklog(), 1);
 
         ledger.close();
     }
