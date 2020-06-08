@@ -58,10 +58,12 @@ public class Worker {
             new DefaultThreadFactory("zk-cache-callback"));
     private GlobalZooKeeperCache globalZkCache;
     private ConfigurationCacheService configurationCacheService;
+    private final ErrorNotifier errorNotifier;
 
     public Worker(WorkerConfig workerConfig) {
         this.workerConfig = workerConfig;
         this.workerService = new WorkerService(workerConfig);
+        this.errorNotifier = new ErrorNotifier();
     }
 
     protected void start() throws Exception {
@@ -70,12 +72,19 @@ public class Worker {
                 workerConfig.getTlsTrustCertsFilePath(), workerConfig.isTlsAllowInsecureConnection(),
                 workerConfig.isTlsHostnameVerificationEnable());
 
-        URI dlogUri = initialize(this.workerConfig, admin);
+        URI dlogUri = initialize(workerConfig, admin);
 
-        workerService.start(dlogUri, getAuthenticationService(), getAuthorizationService(), getInterceptService(admin));
-        this.server = new WorkerServer(workerService);
-        this.server.start();
-        log.info("Start worker server on port {}...", this.workerConfig.getWorkerPort());
+        workerService.start(dlogUri, getAuthenticationService(), getAuthorizationService(), getInterceptService(admin), errorNotifier);
+        server = new WorkerServer(workerService);
+        server.start();
+        log.info("/** Started worker server on port={} **/", this.workerConfig.getWorkerPort());
+        
+        try {
+            errorNotifier.waitForError();
+        } catch (Throwable th) {
+            log.error("!-- Fatal error encountered. Worker will exit now. --!", th);
+            throw th;
+        }
     }
 
     private static URI initialize(WorkerConfig workerConfig, PulsarAdmin admin)
