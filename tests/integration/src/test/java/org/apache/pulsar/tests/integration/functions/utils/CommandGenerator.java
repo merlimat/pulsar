@@ -244,7 +244,7 @@ public class CommandGenerator {
         if (slidingIntervalDurationMs != null)  {
             commandBuilder.append(" --slidingIntervalDurationMs " + slidingIntervalDurationMs);
         }
-        
+
         if (codeFile != null) {
             switch (runtime) {
                 case JAVA:

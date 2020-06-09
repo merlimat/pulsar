@@ -243,6 +243,10 @@ public class PulsarService implements AutoCloseable {
                 this.webService = null;
             }
 
+            if (this.webSocketService != null) {
+                this.webSocketService.close();
+            }
+
             if (this.brokerService != null) {
                 this.brokerService.close();
                 this.brokerService = null;
@@ -1124,8 +1128,7 @@ public class PulsarService implements AutoCloseable {
                 throw ioe;
             }
             LOG.info("Function worker service setup completed");
-            // TODO figure out how to handle errors from function worker service
-            functionWorkerService.get().start(dlogURI, authenticationService, authorizationService, interceptService, new ErrorNotifier());
+            functionWorkerService.get().start(dlogURI, authenticationService, authorizationService, interceptService, ErrorNotifier.getShutdownServiceImpl(shutdownService));
             LOG.info("Function worker service started");
         }
     }
