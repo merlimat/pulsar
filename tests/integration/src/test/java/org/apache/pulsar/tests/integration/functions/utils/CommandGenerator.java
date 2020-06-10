@@ -205,7 +205,9 @@ public class CommandGenerator {
         if (functionName != null) {
             commandBuilder.append(" --name " + functionName);
         }
-        commandBuilder.append(" --className " + functionClassName);
+        if (functionClassName != null) {
+            commandBuilder.append(" --className " + functionClassName);
+        }
         if (sourceTopic != null) {
             commandBuilder.append(" --inputs " + sourceTopic);
         }
@@ -242,14 +244,19 @@ public class CommandGenerator {
         if (slidingIntervalDurationMs != null)  {
             commandBuilder.append(" --slidingIntervalDurationMs " + slidingIntervalDurationMs);
         }
-
-        if (runtime == Runtime.JAVA) {
-            commandBuilder.append(" --jar " + JAVAJAR);
-        } else {
-            if (codeFile != null) {
-                commandBuilder.append(" --py " + PYTHONBASE + codeFile);
-            } else {
-                commandBuilder.append(" --py " + PYTHONBASE);
+        
+        if (codeFile != null) {
+            switch (runtime) {
+                case JAVA:
+                    commandBuilder.append(" --jar " + JAVAJAR);
+                    break;
+                case PYTHON:
+                    if (codeFile != null) {
+                        commandBuilder.append(" --py " + PYTHONBASE + codeFile);
+                    } else {
+                        commandBuilder.append(" --py " + PYTHONBASE);
+                    }
+                    break;
             }
         }
         return commandBuilder.toString();

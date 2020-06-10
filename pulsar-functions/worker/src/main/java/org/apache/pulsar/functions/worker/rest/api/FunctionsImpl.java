@@ -242,10 +242,10 @@ public class FunctionsImpl extends ComponentImpl {
 
             updateRequest(functionMetaDataBuilder.build());
         } finally {
-
-            if (!(functionPkgUrl != null && functionPkgUrl.startsWith(Utils.FILE))
-                    && componentPackageFile != null && componentPackageFile.exists()) {
-                componentPackageFile.delete();
+            if (componentPackageFile != null && componentPackageFile.exists()) {
+                if (functionPkgUrl == null || !functionPkgUrl.startsWith(Utils.FILE)) {
+                    componentPackageFile.delete();
+                }
             }
         }
     }
@@ -443,9 +443,10 @@ public class FunctionsImpl extends ComponentImpl {
 
             updateRequest(functionMetaDataBuilder.build());
         } finally {
-            if (!(functionPkgUrl != null && functionPkgUrl.startsWith(Utils.FILE))
-                    && componentPackageFile != null && componentPackageFile.exists()) {
-                componentPackageFile.delete();
+            if (componentPackageFile != null && componentPackageFile.exists()) {
+                if ((functionPkgUrl != null && !functionPkgUrl.startsWith(Utils.FILE)) || uploadedInputStream != null) {
+                    componentPackageFile.delete();
+                }
             }
         }
     }

@@ -245,10 +245,10 @@ public class SourcesImpl extends ComponentImpl {
 
             updateRequest(functionMetaDataBuilder.build());
         } finally {
-
-            if (!(sourcePkgUrl != null && sourcePkgUrl.startsWith(Utils.FILE))
-                    && componentPackageFile != null && componentPackageFile.exists()) {
-                componentPackageFile.delete();
+            if (componentPackageFile != null && componentPackageFile.exists()) {
+                if (sourcePkgUrl == null || !sourcePkgUrl.startsWith(Utils.FILE)) {
+                    componentPackageFile.delete();
+                }
             }
         }
     }
@@ -446,9 +446,10 @@ public class SourcesImpl extends ComponentImpl {
 
             updateRequest(functionMetaDataBuilder.build());
         } finally {
-            if (!(sourcePkgUrl != null && sourcePkgUrl.startsWith(Utils.FILE))
-                    && componentPackageFile != null && componentPackageFile.exists()) {
-                componentPackageFile.delete();
+            if (componentPackageFile != null && componentPackageFile.exists()) {
+                if ((sourcePkgUrl != null && !sourcePkgUrl.startsWith(Utils.FILE)) || uploadedInputStream != null) {
+                    componentPackageFile.delete();
+                }
             }
         }
     }
