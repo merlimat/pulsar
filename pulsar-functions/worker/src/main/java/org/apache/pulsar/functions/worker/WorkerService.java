@@ -35,6 +35,7 @@ import org.apache.pulsar.broker.authentication.AuthenticationService;
 import org.apache.pulsar.broker.authorization.AuthorizationService;
 import org.apache.pulsar.broker.intercept.InterceptService;
 import org.apache.pulsar.client.admin.PulsarAdmin;
+import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 
@@ -71,15 +72,15 @@ public class WorkerService {
     private PulsarAdmin brokerAdmin;
     private PulsarAdmin functionAdmin;
     private final MetricsGenerator metricsGenerator;
-    private final ScheduledExecutorService executor;
     @VisibleForTesting
     private URI dlogUri;
+    private LeaderService leaderService;
+    private FunctionAssignmentTailer functionAssignmentTailer;
 
     public WorkerService(WorkerConfig workerConfig) {
         this.workerConfig = workerConfig;
         this.statsUpdater = Executors
                 .newSingleThreadScheduledExecutor(new DefaultThreadFactory("worker-stats-updater"));
-        this.executor = Executors.newScheduledThreadPool(10, new DefaultThreadFactory("pulsar-worker"));
         this.metricsGenerator = new MetricsGenerator(this.statsUpdater, workerConfig);
     }
 
@@ -89,7 +90,7 @@ public class WorkerService {
                       AuthorizationService authorizationService,
                       InterceptService interceptService,
                       ErrorNotifier errorNotifier) throws InterruptedException {
-        log.info("Starting worker {}...", workerConfig.getWorkerId());
+        log.info("/** Starting worker id={} **/", workerConfig.getWorkerId());
 
         try {
             log.info("Worker Configs: {}", new ObjectMapper().writerWithDefaultPrettyPrinter()
@@ -100,13 +101,13 @@ public class WorkerService {
 
         try {
             // create the dlog namespace for storing function packages
-            this.dlogUri = dlogUri;
+            dlogUri = dlogUri;
             DistributedLogConfiguration dlogConf = WorkerUtils.getDlogConf(workerConfig);
             try {
                 this.dlogNamespace = NamespaceBuilder.newBuilder()
                         .conf(dlogConf)
                         .clientId("function-worker-" + workerConfig.getWorkerId())
-                        .uri(this.dlogUri)
+                        .uri(dlogUri)
                         .build();
             } catch (Exception e) {
                 log.error("Failed to initialize dlog namespace {} for storing function packages",
@@ -139,7 +140,7 @@ public class WorkerService {
                     workerConfig.getTlsTrustCertsFilePath(), workerConfig.isTlsAllowInsecureConnection(),
                     workerConfig.isTlsHostnameVerificationEnable());
 
-                this.client = WorkerUtils.getPulsarClient(this.workerConfig.getPulsarServiceUrl(),
+                this.client = WorkerUtils.getPulsarClient(workerConfig.getPulsarServiceUrl(),
                         workerConfig.getClientAuthenticationPlugin(),
                         workerConfig.getClientAuthenticationParameters(),
                         workerConfig.isUseTls(), workerConfig.getTlsTrustCertsFilePath(),
@@ -149,16 +150,14 @@ public class WorkerService {
 
                 this.functionAdmin = WorkerUtils.getPulsarAdminClient(functionWebServiceUrl);
 
-                this.client = WorkerUtils.getPulsarClient(this.workerConfig.getPulsarServiceUrl());
+                this.client = WorkerUtils.getPulsarClient(workerConfig.getPulsarServiceUrl());
             }
-            log.info("Created Pulsar client");
 
             brokerAdmin.topics().createNonPartitionedTopic(workerConfig.getFunctionAssignmentTopic());
             brokerAdmin.topics().createNonPartitionedTopic(workerConfig.getClusterCoordinationTopic());
             brokerAdmin.topics().createNonPartitionedTopic(workerConfig.getFunctionMetadataTopic());
             //create scheduler manager
-            this.schedulerManager = new SchedulerManager(this.workerConfig, this.client, this.brokerAdmin,
-                    this.executor);
+            this.schedulerManager = new SchedulerManager(workerConfig, client, brokerAdmin, errorNotifier);
 
             //create function meta data manager
             this.functionMetaDataManager = new FunctionMetaDataManager(
@@ -168,54 +167,93 @@ public class WorkerService {
             this.functionsManager = new FunctionsManager(workerConfig);
 
             //create membership manager
-            this.membershipManager = new MembershipManager(this, this.client, this.brokerAdmin);
+            String coordinationTopic = workerConfig.getClusterCoordinationTopic();
+            if (!brokerAdmin.topics().getSubscriptions(coordinationTopic).contains(MembershipManager.COORDINATION_TOPIC_SUBSCRIPTION)) {
+                brokerAdmin.topics().createSubscription(coordinationTopic, MembershipManager.COORDINATION_TOPIC_SUBSCRIPTION, MessageId.earliest);
+            }
+            this.membershipManager = new MembershipManager(this, client, brokerAdmin);
 
             // create function runtime manager
             this.functionRuntimeManager = new FunctionRuntimeManager(
-                    this.workerConfig,
+                    workerConfig,
                     this,
-                    this.dlogNamespace,
-                    this.membershipManager,
+                    dlogNamespace,
+                    membershipManager,
                     connectorsManager,
                     functionsManager,
                     functionMetaDataManager,
                     errorNotifier);
 
-            // Setting references to managers in scheduler
-            this.schedulerManager.setFunctionMetaDataManager(this.functionMetaDataManager);
-            this.schedulerManager.setFunctionRuntimeManager(this.functionRuntimeManager);
-            this.schedulerManager.setMembershipManager(this.membershipManager);
+
+            // initialize function assignment tailer that reads from the assignment topic
+            this.functionAssignmentTailer = new FunctionAssignmentTailer(
+                    functionRuntimeManager,
+                    client.newReader(),
+                    workerConfig,
+                    errorNotifier);
 
             // initialize function metadata manager
-            this.functionMetaDataManager.initialize();
+            log.info("/** Initializing Metdata Manager **/");
+            functionMetaDataManager.initialize();
 
             // initialize function runtime manager
-            this.functionRuntimeManager.initialize();
+            log.info("/** Initializing Runtime Manager **/");
+            functionRuntimeManager.initialize();
+
+            this.leaderService = new LeaderService(this,
+                    client,
+                    functionAssignmentTailer,
+                    schedulerManager,
+                    errorNotifier);
+
+            // Setting references to managers in scheduler
+            schedulerManager.setFunctionMetaDataManager(functionMetaDataManager);
+            schedulerManager.setFunctionRuntimeManager(functionRuntimeManager);
+            schedulerManager.setMembershipManager(membershipManager);
+            schedulerManager.setLeaderService(leaderService);
 
             this.authenticationService = authenticationService;
 
             this.authorizationService = authorizationService;
 
             this.interceptService = interceptService;
+            // Start function assignment tailer
+            log.info("/** Starting Function Assignment Tailer **/");
+            functionAssignmentTailer.start();
+
+            log.info("/** Start Leader Service **/");
+            leaderService.start();
+            
+            // start function metadata manager
+            log.info("/** Starting Metdata Manager **/");
+            functionMetaDataManager.start();
 
             // Starting cluster services
-            log.info("Start cluster services...");
             this.clusterServiceCoordinator = new ClusterServiceCoordinator(
-                    this.workerConfig.getWorkerId(),
-                    membershipManager);
+                    workerConfig.getWorkerId(),
+                    leaderService);
 
-            this.clusterServiceCoordinator.addTask("membership-monitor",
-                    this.workerConfig.getFailureCheckFreqMs(),
-                    () -> membershipManager.checkFailures(
-                            functionMetaDataManager, functionRuntimeManager, schedulerManager));
+            clusterServiceCoordinator.addTask("membership-monitor",
+                    workerConfig.getFailureCheckFreqMs(),
+                    () -> {
+                        // computing a new schedule and checking for failures cannot happen concurrently
+                        // both paths of code modify internally cached assignments map in function runtime manager
+                        try {
+                            schedulerManager.getSchedulerLock().lock();
+                            membershipManager.checkFailures(
+                                    functionMetaDataManager, functionRuntimeManager, schedulerManager);
+                        } finally {
+                            schedulerManager.getSchedulerLock().unlock();
+                        }
+                    });
 
-            this.clusterServiceCoordinator.start();
-
-            // Start function runtime manager
-            this.functionRuntimeManager.start();
+            log.info("/** Starting Cluster Service Coordinator **/");
+            clusterServiceCoordinator.start();
 
             // indicate function worker service is done initializing
             this.isInitialized = true;
+
+            log.info("/** Started worker id={} **/", workerConfig.getWorkerId());
         } catch (Throwable t) {
             log.error("Error Starting up in worker", t);
             throw new RuntimeException(t);
@@ -230,18 +268,20 @@ public class WorkerService {
                 log.warn("Failed to close function metadata manager", e);
             }
         }
+
+        if (null != functionAssignmentTailer) {
+            try {
+                functionAssignmentTailer.close();
+            } catch (Exception e) {
+                log.warn("Failed to close function assignment tailer", e);
+            }
+        }
+
         if (null != functionRuntimeManager) {
             try {
                 functionRuntimeManager.close();
             } catch (Exception e) {
                 log.warn("Failed to close function runtime manager", e);
-            }
-        }
-        if (null != client) {
-            try {
-                client.close();
-            } catch (PulsarClientException e) {
-                log.warn("Failed to close pulsar client", e);
             }
         }
 
@@ -250,38 +290,46 @@ public class WorkerService {
         }
 
         if (null != membershipManager) {
-            try {
-                membershipManager.close();
-            } catch (PulsarClientException e) {
-                log.warn("Failed to close membership manager", e);
-            }
+            membershipManager.close();
         }
 
         if (null != schedulerManager) {
             schedulerManager.close();
         }
 
-        if (null != this.brokerAdmin) {
-            this.brokerAdmin.close();
+        if (null != leaderService) {
+            try {
+                leaderService.close();
+            } catch (PulsarClientException e) {
+                log.warn("Failed to close leader service", e);
+            }
         }
 
-        if (null != this.functionAdmin) {
-            this.functionAdmin.close();
+        if (null != client) {
+            try {
+                client.close();
+            } catch (PulsarClientException e) {
+                log.warn("Failed to close pulsar client", e);
+            }
         }
 
-        if (null != this.stateStoreAdminClient) {
-            this.stateStoreAdminClient.close();
+        if (null != brokerAdmin) {
+            brokerAdmin.close();
         }
 
-        if (null != this.dlogNamespace) {
-            this.dlogNamespace.close();
+        if (null != functionAdmin) {
+            functionAdmin.close();
         }
 
-        if(this.executor != null) {
-            this.executor.shutdown();
+        if (null != stateStoreAdminClient) {
+            stateStoreAdminClient.close();
         }
 
-        if (this.statsUpdater != null) {
+        if (null != dlogNamespace) {
+            dlogNamespace.close();
+        }
+
+        if (statsUpdater != null) {
             statsUpdater.shutdownNow();
         }
     }
