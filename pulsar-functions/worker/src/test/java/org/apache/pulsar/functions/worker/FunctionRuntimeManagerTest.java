@@ -514,13 +514,12 @@ public class FunctionRuntimeManagerTest {
                 .build();
 
         ArrayBlockingQueue<Message<byte[]>> messageList = new ArrayBlockingQueue<>(2);
-        PulsarApi.MessageMetadata.Builder msgMetadataBuilder = PulsarApi.MessageMetadata.newBuilder();
         Message message1 = spy(new MessageImpl("foo", MessageId.latest.toString(),
-                new HashMap<>(), Unpooled.copiedBuffer(assignment1.toByteArray()), null, msgMetadataBuilder));
+                new HashMap<>(), Unpooled.copiedBuffer(assignment1.toByteArray()), null));
         doReturn(FunctionCommon.getFullyQualifiedInstanceId(assignment1.getInstance())).when(message1).getKey();
 
         Message message2 = spy(new MessageImpl("foo", MessageId.latest.toString(),
-                new HashMap<>(), Unpooled.copiedBuffer(assignment2.toByteArray()), null, msgMetadataBuilder));
+                new HashMap<>(), Unpooled.copiedBuffer(assignment2.toByteArray()), null));
         doReturn(FunctionCommon.getFullyQualifiedInstanceId(assignment2.getInstance())).when(message2).getKey();
 
         PulsarClient pulsarClient = mock(PulsarClient.class);
