@@ -192,19 +192,26 @@ public class WorkerService {
                     workerConfig,
                     errorNotifier);
 
+            // Start worker early in the worker service init process so that functions don't get re-assigned because
+            // initialize operations of FunctionRuntimeManager and FunctionMetadataManger might take a while
+            this.leaderService = new LeaderService(this,
+              client,
+              functionAssignmentTailer,
+              schedulerManager,
+              functionRuntimeManager,
+              functionMetaDataManager,
+              errorNotifier);
+
+            log.info("/** Start Leader Service **/");
+            leaderService.start();
+
             // initialize function metadata manager
             log.info("/** Initializing Metdata Manager **/");
             functionMetaDataManager.initialize();
 
             // initialize function runtime manager
             log.info("/** Initializing Runtime Manager **/");
-            functionRuntimeManager.initialize();
-
-            this.leaderService = new LeaderService(this,
-                    client,
-                    functionAssignmentTailer,
-                    schedulerManager,
-                    errorNotifier);
+            MessageId lastAssignmentMessageId = functionRuntimeManager.initialize();
 
             // Setting references to managers in scheduler
             schedulerManager.setFunctionMetaDataManager(functionMetaDataManager);
@@ -219,10 +226,7 @@ public class WorkerService {
             this.interceptService = interceptService;
             // Start function assignment tailer
             log.info("/** Starting Function Assignment Tailer **/");
-            functionAssignmentTailer.start();
-
-            log.info("/** Start Leader Service **/");
-            leaderService.start();
+            functionAssignmentTailer.startFromMessage(lastAssignmentMessageId);
             
             // start function metadata manager
             log.info("/** Starting Metdata Manager **/");
