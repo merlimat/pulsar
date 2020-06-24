@@ -665,12 +665,13 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
 
     private CompletableFuture<? extends Subscription> getNonDurableSubscription(String subscriptionName,
             MessageId startMessageId, long startMessageRollbackDurationSec) {
-        CompletableFuture<Subscription> subscriptionFuture = new CompletableFuture<>();
         log.info("[{}][{}] Creating non-durable subscription at msg id {}", topic, subscriptionName, startMessageId);
 
         synchronized (ledger) {
             // Create a new non-durable cursor only for the first consumer that connects
-            Subscription subscription = subscriptions.computeIfAbsent(subscriptionName, name -> {
+            PersistentSubscription subscription = subscriptions.get(subscriptionName);
+
+            if (subscription == null) {
                 MessageIdImpl msgId = startMessageId != null ? (MessageIdImpl) startMessageId
                         : (MessageIdImpl) MessageId.latest;
 
@@ -678,7 +679,8 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                 long entryId = msgId.getEntryId();
                 if (ledgerId >= 0
                         && msgId instanceof BatchMessageIdImpl) {
-                    // When the start message is relative to a batch, we need to take one step back on the previous message,
+                    // When the start message is relative to a batch, we need to take one step back on the previous
+                    // message,
                     // because the "batch" might not have been consumed in its entirety.
                     // The client will then be able to discard the first messages if needed.
                     entryId = msgId.getEntryId() - 1;
@@ -689,33 +691,31 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                 try {
                     cursor = ledger.newNonDurableCursor(startPosition, subscriptionName);
                 } catch (ManagedLedgerException e) {
-                    subscriptionFuture.completeExceptionally(e);
+                    return FutureUtil.failedFuture(e);
                 }
 
-                return new PersistentSubscription(this, subscriptionName, cursor, false);
-            });
+                subscription = new PersistentSubscription(this, subscriptionName, cursor, false);
+                subscriptions.put(subscriptionName, subscription);
+            }
 
-            if (!subscriptionFuture.isDone()) {
-                if (startMessageRollbackDurationSec > 0) {
-                    long timestamp = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(startMessageRollbackDurationSec);
-                    subscription.resetCursor(timestamp).handle((s, ex) -> {
-                        if (ex != null) {
-                            log.warn("[{}] Failed to reset cursor {} position at timestamp {}", topic, subscriptionName,
-                                    startMessageRollbackDurationSec);
-                        }
-                        subscriptionFuture.complete(subscription);
-                        return null;
-                    });
-                } else {
-                    subscriptionFuture.complete(subscription);
-                }
+            if (startMessageRollbackDurationSec > 0) {
+                long timestamp = System.currentTimeMillis()
+                        - TimeUnit.SECONDS.toMillis(startMessageRollbackDurationSec);
+                CompletableFuture<Subscription> subscriptionFuture = new CompletableFuture<>();
+                final Subscription finalSubscription = subscription;
+                subscription.resetCursor(timestamp).handle((s, ex) -> {
+                    if (ex != null) {
+                        log.warn("[{}] Failed to reset cursor {} position at timestamp {}", topic, subscriptionName,
+                                startMessageRollbackDurationSec);
+                    }
+                    subscriptionFuture.complete(finalSubscription);
+                    return null;
+                });
+                return subscriptionFuture;
             } else {
-                // failed to initialize managed-cursor: clean up created subscription
-                subscriptions.remove(subscriptionName);
+                return CompletableFuture.completedFuture(subscription);
             }
         }
-
-        return subscriptionFuture;
     }
 
     @Override
@@ -907,7 +907,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
         return deleteFuture;
     }
 
-    /**
+   /**
      * Close this topic - close all producers and subscriptions associated with this topic
      *
      * @return Completable future indicating completion of close operation
