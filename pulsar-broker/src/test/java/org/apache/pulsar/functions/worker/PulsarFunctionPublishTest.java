@@ -207,6 +207,7 @@ public class PulsarFunctionPublishTest {
         System.setProperty(JAVA_INSTANCE_JAR_PROPERTY,
                 FutureUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 
+        functionsWorkerService.getLeaderService().waitLeaderInit();
     }
 
     @AfterMethod
