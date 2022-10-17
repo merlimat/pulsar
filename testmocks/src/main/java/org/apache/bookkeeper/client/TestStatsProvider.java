@@ -59,8 +59,13 @@ public class TestStatsProvider implements StatsProvider {
         }
 
         @Override
-        public void add(long delta) {
+        public void addCount(long delta) {
             updateMax(val.addAndGet(delta));
+        }
+
+        @Override
+        public void addLatency(long eventLatency, TimeUnit unit) {
+            updateMax(val.addAndGet(unit.toNanos(eventLatency)));
         }
 
         @Override
