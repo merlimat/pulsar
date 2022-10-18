@@ -37,7 +37,6 @@ import org.apache.bookkeeper.mledger.ManagedLedgerException.ConcurrentWaitCallba
 import org.apache.bookkeeper.mledger.ManagedLedgerException.NoMoreEntriesToReadException;
 import org.apache.bookkeeper.mledger.ManagedLedgerException.TooManyRequestsException;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
-import org.apache.bookkeeper.mledger.util.SafeRun;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pulsar.broker.service.AbstractDispatcherSingleActiveConsumer;
 import org.apache.pulsar.broker.service.Consumer;
@@ -144,13 +143,7 @@ public class PersistentDispatcherSingleActiveConsumer extends AbstractDispatcher
     }
 
     @Override
-    public void readEntriesComplete(final List<Entry> entries, Object obj) {
-        topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, SafeRun.safeRun(() -> {
-            internalReadEntriesComplete(entries, obj);
-        }));
-    }
-
-    public synchronized void internalReadEntriesComplete(final List<Entry> entries, Object obj) {
+    public synchronized void readEntriesComplete(final List<Entry> entries, Object obj) {
         ReadEntriesCtx readEntriesCtx = (ReadEntriesCtx) obj;
         Consumer readConsumer = readEntriesCtx.getConsumer();
         long epoch = readEntriesCtx.getEpoch();
@@ -225,25 +218,16 @@ public class PersistentDispatcherSingleActiveConsumer extends AbstractDispatcher
                             sendMessageInfo.getTotalMessages(), sendMessageInfo.getTotalBytes());
 
                     // Schedule a new read batch operation only after the previous batch has been written to the socket.
-                    topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName,
-                        SafeRun.safeRun(() -> {
-                            synchronized (PersistentDispatcherSingleActiveConsumer.this) {
-                                Consumer newConsumer = getActiveConsumer();
-                                readMoreEntries(newConsumer);
-                            }
-                        }));
+                    synchronized (PersistentDispatcherSingleActiveConsumer.this) {
+                        Consumer newConsumer = getActiveConsumer();
+                        readMoreEntries(newConsumer);
+                    }
                 }
             });
     }
 
     @Override
-    public void consumerFlow(Consumer consumer, int additionalNumberOfMessages) {
-        topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, SafeRun.safeRun(() -> {
-            internalConsumerFlow(consumer);
-        }));
-    }
-
-    private synchronized void internalConsumerFlow(Consumer consumer) {
+    public synchronized  void consumerFlow(Consumer consumer, int additionalNumberOfMessages) {
         if (havePendingRead) {
             if (log.isDebugEnabled()) {
                 log.debug("[{}-{}] Ignoring flow control message since we already have a pending read req", name,
@@ -268,14 +252,7 @@ public class PersistentDispatcherSingleActiveConsumer extends AbstractDispatcher
     }
 
     @Override
-    public void redeliverUnacknowledgedMessages(Consumer consumer, long consumerEpoch) {
-        topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, SafeRun.safeRun(() -> {
-            internalRedeliverUnacknowledgedMessages(consumer, consumerEpoch);
-        }));
-    }
-
-    private synchronized void internalRedeliverUnacknowledgedMessages(Consumer consumer, long consumerEpoch) {
-
+    public synchronized void redeliverUnacknowledgedMessages(Consumer consumer, long consumerEpoch) {
         if (consumerEpoch > consumer.getConsumerEpoch()) {
             if (log.isDebugEnabled()) {
                 log.debug("[{}-{}] Update epoch, old epoch [{}], new epoch [{}]",
@@ -462,13 +439,7 @@ public class PersistentDispatcherSingleActiveConsumer extends AbstractDispatcher
     }
 
     @Override
-    public void readEntriesFailed(ManagedLedgerException exception, Object ctx) {
-        topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, SafeRun.safeRun(() -> {
-            internalReadEntriesFailed(exception, ctx);
-        }));
-    }
-
-    private synchronized void internalReadEntriesFailed(ManagedLedgerException exception, Object ctx) {
+    public synchronized void readEntriesFailed(ManagedLedgerException exception, Object ctx) {
         havePendingRead = false;
         ReadEntriesCtx readEntriesCtx = (ReadEntriesCtx) ctx;
         Consumer c = readEntriesCtx.getConsumer();
@@ -511,26 +482,22 @@ public class PersistentDispatcherSingleActiveConsumer extends AbstractDispatcher
         readBatchSize = serviceConfig.getDispatcherMinReadBatchSize();
 
         topic.getBrokerService().executor().schedule(() -> {
-
-            // Jump again into dispatcher dedicated thread
-            topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, SafeRun.safeRun(() -> {
-                synchronized (PersistentDispatcherSingleActiveConsumer.this) {
-                    Consumer currentConsumer = ACTIVE_CONSUMER_UPDATER.get(this);
-                    // we should retry the read if we have an active consumer and there is no pending read
-                    if (currentConsumer != null && !havePendingRead) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("[{}-{}] Retrying read operation", name, c);
-                        }
-                        if (currentConsumer != c) {
-                            notifyActiveConsumerChanged(currentConsumer);
-                        }
-                        readMoreEntries(currentConsumer);
-                    } else {
-                        log.info("[{}-{}] Skipping read retry: Current Consumer {}, havePendingRead {}", name, c,
-                                currentConsumer, havePendingRead);
+            synchronized (PersistentDispatcherSingleActiveConsumer.this) {
+                Consumer currentConsumer = ACTIVE_CONSUMER_UPDATER.get(this);
+                // we should retry the read if we have an active consumer and there is no pending read
+                if (currentConsumer != null && !havePendingRead) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("[{}-{}] Retrying read operation", name, c);
                     }
+                    if (currentConsumer != c) {
+                        notifyActiveConsumerChanged(currentConsumer);
+                    }
+                    readMoreEntries(currentConsumer);
+                } else {
+                    log.info("[{}-{}] Skipping read retry: Current Consumer {}, havePendingRead {}", name, c,
+                            currentConsumer, havePendingRead);
                 }
-            }));
+            }
         }, waitTimeMillis, TimeUnit.MILLISECONDS);
 
     }
