@@ -44,8 +44,9 @@
 # Extra options to be passed to the jvm
 PULSAR_MEM=${PULSAR_MEM:-"-Xms2g -Xmx2g -XX:MaxDirectMemorySize=4g"}
 
+# -agentpath:/Applications/YourKit-Java-Profiler-2022.3.app/Contents/Resources/bin/mac/libyjpagent.dylib=exceptions=disable,delay=10000,listen=all 
 # Garbage collection options
-PULSAR_GC=${PULSAR_GC:-"-XX:+UseZGC -XX:+PerfDisableSharedMem -XX:+AlwaysPreTouch"}
+PULSAR_GC=${PULSAR_GC:-"-XX:+UseZGC -XX:+PerfDisableSharedMem -XX:+AlwaysPreTouch -Dio.netty.leakDetection.level=paranoid -Dpulsar.allocator.leak_detection=Paranoid"}
 
 if [ -z "$JAVA_HOME" ]; then
   JAVA_BIN=java
