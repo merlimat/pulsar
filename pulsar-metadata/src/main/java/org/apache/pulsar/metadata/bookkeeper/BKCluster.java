@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.bookkeeper.bookie.BookieException;
 import org.apache.bookkeeper.bookie.BookieImpl;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.common.allocator.PoolingPolicy;
@@ -41,12 +42,14 @@ import org.apache.bookkeeper.common.component.LifecycleComponent;
 import org.apache.bookkeeper.common.component.LifecycleComponentStack;
 import org.apache.bookkeeper.conf.ClientConfiguration;
 import org.apache.bookkeeper.conf.ServerConfiguration;
+import org.apache.bookkeeper.meta.MetadataDrivers;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.proto.BookieServer;
 import org.apache.bookkeeper.replication.AutoRecoveryMain;
 import org.apache.bookkeeper.server.conf.BookieConfiguration;
 import org.apache.bookkeeper.util.IOUtils;
 import org.apache.bookkeeper.util.PortManager;
+import org.apache.bookkeeper.versioning.LongVersion;
 import org.apache.commons.io.FileUtils;
 import org.apache.pulsar.metadata.api.MetadataStoreConfig;
 import org.apache.pulsar.metadata.api.extended.MetadataStoreExtended;
@@ -224,12 +227,14 @@ public class BKCluster implements AutoCloseable {
         }
 
         int port;
-        if (baseConf.isEnableLocalTransport() || !baseConf.getAllowEphemeralPorts() || clusterConf.bkPort == 0) {
+        if (baseConf.isEnableLocalTransport()
+                || (!baseConf.getAllowEphemeralPorts() && baseConf.getBookiePort() == 0)
+                || clusterConf.bkPort == 0) {
             port = PortManager.nextFreePort();
         } else {
             // bk 4.15 cookie validation finds the same ip:port in case of port 0
             // and 2nd bookie's cookie validation fails
-            port = clusterConf.bkPort;
+            port = clusterConf.bkPort != 0 ? clusterConf.bkPort : baseConf.getBookiePort();
         }
         return newServerConfiguration(port, dataDir, new File[]{dataDir});
     }
@@ -295,8 +300,39 @@ public class BKCluster implements AutoCloseable {
      */
     protected LifecycleComponentStack startBookie(ServerConfiguration conf)
             throws Exception {
-        LifecycleComponentStack server =
-                org.apache.bookkeeper.server.Main.buildBookieServer(new BookieConfiguration(conf));
+        LifecycleComponentStack server;
+
+        try {
+            server = org.apache.bookkeeper.server.Main.buildBookieServer(new BookieConfiguration(conf));
+        } catch (BookieException.InvalidCookieException e) {
+            e.printStackTrace();
+            // InvalidCookieException can happen if the machine IP has changed
+            // Since we are running here a local bookie that is always accessed
+            // from localhost, we can ignore the error
+            MetadataDrivers.runFunctionWithRegistrationManager(conf, registrationManager -> {
+                BookieId id = BookieId.parse(conf.getAdvertisedAddress() + ":" + conf.getBookiePort());
+                try {
+                    registrationManager.removeCookie(id, new LongVersion(-1));
+                } catch (BookieException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                return null;
+            });
+
+
+//            for (String path : store.getChildren("/ledgers/cookies").get()) {
+//                log.info("deleting zk node {}", "/ledgers/cookies/" + path);
+//                store.delete("/ledgers/cookies/" + path, Optional.empty()).get();
+//            }
+//
+//            // Also clean the on-disk directory and cookie,
+//            // cookie validation fails on non-empty dirs
+//            // even if the cookie file is deleted
+//            log.info("Recursively deleting data directory {}", conf.bk);
+//            FileUtils.deleteDirectory(bkDataDir);
+            server = org.apache.bookkeeper.server.Main.buildBookieServer(new BookieConfiguration(conf));
+        }
 
         BookieId address = BookieImpl.getBookieId(conf);
         ComponentStarter.startComponent(server);
