@@ -42,11 +42,13 @@ call %UNZIP_CMD%
 cd /d %TMP_DIR%/%FILE_PREFIX%
 
 :: Loop through the number of groups
-SET Obj_Length=2
+SET Obj_Length=3
 SET Obj[0].FROM=libnetty_transport_native_epoll_x86_64.so
 SET Obj[0].TO=liborg_apache_pulsar_shade_netty_transport_native_epoll_x86_64.so
 SET Obj[1].FROM=libnetty_tcnative_linux_x86_64.so
 SET Obj[1].TO=liborg_apache_pulsar_shade_netty_tcnative_linux_x86_64.so
+SET Obj[2].FROM=libnetty_transport_native_io_uring_x86_64.so
+SET Obj[2].TO=liborg_apache_pulsar_shade_netty_transport_native_io_uring_x86_64.so
 SET Obj_Index=0
 
 :LoopStart

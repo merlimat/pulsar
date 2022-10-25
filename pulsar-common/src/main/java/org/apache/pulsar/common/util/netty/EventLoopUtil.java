@@ -35,6 +35,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.incubator.channel.uring.IOUring;
+import io.netty.incubator.channel.uring.IOUringDatagramChannel;
+import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
+import io.netty.incubator.channel.uring.IOUringServerSocketChannel;
+import io.netty.incubator.channel.uring.IOUringSocketChannel;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +53,9 @@ public class EventLoopUtil {
      * @return an EventLoopGroup suitable for the current platform
      */
     public static EventLoopGroup newEventLoopGroup(int nThreads, boolean enableBusyWait, ThreadFactory threadFactory) {
-        if (Epoll.isAvailable()) {
+        if (IOUring.isAvailable()) {
+            return new IOUringEventLoopGroup(nThreads, threadFactory);
+        } else if (Epoll.isAvailable()) {
             if (!enableBusyWait) {
                 // Regular Epoll based event loop
                 return new EpollEventLoopGroup(nThreads, threadFactory);
@@ -85,7 +92,9 @@ public class EventLoopUtil {
      * @return
      */
     public static Class<? extends SocketChannel> getClientSocketChannelClass(EventLoopGroup eventLoopGroup) {
-        if (eventLoopGroup instanceof EpollEventLoopGroup) {
+        if (eventLoopGroup instanceof IOUringEventLoopGroup) {
+            return IOUringSocketChannel.class;
+        } else if (eventLoopGroup instanceof EpollEventLoopGroup) {
             return EpollSocketChannel.class;
         } else {
             return NioSocketChannel.class;
@@ -93,7 +102,9 @@ public class EventLoopUtil {
     }
 
     public static Class<? extends ServerSocketChannel> getServerSocketChannelClass(EventLoopGroup eventLoopGroup) {
-        if (eventLoopGroup instanceof EpollEventLoopGroup) {
+        if (eventLoopGroup instanceof IOUringEventLoopGroup) {
+            return IOUringServerSocketChannel.class;
+        } else if (eventLoopGroup instanceof EpollEventLoopGroup) {
             return EpollServerSocketChannel.class;
         } else {
             return NioServerSocketChannel.class;
@@ -101,7 +112,9 @@ public class EventLoopUtil {
     }
 
     public static Class<? extends DatagramChannel> getDatagramChannelClass(EventLoopGroup eventLoopGroup) {
-        if (eventLoopGroup instanceof EpollEventLoopGroup) {
+        if (eventLoopGroup instanceof IOUringEventLoopGroup) {
+            return IOUringDatagramChannel.class;
+        } else if (eventLoopGroup instanceof EpollEventLoopGroup) {
             return EpollDatagramChannel.class;
         } else {
             return NioDatagramChannel.class;
