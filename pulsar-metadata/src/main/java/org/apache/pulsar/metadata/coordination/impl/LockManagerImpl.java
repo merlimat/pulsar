@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.common.concurrent.FutureUtils;
-import org.apache.bookkeeper.common.util.SafeRunnable;
 import org.apache.pulsar.common.util.FutureUtil;
 import org.apache.pulsar.metadata.api.MetadataCache;
 import org.apache.pulsar.metadata.api.MetadataSerde;
@@ -119,7 +118,7 @@ class LockManagerImpl<T> implements LockManager<T> {
     private void handleSessionEvent(SessionEvent se) {
         // We want to make sure we're processing one event at a time and that we're done with one event before going
         // for the next one.
-        executor.execute(SafeRunnable.safeRun(() -> {
+        executor.execute(() -> {
             List<CompletableFuture<Void>> futures = new ArrayList<>();
 
             if (se == SessionEvent.SessionReestablished) {
@@ -140,7 +139,7 @@ class LockManagerImpl<T> implements LockManager<T> {
             } catch (ExecutionException | InterruptedException e) {
                 log.warn("Failure when processing session event", e);
             }
-        }));
+        });
     }
 
     private void handleDataNotification(Notification n) {

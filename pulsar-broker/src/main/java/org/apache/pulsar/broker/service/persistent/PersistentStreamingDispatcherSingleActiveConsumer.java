@@ -18,7 +18,6 @@
  */
 package org.apache.pulsar.broker.service.persistent;
 
-import static org.apache.bookkeeper.mledger.util.SafeRun.safeRun;
 import static org.apache.pulsar.common.protocol.Commands.DEFAULT_CONSUMER_EPOCH;
 import com.google.common.collect.Lists;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +27,6 @@ import org.apache.bookkeeper.mledger.ManagedCursor;
 import org.apache.bookkeeper.mledger.impl.ManagedCursorImpl;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
-import org.apache.bookkeeper.mledger.util.SafeRun;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pulsar.broker.service.Consumer;
 import org.apache.pulsar.broker.service.EntryBatchIndexesAcks;
@@ -64,7 +62,7 @@ public class PersistentStreamingDispatcherSingleActiveConsumer extends Persisten
     public void canReadMoreEntries(boolean withBackoff) {
         havePendingRead = false;
         topic.getBrokerService().executor().schedule(() -> {
-            topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, SafeRun.safeRun(() -> {
+            topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, () -> {
                 synchronized (PersistentStreamingDispatcherSingleActiveConsumer.this) {
                     Consumer currentConsumer = ACTIVE_CONSUMER_UPDATER.get(this);
                     if (currentConsumer != null && !havePendingRead) {
@@ -77,7 +75,7 @@ public class PersistentStreamingDispatcherSingleActiveConsumer extends Persisten
                                 currentConsumer, havePendingRead);
                     }
                 }
-            }));
+            });
         }, withBackoff
                 ? readFailureBackoff.next() : 0, TimeUnit.MILLISECONDS);
     }
@@ -111,9 +109,9 @@ public class PersistentStreamingDispatcherSingleActiveConsumer extends Persisten
      */
     @Override
     public void readEntryComplete(Entry entry, PendingReadEntryRequest ctx) {
-        topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(name, safeRun(() -> {
-            internalReadEntryComplete(entry, ctx);
-        }));
+        topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(name, () ->
+            internalReadEntryComplete(entry, ctx)
+        );
     }
 
     public synchronized void internalReadEntryComplete(Entry entry, PendingReadEntryRequest ctx) {

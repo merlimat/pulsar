@@ -18,7 +18,6 @@
  */
 package org.apache.pulsar.broker.service.persistent;
 
-import static org.apache.bookkeeper.mledger.util.SafeRun.safeRun;
 import static org.apache.pulsar.broker.service.persistent.PersistentTopic.MESSAGE_RATE_BACKOFF_MS;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
@@ -222,9 +221,9 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
 
     @Override
     public void consumerFlow(Consumer consumer, int additionalNumberOfMessages) {
-        topic.getBrokerService().executor().execute(safeRun(() -> {
-            internalConsumerFlow(consumer, additionalNumberOfMessages);
-        }));
+        topic.getBrokerService().executor().execute(() ->
+            internalConsumerFlow(consumer, additionalNumberOfMessages)
+        );
     }
 
     private synchronized void internalConsumerFlow(Consumer consumer, int additionalNumberOfMessages) {
@@ -250,7 +249,7 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
      *
      */
     public void readMoreEntriesAsync() {
-        topic.getBrokerService().executor().execute(safeRun(this::readMoreEntries));
+        topic.getBrokerService().executor().execute(this::readMoreEntries);
     }
 
     public synchronized void readMoreEntries() {
@@ -552,11 +551,11 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
             // setting sendInProgress here, because sendMessagesToConsumers will be executed
             // in a separate thread, and we want to prevent more reads
             sendInProgress = true;
-            dispatchMessagesThread.execute(safeRun(() -> {
+            dispatchMessagesThread.execute(() -> {
                 if (sendMessagesToConsumers(readType, entries)) {
                     readMoreEntries();
                 }
-            }));
+            });
         } else {
             if (sendMessagesToConsumers(readType, entries)) {
                 readMoreEntriesAsync();

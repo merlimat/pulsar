@@ -63,7 +63,6 @@ import org.apache.bookkeeper.mledger.ManagedLedgerException;
 import org.apache.bookkeeper.mledger.Position;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
-import org.apache.bookkeeper.mledger.util.SafeRun;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -768,7 +767,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
             return;
         }
 
-        ctx.executor().execute(SafeRun.safeRun(() -> {
+        ctx.executor().execute(() -> {
             log.info("[{}] Refreshing authentication credentials for originalPrincipal {} and authRole {}",
                     remoteAddress, originalPrincipal, this.authRole);
 
@@ -802,7 +801,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
                 log.warn("[{}] Failed to refresh authentication: {}", remoteAddress, e);
                 ctx.close();
             }
-        }));
+        });
     }
 
     private static final byte[] emptyArray = new byte[0];
@@ -1569,9 +1568,9 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
                 final long producerId = send.getProducerId();
                 final long sequenceId = send.getSequenceId();
                 final long highestSequenceId = send.getHighestSequenceId();
-                service.getTopicOrderedExecutor().executeOrdered(producer.getTopic().getName(), SafeRun.safeRun(() -> {
-                    commandSender.sendSendReceiptResponse(producerId, sequenceId, highestSequenceId, -1, -1);
-                }));
+                service.getTopicOrderedExecutor().executeOrdered(producer.getTopic().getName(), () ->
+                    commandSender.sendSendReceiptResponse(producerId, sequenceId, highestSequenceId, -1, -1)
+                );
                 producer.recordMessageDrop(send.getNumMessages());
                 return;
             } else {

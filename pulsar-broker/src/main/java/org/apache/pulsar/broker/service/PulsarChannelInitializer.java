@@ -18,7 +18,6 @@
  */
 package org.apache.pulsar.broker.service;
 
-import static org.apache.bookkeeper.util.SafeRunnable.safeRun;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.annotations.VisibleForTesting;
@@ -115,7 +114,7 @@ public class PulsarChannelInitializer extends ChannelInitializer<SocketChannel> 
         }
         this.brokerConf = pulsar.getConfiguration();
 
-        pulsar.getExecutor().scheduleAtFixedRate(safeRun(this::refreshAuthenticationCredentials),
+        pulsar.getExecutor().scheduleAtFixedRate(this::refreshAuthenticationCredentials,
                 pulsar.getConfig().getAuthenticationRefreshCheckSeconds(),
                 pulsar.getConfig().getAuthenticationRefreshCheckSeconds(), TimeUnit.SECONDS);
     }

@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.Math.min;
 import static org.apache.bookkeeper.mledger.util.Errors.isNoSuchLedgerExistsException;
-import static org.apache.bookkeeper.mledger.util.SafeRun.safeRun;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Lists;
@@ -408,7 +407,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 if (!ledgers.isEmpty()) {
                     final long id = ledgers.lastKey();
                     OpenCallback opencb = (rc, lh, ctx1) -> {
-                        executor.execute(safeRun(() -> {
+                        executor.execute(() -> {
                             mbean.endDataLedgerOpenOp();
                             if (log.isDebugEnabled()) {
                                 log.debug("[{}] Opened ledger {}: {}", name, id, BKException.getMessage(rc));
@@ -438,7 +437,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                                 callback.initializeFailed(createManagedLedgerException(rc));
                                 return;
                             }
-                        }));
+                        });
                     };
 
                     if (log.isDebugEnabled()) {
@@ -517,7 +516,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 return;
             }
 
-            executor.execute(safeRun(() -> {
+            executor.execute(() -> {
                 mbean.endDataLedgerCreateOp();
                 if (rc != BKException.Code.OK) {
                     callback.initializeFailed(createManagedLedgerException(rc));
@@ -546,7 +545,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
 
                 // Save it back to ensure all nodes exist
                 store.asyncUpdateLedgerIds(name, getManagedLedgerInfo(), ledgersStat, storeLedgersCb);
-            }));
+            });
         }, ledgerMetadata);
     }
 
@@ -769,10 +768,10 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
         buffer.retain();
 
         // Jump to specific thread to avoid contention from writers writing from different threads
-        executor.execute(safeRun(() -> {
+        executor.execute(() -> {
             OpAddEntry addOperation = OpAddEntry.createNoRetainBuffer(this, buffer, callback, ctx);
             internalAsyncAddEntry(addOperation);
-        }));
+        });
     }
 
     @Override
@@ -785,10 +784,10 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
         buffer.retain();
 
         // Jump to specific thread to avoid contention from writers writing from different threads
-        executor.execute(safeRun(() -> {
+        executor.execute(() -> {
             OpAddEntry addOperation = OpAddEntry.createNoRetainBuffer(this, buffer, numberOfMessages, callback, ctx);
             internalAsyncAddEntry(addOperation);
-        }));
+        });
     }
 
     private synchronized void internalAsyncAddEntry(OpAddEntry addOperation) {
@@ -2334,7 +2333,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 break;
             }
 
-            executor.execute(safeRun(waitingCursor::notifyEntriesAvailable));
+            executor.execute(waitingCursor::notifyEntriesAvailable);
         }
     }
 
@@ -2345,7 +2344,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 break;
             }
 
-            executor.execute(safeRun(cb::entriesAvailable));
+            executor.execute(cb::entriesAvailable);
         }
     }
 
@@ -2392,15 +2391,15 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
 
     @Override
     public void trimConsumedLedgersInBackground(CompletableFuture<?> promise) {
-        executor.execute(safeRun(() -> internalTrimConsumedLedgers(promise)));
+        executor.execute(() -> internalTrimConsumedLedgers(promise));
     }
 
     public void trimConsumedLedgersInBackground(boolean isTruncate, CompletableFuture<?> promise) {
-        executor.execute(safeRun(() -> internalTrimLedgers(isTruncate, promise)));
+        executor.execute(() -> internalTrimLedgers(isTruncate, promise));
     }
 
     private void scheduleDeferredTrimming(boolean isTruncate, CompletableFuture<?> promise) {
-        scheduledExecutor.schedule(safeRun(() -> trimConsumedLedgersInBackground(isTruncate, promise)), 100,
+        scheduledExecutor.schedule(() -> trimConsumedLedgersInBackground(isTruncate, promise), 100,
                 TimeUnit.MILLISECONDS);
     }
 
@@ -2416,14 +2415,14 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
         final long offloadThresholdInSeconds =
                 Optional.ofNullable(policies.getManagedLedgerOffloadThresholdInSeconds()).orElse(-1L);
         if (offloadThresholdInBytes >= 0 || offloadThresholdInSeconds >= 0) {
-            executor.execute(safeRun(() -> maybeOffload(offloadThresholdInBytes, offloadThresholdInSeconds, promise)));
+            executor.execute(() -> maybeOffload(offloadThresholdInBytes, offloadThresholdInSeconds, promise));
         }
     }
 
     private void maybeOffload(long offloadThresholdInBytes, long offloadThresholdInSeconds,
                               CompletableFuture<PositionImpl> finalPromise) {
         if (!offloadMutex.tryLock()) {
-            scheduledExecutor.schedule(safeRun(() -> maybeOffloadInBackground(finalPromise)),
+            scheduledExecutor.schedule(() -> maybeOffloadInBackground(finalPromise),
                     100, TimeUnit.MILLISECONDS);
             return;
         }
@@ -2911,7 +2910,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 log.warn("[{}] Ledger was already deleted {}", name, ledgerId);
             } else if (rc != BKException.Code.OK) {
                 log.error("[{}] Error deleting ledger {} : {}", name, ledgerId, BKException.getMessage(rc));
-                scheduledExecutor.schedule(safeRun(() -> asyncDeleteLedger(ledgerId, retry - 1)),
+                scheduledExecutor.schedule(() -> asyncDeleteLedger(ledgerId, retry - 1),
                         DEFAULT_LEDGER_DELETE_BACKOFF_TIME_SEC, TimeUnit.SECONDS);
             } else {
                 if (log.isDebugEnabled()) {
@@ -3215,7 +3214,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             if (!metadataMutex.tryLock()) {
                 // retry in 100 milliseconds
                 scheduledExecutor.schedule(
-                        safeRun(() -> tryTransformLedgerInfo(ledgerId, transformation, finalPromise)), 100,
+                        () -> tryTransformLedgerInfo(ledgerId, transformation, finalPromise), 100,
                         TimeUnit.MILLISECONDS);
             } else { // lock acquired
                 CompletableFuture<Void> unlockingPromise = new CompletableFuture<>();
@@ -3966,9 +3965,9 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             timeoutSec = timeoutSec <= 0
                     ? Math.max(config.getAddEntryTimeoutSeconds(), config.getReadEntryTimeoutSeconds())
                     : timeoutSec;
-            this.timeoutTask = this.scheduledExecutor.scheduleAtFixedRate(safeRun(() -> {
-                checkTimeouts();
-            }), timeoutSec, timeoutSec, TimeUnit.SECONDS);
+            this.timeoutTask = this.scheduledExecutor.scheduleAtFixedRate(
+                    () -> checkTimeouts(),
+                    timeoutSec, timeoutSec, TimeUnit.SECONDS);
         }
     }
 
@@ -4291,7 +4290,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 checkLedgerRollTask.cancel(true);
             }
             this.checkLedgerRollTask = this.scheduledExecutor.schedule(
-                    safeRun(this::rollCurrentLedgerIfFull), this.maximumRolloverTimeMs, TimeUnit.MILLISECONDS);
+                    this::rollCurrentLedgerIfFull, this.maximumRolloverTimeMs, TimeUnit.MILLISECONDS);
         }
     }
 
