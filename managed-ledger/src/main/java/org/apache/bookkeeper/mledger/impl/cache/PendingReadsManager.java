@@ -290,8 +290,7 @@ public class PendingReadsManager {
                         }
                     }
                 }
-            }, rangeEntryCache.getManagedLedger().getExecutor()
-                    .chooseThread(rangeEntryCache.getManagedLedger().getName())).exceptionally(exception -> {
+            }, rangeEntryCache.getManagedLedger().getExecutor()).exceptionally(exception -> {
                 synchronized (PendingRead.this) {
                     for (ReadEntriesCallbackWithContext callback : callbacks) {
                         ManagedLedgerException mlException = createManagedLedgerException(exception);
