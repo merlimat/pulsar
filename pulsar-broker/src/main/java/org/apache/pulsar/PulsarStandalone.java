@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,6 +23,7 @@ import static org.apache.pulsar.common.naming.SystemTopicNames.TRANSACTION_COORD
 import com.beust.jcommander.Parameter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import io.netty.util.internal.PlatformDependent;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -434,16 +435,18 @@ public class PulsarStandalone implements AutoCloseable {
         }
     }
 
-    private void startBookieWithMetadataStore() throws Exception {
+    @VisibleForTesting
+    void startBookieWithMetadataStore() throws Exception {
         if (StringUtils.isBlank(metadataStoreUrl)){
             log.info("Starting BK with RocksDb metadata store");
             metadataStoreUrl = "rocksdb://" + Paths.get(metadataDir).toAbsolutePath();
         } else {
-            log.info("Starting BK with metadata store:", metadataStoreUrl);
+            log.info("Starting BK with metadata store: {}", metadataStoreUrl);
         }
 
         ServerConfiguration bkServerConf = new ServerConfiguration();
         bkServerConf.loadConf(new File(configFile).toURI().toURL());
+        calculateCacheSize(bkServerConf);
         bkCluster = BKCluster.builder()
                 .baseServerConfiguration(bkServerConf)
                 .metadataServiceUri(metadataStoreUrl)
@@ -460,13 +463,29 @@ public class PulsarStandalone implements AutoCloseable {
         log.info("Starting BK & ZK cluster");
         ServerConfiguration bkServerConf = new ServerConfiguration();
         bkServerConf.loadConf(new File(configFile).toURI().toURL());
-
+        calculateCacheSize(bkServerConf);
         // Start LocalBookKeeper
         bkEnsemble = new LocalBookkeeperEnsemble(
                 this.getNumOfBk(), this.getZkPort(), this.getBkPort(), this.getStreamStoragePort(), this.getZkDir(),
                 this.getBkDir(), this.isWipeData(), "127.0.0.1");
         bkEnsemble.startStandalone(bkServerConf, !this.isNoStreamStorage());
         config.setMetadataStoreUrl("zk:127.0.0.1:" + zkPort);
+    }
+
+    private void calculateCacheSize(ServerConfiguration bkServerConf) {
+        String writeCacheMaxSizeMb = "dbStorage_writeCacheMaxSizeMb";
+        String readAheadCacheMaxSizeMb = "dbStorage_readAheadCacheMaxSizeMb";
+        Object writeCache = bkServerConf.getProperty(writeCacheMaxSizeMb);
+        Object readCache = bkServerConf.getProperty(readAheadCacheMaxSizeMb);
+        // we need to add one broker and one zk (if needed) to calculate the default cache
+        int instanceCount = usingNewDefaultsPIP117 ? (1 + numOfBk) : (2 + numOfBk);
+        long defaultCacheMB = PlatformDependent.maxDirectMemory() / (1024 * 1024) / instanceCount / 4;
+        if (writeCache == null || writeCache.equals("")) {
+            bkServerConf.setProperty(writeCacheMaxSizeMb, defaultCacheMB);
+        }
+        if (readCache == null || readCache.equals("")) {
+            bkServerConf.setProperty(readAheadCacheMaxSizeMb, defaultCacheMB);
+        }
     }
 
     private static void processTerminator(int exitCode) {

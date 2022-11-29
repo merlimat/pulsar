@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.pulsar.broker.service;
 
 import io.netty.buffer.ByteBuf;
+import io.prometheus.client.Gauge;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +49,12 @@ import org.apache.pulsar.common.protocol.Markers;
 
 @Slf4j
 public abstract class AbstractBaseDispatcher extends EntryFilterSupport implements Dispatcher {
+
+    private static final Gauge PENDING_BYTES_TO_DISPATCH = Gauge
+            .build()
+            .name("pulsar_broker_pending_bytes_to_dispatch")
+            .help("Amount of bytes loaded in memory to be dispatched to Consumers")
+            .register();
 
     protected final ServiceConfiguration serviceConfig;
     protected final boolean dispatchThrottlingOnBatchMessageEnabled;
@@ -164,7 +170,8 @@ public abstract class AbstractBaseDispatcher extends EntryFilterSupport implemen
                     entry.release();
                     continue;
                 } else if (((PersistentTopic) subscription.getTopic())
-                        .isTxnAborted(new TxnID(msgMetadata.getTxnidMostBits(), msgMetadata.getTxnidLeastBits()))) {
+                        .isTxnAborted(new TxnID(msgMetadata.getTxnidMostBits(), msgMetadata.getTxnidLeastBits()),
+                                (PositionImpl) entry.getPosition())) {
                     individualAcknowledgeMessageIfNeeded(entry.getPosition(), Collections.emptyMap());
                     entries.set(i, null);
                     entry.release();
@@ -276,8 +283,12 @@ public abstract class AbstractBaseDispatcher extends EntryFilterSupport implemen
     protected abstract boolean isConsumersExceededOnSubscription();
 
     protected boolean isConsumersExceededOnSubscription(AbstractTopic topic, int consumerSize) {
+        if (topic.isSystemTopic()) {
+            return false;
+        }
         Integer maxConsumersPerSubscription = topic.getHierarchyTopicPolicies().getMaxConsumersPerSubscription().get();
-        return maxConsumersPerSubscription > 0 && maxConsumersPerSubscription <= consumerSize;
+        return maxConsumersPerSubscription != null && maxConsumersPerSubscription > 0
+                && maxConsumersPerSubscription <= consumerSize;
     }
 
     private void processReplicatedSubscriptionSnapshot(PositionImpl pos, ByteBuf headersAndPayload) {
@@ -369,5 +380,9 @@ public abstract class AbstractBaseDispatcher extends EntryFilterSupport implemen
     @Override
     public long getFilterRescheduledMsgCount() {
         return this.filterRescheduledMsgs.longValue();
+    }
+
+    protected final void updatePendingBytesToDispatch(long size) {
+        PENDING_BYTES_TO_DISPATCH.inc(size);
     }
 }

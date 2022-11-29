@@ -300,6 +300,12 @@ If batching is enabled, all messages in one batch are redelivered to the consume
 
 ### Acknowledgment timeout
 
+:::note
+
+By default, the acknowledge timeout is disabled and that means that messages delivered to a consumer will not be re-delivered unless the consumer crashes.
+
+:::
+
 The acknowledgment timeout mechanism allows you to set a time range during which the client tracks the unacknowledged messages. After this acknowledgment timeout (`ackTimeout`) period, the client sends `redeliver unacknowledged messages` request to the broker, thus the broker resends the unacknowledged messages to the consumer.
 
 You can configure the acknowledgment timeout mechanism to redeliver the message if it is not acknowledged after `ackTimeout` or to execute a timer task to check the acknowledgment timeout messages during every `ackTimeoutTickTime` period.
@@ -357,7 +363,7 @@ consumer.acknowledge(message);
 
 ### Retry letter topic
 
-The retry letter topic allows you to store the messages that failed to be consumed and retry consuming them later. With this method, you can customize the interval at which the messages are redelivered. Consumers on the original topic are automatically subscribed to the retry letter topic as well. Once the maximum number of retries has been reached, the unconsumed messages are moved to a [dead letter topic](#dead-letter-topic) for manual processing.
+Retry letter topic allows you to store the messages that failed to be consumed and retry consuming them later. With this method, you can customize the interval at which the messages are redelivered. Consumers on the original topic are automatically subscribed to the retry letter topic as well. Once the maximum number of retries has been reached, the unconsumed messages are moved to a [dead letter topic](#dead-letter-topic) for manual processing. The functionality of a retry letter topic is implemented by consumers. 
 
 The diagram below illustrates the concept of the retry letter topic.
 ![](/assets/retry-letter-topic.svg)
@@ -443,7 +449,7 @@ consumer.reconsumeLater(msg, customProperties, 3, TimeUnit.SECONDS);
 
 ### Dead letter topic
 
-Dead letter topic allows you to continue message consumption even when some messages are not consumed successfully. The messages that have failed to be consumed are stored in a specific topic, which is called the dead letter topic. You can decide how to handle the messages in the dead letter topic.
+Dead letter topic allows you to continue message consumption even when some messages are not consumed successfully. The messages that have failed to be consumed are stored in a specific topic, which is called the dead letter topic. The functionality of a dead letter topic is implemented by consumers. You can decide how to handle the messages in the dead letter topic. 
 
 Enable dead letter topic in a Java client using the default dead letter topic.
 
@@ -525,7 +531,7 @@ If no tenant or namespace is specified when a client creates a topic, the topic 
 
 ## Namespaces
 
-A namespace is a logical nomenclature within a tenant. A tenant creates namespaces via the [admin API](admin-api-namespaces.md#create). For instance, a tenant with different applications can create a separate namespace for each application. A namespace allows the application to create and manage a hierarchy of topics. The topic `my-tenant/app1` is a namespace for the application `app1` for `my-tenant`. You can create any number of [topics](#topics) under the namespace.
+A namespace is a logical nomenclature within a tenant. A tenant creates namespaces via the [admin API](admin-api-namespaces.md#create-namespaces). For instance, a tenant with different applications can create a separate namespace for each application. A namespace allows the application to create and manage a hierarchy of topics. The topic `my-tenant/app1` is a namespace for the application `app1` for `my-tenant`. You can create any number of [topics](#topics) under the namespace.
 
 ## Subscriptions
 
@@ -570,7 +576,7 @@ In the *Failover* type, multiple consumers can attach to the same subscription. 
 
 For example, a partitioned topic has 3 partitions, and 15 consumers. Each partition will have 1 active consumer and 4 stand-by consumers.
 
-In the diagram below, **Consumer A** is the master consumer while **Consumer B** would be the next consumer in line to receive messages if **Consumer B** is disconnected.
+In the diagram below, **Consumer A** is the master consumer while **Consumer B** would be the next consumer in line to receive messages if **Consumer A** is disconnected.
 
 ![Failover subscriptions](/assets/pulsar-failover-subscriptions.svg)
 
@@ -712,7 +718,7 @@ After a consumer is created, the default subscription mode of the consumer is `D
 </Tabs>
 ````
 
-For how to create, check, or delete a durable subscription, see [manage subscriptions](admin-api-topics.md/#manage-subscriptions).
+For how to create, check, or delete a durable subscription, see [manage subscriptions](admin-api-topics.md#manage-subscriptions).
 
 ## Multi-topic subscriptions
 
@@ -846,7 +852,7 @@ Non-persistent messaging is usually faster than persistent messaging because bro
 
 Producers and consumers can connect to non-persistent topics in the same way as persistent topics, with the crucial difference that the topic name must start with `non-persistent`. All the subscription types---[exclusive](#exclusive), [shared](#shared), [key-shared](#key_shared) and [failover](#failover)---are supported for non-persistent topics.
 
-Here's an example [Java consumer](client-libraries-java.md#consumers) for a non-persistent topic:
+Here's an example [Java consumer](client-libraries-java.md#consumer) for a non-persistent topic:
 
 ```java
 PulsarClient client = PulsarClient.builder()

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -71,10 +71,6 @@ public interface PulsarCommandSender {
     void sendLookupResponse(ServerError error, String errorMsg, long requestId);
 
     void sendActiveConsumerChange(long consumerId, boolean isActive);
-
-    void sendSuccess(long requestId);
-
-    void sendError(long requestId, ServerError error, String message);
 
     void sendReachedEndOfTopic(long consumerId);
 
