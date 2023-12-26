@@ -92,4 +92,3 @@ jobs:
           path: |
             distribution/server/target/dependency-check-report.html
             distribution/offloaders/target/dependency-check-report.html
-            distribution/io/target/dependency-check-report.html
