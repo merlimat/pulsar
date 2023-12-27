@@ -41,7 +41,6 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <modules>
-        <module>io</module>
         <module>offloaders</module>
         <module>server</module>
         <module>shell</module>

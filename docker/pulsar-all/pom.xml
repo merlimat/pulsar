@@ -32,19 +32,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>pulsar-io-distribution</artifactId>
-      <version>${project.parent.version}</version>
-      <type>pom</type>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>io.perfmark</groupId>
       <artifactId>perfmark-api</artifactId>
       <scope>runtime</scope>
@@ -78,7 +65,7 @@
       </properties>
     </profile>
     <profile>
-      <id>docker</id>
+      <id>docker-all</id>
       <!-- include the docker image only when docker profile is active -->
       <dependencies>
         <dependency>
