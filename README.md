@@ -21,7 +21,7 @@
 
 ![logo](https://pulsar.apache.org/img/pulsar.svg)
 
-[![docker pull](https://img.shields.io/docker/pulls/apachepulsar/pulsar-all.svg)](https://hub.docker.com/r/apachepulsar/pulsar)
+[![docker pull](https://img.shields.io/docker/pulls/apachepulsar/pulsar.svg)](https://hub.docker.com/r/apachepulsar/pulsar)
 [![contributors](https://img.shields.io/github/contributors-anon/apache/pulsar)](https://github.com/apache/pulsar/graphs/contributors)
 [![last commit](https://img.shields.io/github/last-commit/apache/pulsar)](https://github.com/apache/pulsar/commits/master)
 [![release](https://img.shields.io/github/v/release/apache/pulsar?sort=semver)](https://pulsar.apache.org/download/)
@@ -200,13 +200,13 @@ Here are some general instructions for building custom docker images:
 * Java 11 is the recommended JDK version in `branch-2.8`, `branch-2.9` and `branch-2.10`.
 * Java 17 is the recommended JDK version in `master`.
 
-The following command builds the docker images `apachepulsar/pulsar-all:latest` and `apachepulsar/pulsar:latest`:
+The following command builds the docker image `apachepulsar/pulsar:latest`:
 
 ```bash
 mvn clean install -DskipTests
 # setting DOCKER_CLI_EXPERIMENTAL=enabled is required in some environments with older docker versions
 export DOCKER_CLI_EXPERIMENTAL=enabled
-mvn package -Pdocker,-main -am -pl docker/pulsar-all -DskipTests
+mvn package -Pdocker,-main -am -pl docker/pulsar -DskipTests
 ```
 
 After the images are built, they can be tagged and pushed to your custom repository. Here's an example of a bash script that tags the docker images with the current version and git revision and pushes them to `localhost:32000/apachepulsar`.
@@ -217,8 +217,6 @@ pulsar_version=$(mvn initialize help:evaluate -Dexpression=project.version -pl .
 gitrev=$(git rev-parse HEAD | colrm 10)
 tag="${pulsar_version}-${gitrev}"
 echo "Using tag $tag"
-docker tag apachepulsar/pulsar-all:latest ${image_repo_and_project}/pulsar-all:$tag
-docker push ${image_repo_and_project}/pulsar-all:$tag
 docker tag apachepulsar/pulsar:latest ${image_repo_and_project}/pulsar:$tag
 docker push ${image_repo_and_project}/pulsar:$tag
 ```

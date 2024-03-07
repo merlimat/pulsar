@@ -28,7 +28,7 @@ services:
   zk1:
     container_name: zk1
     hostname: zk1
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: >
       bash -c "bin/apply-config-from-env.py conf/zookeeper.conf && \
                bin/apply-config-from-env.py conf/pulsar_env.sh && \
@@ -44,7 +44,7 @@ services:
   zk2:
     container_name: zk2
     hostname: zk2
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: >
       bash -c "bin/apply-config-from-env.py conf/zookeeper.conf && \
                bin/apply-config-from-env.py conf/pulsar_env.sh && \
@@ -60,7 +60,7 @@ services:
   zk3:
     container_name: zk3
     hostname: zk3
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: >
       bash -c "bin/apply-config-from-env.py conf/zookeeper.conf && \
                bin/apply-config-from-env.py conf/pulsar_env.sh && \
@@ -76,7 +76,7 @@ services:
   pulsar-init:
     container_name: pulsar-init
     hostname: pulsar-init
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: bin/init-cluster.sh
     environment:
       clusterName: test
@@ -95,7 +95,7 @@ services:
   bk1:
     hostname: bk1
     container_name: bk1
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: >
       bash -c "export dbStorage_writeCacheMaxSizeMb="$${dbStorage_writeCacheMaxSizeMb:-16}" && \
                export dbStorage_readAheadCacheMaxSizeMb="$${dbStorage_readAheadCacheMaxSizeMb:-16}" && \
@@ -121,7 +121,7 @@ services:
   bk2:
     hostname: bk2
     container_name: bk2
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: >
       bash -c "export dbStorage_writeCacheMaxSizeMb="${dbStorage_writeCacheMaxSizeMb:-16}" && \
                export dbStorage_readAheadCacheMaxSizeMb="${dbStorage_readAheadCacheMaxSizeMb:-16}" && \
@@ -148,7 +148,7 @@ services:
   bk3:
     hostname: bk3
     container_name: bk3
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: >
       bash -c "export dbStorage_writeCacheMaxSizeMb="${dbStorage_writeCacheMaxSizeMb:-16}" && \
                export dbStorage_readAheadCacheMaxSizeMb="${dbStorage_readAheadCacheMaxSizeMb:-16}" && \
@@ -176,7 +176,7 @@ services:
   broker1:
     hostname: broker1
     container_name: broker1
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     restart: on-failure
     command: >
       bash -c "bin/apply-config-from-env.py conf/broker.conf && \
@@ -205,7 +205,7 @@ services:
   broker2:
     hostname: broker2
     container_name: broker2
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     restart: on-failure
     command: >
       bash -c "bin/apply-config-from-env.py conf/broker.conf && \
@@ -235,7 +235,7 @@ services:
   broker3:
     hostname: broker3
     container_name: broker3
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     restart: on-failure
     command: >
       bash -c "bin/apply-config-from-env.py conf/broker.conf && \
@@ -267,7 +267,7 @@ services:
     hostname: proxy1
     container_name: proxy1
     restart: on-failure
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: >
       bash -c "bin/apply-config-from-env.py conf/proxy.conf && \
                bin/apply-config-from-env.py conf/pulsar_env.sh && \
@@ -300,7 +300,7 @@ services:
     hostname: websocket1
     container_name: websocket1
     restart: on-failure
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     command: >
       bash -c "bin/apply-config-from-env.py conf/websocket.conf && \
                bin/apply-config-from-env.py conf/pulsar_env.sh && \
@@ -328,7 +328,7 @@ services:
   fnc1:
     hostname: fnc1
     container_name: fnc1
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     restart: on-failure
     command: >
       bash -c "bin/apply-config-from-env.py conf/client.conf && \
@@ -364,7 +364,7 @@ services:
   sql1:
     hostname: sql1
     container_name: sql1
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     restart: on-failure
     command: >
       bash -c "bin/apply-config-from-env.py conf/pulsar_env.sh && \

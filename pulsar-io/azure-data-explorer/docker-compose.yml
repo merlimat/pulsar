@@ -23,7 +23,7 @@ version: '3.0'
 services:
   pulsar-server:
     command: bin/pulsar standalone
-    image: apachepulsar/pulsar-all:latest
+    image: apachepulsar/pulsar:latest
     container_name: pulsar-server
     hostname: pulsar-server
     volumes:

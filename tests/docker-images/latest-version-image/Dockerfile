@@ -19,6 +19,9 @@
 
 # build go lang examples first in a separate layer
 
+ARG PULSAR_IO_DIR
+ARG PULSAR_OFFLOADER_TARBALL
+
 FROM golang:1.21-alpine as pulsar-function-go
 
 COPY target/pulsar-function-go/ /go/src/github.com/apache/pulsar/pulsar-function-go
@@ -26,13 +29,31 @@ RUN cd /go/src/github.com/apache/pulsar/pulsar-function-go && go install ./...
 RUN cd /go/src/github.com/apache/pulsar/pulsar-function-go/pf && go install
 RUN cd /go/src/github.com/apache/pulsar/pulsar-function-go/examples && go install ./...
 
-# Reference pulsar-all to copy connectors from there
-FROM apachepulsar/pulsar-all:latest as pulsar-all
+## Prepare a stage with few connectors and offloaders
+FROM busybox as connectors-offloaders
+ARG PULSAR_IO_DIR
+ARG PULSAR_OFFLOADER_TARBALL
+
+ADD ${PULSAR_IO_DIR} /connectors
+RUN mkdir -p /pulsar/connectors
+RUN cp /connectors/pulsar-io-cassandra-*.nar /pulsar/connectors/
+RUN cp /connectors/pulsar-io-debezium-*.nar /pulsar/connectors/
+RUN cp /connectors/pulsar-io-elastic-*.nar /pulsar/connectors/
+RUN cp /connectors/pulsar-io-hdfs*.nar /pulsar/connectors/
+RUN cp /connectors/pulsar-io-jdbc-postgres-*.nar /pulsar/connectors/
+RUN cp /connectors/pulsar-io-kafka-*.nar /pulsar/connectors/
+RUN cp /connectors/pulsar-io-rabbitmq-*.nar /pulsar/connectors/
+RUN cp /connectors/pulsar-io-batch-data-generator-*.nar /pulsar/connectors/
+RUN cp /connectors/pulsar-io-kinesis-*.nar /pulsar/connectors/
+
+ADD ${PULSAR_OFFLOADER_TARBALL} /
+RUN mkdir -p /pulsar/offloaders
+RUN mv /apache-pulsar-offloaders-*/offloaders /pulsar/offloaders
 
 ########################################
 ###### Main image build
 ########################################
-FROM apachepulsar/pulsar:latest
+FROM apachepulsar/pulsar-functions-python:latest
 
 # Switch to run as the root user to simplify building container and then running
 # supervisord. Each of the pulsar components are spawned by supervisord and their
@@ -76,19 +97,9 @@ COPY target/certificate-authority /pulsar/certificate-authority/
 # copy broker plugins
 COPY target/plugins/ /pulsar/examples/
 
-# Include all offloaders
-COPY --from=pulsar-all /pulsar/offloaders /pulsar/offloaders
-
-# Include only the connectors needed by integration tests
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-cassandra-*.nar /pulsar/connectors/
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-debezium-*.nar /pulsar/connectors/
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-elastic-*.nar /pulsar/connectors/
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-hdfs*.nar /pulsar/connectors/
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-jdbc-postgres-*.nar /pulsar/connectors/
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-kafka-*.nar /pulsar/connectors/
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-rabbitmq-*.nar /pulsar/connectors/
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-batch-data-generator-*.nar /pulsar/connectors/
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-kinesis-*.nar /pulsar/connectors/
+# Include all offloaders and few connectors needed by integration tests
+COPY --from=connectors-offloaders /pulsar/connectors /pulsar/connectors
+COPY --from=connectors-offloaders /pulsar/offloaders /pulsar/offloaders
 
 # download Oracle JDBC driver for Oracle Debezium Connector tests
 RUN mkdir -p META-INF/bundled-dependencies

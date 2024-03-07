@@ -24,7 +24,8 @@
 The Apache Pulsar community produces 2 docker images with each official release.
 
 * `apachepulsar/pulsar` - contains the necessary components for a working Pulsar cluster
-* `apachepulsar/pulsar-all` - extends the `apachepulsar/pulsar` image by adding many Pulsar connectors and offloaders
+* `apachepulsar/pulsar-functions-python` - extends the `apachepulsar/pulsar` image by adding the Python
+   dependencies required to run Pulsar Functions with Python runtime. 
 
 Since the 2.10.0 release, these docker images run as an unnamed, non-root user that is also part of the root group, by
 default. This was done to increase container security. The user is part of the root group to ensure that the container
@@ -37,43 +38,26 @@ Note that you first must build the project in order to have the right dependenci
 
 ## Building Derivative Custom Images
 
-If you find the `apachepulsar/pulsar-all` docker image too large, but you want to use a connector or an offloader,
-you can easily build an image with a curated list of connectors or offloaders based on the official Apache Pulsar
+You can easily build an image with a curated list of connectors or offloaders based on the official Apache Pulsar
 images. You can use the following sample docker image as a guide:
 
 ```Dockerfile
 ARG VERSION
 
-# Load the pulsar-all image as a builder image
-FROM apachepulsar/pulsar-all:${VERSION} as pulsar-all
-
 FROM apachepulsar/pulsar:${VERSION}
 
 # Add the cassandra connector
-COPY --from=pulsar-all /pulsar/connectors/pulsar-io-cassandra-*.nar /pulsar/connectors
-
-# Add the jcloud offloader
-COPY --from=pulsar-all /pulsar/connectors/tiered-storage-jcloud-*.nar /pulsar/offloaders
+RUN mkdir -p connectors && \
+    cd connectors && \
+    wget https://downloads.apache.org/pulsar/pulsar-${VERSION}/connectors/pulsar-io-cassandra-${VERSION}.nar 
 ```
 
-NOTE: the above example uses a wildcard in the `COPY` commands because argument expansion does not work for `COPY`.
-
 Assuming that you have the above `Dockerfile` in your local directory and are running docker on your local host, you can
-run the following command to build a custom image with the cassandra connector and the jcloud offloader.
+run the following command to build a custom image with the cassandra connector.
 
 ```shell
 docker build --build-arg VERSION=2.9.1 -t pulsar-custom:2.9.1 .
 ```
-
-For reference, here are the sizes of the official 2.9.1 docker images and the custom image built from the above
-`Dockerfile`:
-
-| REPOSITORY              | TAG   | SIZE   |
-| :---------------------- | :---- | :----- |
-| apachepulsar/pulsar     | 2.9.1 | 1.59GB |
-| apachepulsar/pulsar-all | 2.9.1 | 3.44GB |
-| pulsar-custom           | 2.9.1 | 1.6GB  |
-
 
 ## Troubleshooting non-root containers
 

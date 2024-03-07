@@ -30,6 +30,41 @@
   <name>Apache Pulsar :: Tests :: Docker Images :: Latest Version Testing</name>
   <packaging>pom</packaging>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.pulsar</groupId>
+      <artifactId>pulsar-io-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.perfmark</groupId>
+      <artifactId>perfmark-api</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pulsar</groupId>
+      <artifactId>pulsar-offloader-distribution</artifactId>
+      <version>${project.version}</version>
+      <classifier>bin</classifier>
+      <type>tar.gz</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+
   <profiles>
     <profile>
       <id>docker</id>
@@ -51,7 +86,7 @@
         </dependency>
         <dependency>
           <groupId>org.apache.pulsar</groupId>
-          <artifactId>pulsar-all-docker-image</artifactId>
+          <artifactId>pulsar-functions-python-docker-image</artifactId>
           <version>${project.parent.version}</version>
           <type>pom</type>
           <scope>provided</scope>
@@ -113,7 +148,7 @@
                   <overwrite>true</overwrite>
                   <resources>
                     <resource>
-                      <directory>../../../pulsar-function-go/</directory>
+                      <directory>${project.build.sourceDirectory}/../../../pulsar-function-go/</directory>
                       <filtering>false</filtering>
                     </resource>
                   </resources>
@@ -139,6 +174,48 @@
             </executions>
           </plugin>
           <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-resources</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/apache-pulsar-io-connectors-${project.version}-bin
+                  </outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>
+                        ${basedir}/../../../distribution/io/target/apache-pulsar-io-connectors-${project.version}-bin
+                      </directory>
+                      <filtering>false</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-offloader-tarball</id>
+                <goals>
+                  <goal>copy-dependencies</goal>
+                </goals>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                  <includeArtifactIds>pulsar-offloader-distribution</includeArtifactIds>
+                  <excludeTransitive>true</excludeTransitive>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
             <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <executions>
@@ -159,6 +236,10 @@
                           <tag>latest</tag>
                           <tag>${project.version}</tag>
                         </tags>
+                        <args>
+                          <PULSAR_IO_DIR>target/apache-pulsar-io-connectors-${project.version}-bin</PULSAR_IO_DIR>
+                          <PULSAR_OFFLOADER_TARBALL>target/pulsar-offloader-distribution-${project.version}-bin.tar.gz</PULSAR_OFFLOADER_TARBALL>
+                        </args>
                         <noCache>true</noCache>
                         <buildx>
                           <platforms>
