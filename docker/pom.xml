@@ -58,7 +58,7 @@
       </activation>
       <modules>
         <module>pulsar</module>
-        <module>pulsar-all</module>
+        <module>pulsar-functions-python</module>
       </modules>
       <build>
         <plugins>

@@ -17,16 +17,38 @@
 # under the License.
 #
 
+ARG PULSAR_CLIENT_PYTHON_VERSION
 ARG PULSAR_IMAGE
-FROM busybox as pulsar-all
 
-ARG PULSAR_IO_DIR
-ARG PULSAR_OFFLOADER_TARBALL
+## Create stage to build the Python dependencies
+## Since it needs to have GCC available, we're doing it in a different layer
+FROM alpine:3.19 AS python-deps
 
-ADD ${PULSAR_IO_DIR} /connectors
-ADD ${PULSAR_OFFLOADER_TARBALL} /
-RUN mv /apache-pulsar-offloaders-*/offloaders /offloaders
+RUN apk add --no-cache \
+       bash \
+       python3-dev \
+       g++ \
+       musl-dev \
+       libffi-dev \
+       py3-pip \
+       py3-grpcio \
+       py3-yaml
 
+RUN pip3 install --break-system-packages \
+        kazoo
+
+ARG PULSAR_CLIENT_PYTHON_VERSION
+RUN pip3 install --break-system-packages \
+    pulsar-client[all]==${PULSAR_CLIENT_PYTHON_VERSION}
+
+# Main image stage
+ARG PULSAR_IMAGE
 FROM $PULSAR_IMAGE
-COPY --from=pulsar-all /connectors /pulsar/connectors
-COPY --from=pulsar-all /offloaders /pulsar/offloaders
+
+# Switch to root user to install PIP package
+USER root
+RUN apk add --no-cache py3-pip
+USER 10000
+
+# Copy Python depedencies from the other stage
+COPY --from=python-deps /usr/lib/python3.11/site-packages /usr/lib/python3.11/site-packages

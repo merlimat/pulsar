@@ -182,7 +182,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.pulsar</groupId>
-        <artifactId>pulsar-all-docker-image</artifactId>
+        <artifactId>pulsar-functions-python-docker-image</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

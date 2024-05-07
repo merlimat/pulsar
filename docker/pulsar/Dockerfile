@@ -48,27 +48,6 @@ RUN for SUBDIRECTORY in conf data download logs instances/deps; do \
 RUN chmod -R g+rx /pulsar/bin
 RUN chmod -R o+rx /pulsar
 
-## Create 2nd stage to build the Python dependencies
-## Since it needs to have GCC available, we're doing it in a different layer
-FROM alpine:3.19 AS python-deps
-
-RUN apk add --no-cache \
-       bash \
-       python3-dev \
-       g++ \
-       musl-dev \
-       libffi-dev \
-       py3-pip \
-       py3-grpcio \
-       py3-yaml
-
-RUN pip3 install --break-system-packages \
-        kazoo
-
-ARG PULSAR_CLIENT_PYTHON_VERSION
-RUN pip3 install --break-system-packages \
-    pulsar-client[all]==${PULSAR_CLIENT_PYTHON_VERSION}
-
 
 ###  Create one stage to include JVM distribution
 FROM alpine AS jvm
@@ -87,7 +66,6 @@ RUN echo networkaddress.cache.negative.ttl=1 >> /opt/jvm/conf/security/java.secu
 FROM apachepulsar/glibc-base:2.38 as glibc
 
 ## Create final stage from Alpine image
-## and add OpenJDK and Python dependencies (for Pulsar functions)
 FROM alpine:3.19.1
 ENV LANG C.UTF-8
 
@@ -95,7 +73,6 @@ ENV LANG C.UTF-8
 RUN apk add --no-cache \
             bash \
             python3 \
-            py3-pip \
             gcompat \
             ca-certificates \
             procps
@@ -107,11 +84,8 @@ RUN apk add --allow-untrusted --force-overwrite /root/packages/glibc-*.apk
 COPY --from=jvm /opt/jvm /opt/jvm
 ENV JAVA_HOME=/opt/jvm
 
-# The default is /pulsat/bin and cannot be written.
+# The default is /pulsar/bin and cannot be written.
 ENV PULSAR_PID_DIR=/pulsar/logs
-
-# Copy Python depedencies from the other stage
-COPY --from=python-deps /usr/lib/python3.11/site-packages /usr/lib/python3.11/site-packages
 
 ENV PULSAR_ROOT_LOGGER=INFO,CONSOLE
 
