@@ -19,6 +19,7 @@
 package org.apache.pulsar.broker.web;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -128,14 +129,16 @@ public class JettyRequestLogFactory {
             delegate.log(request, response);
             StringBuilder sb = requestLogStringBuilder.get();
             sb.append(" [R:");
-            sb.append(request.getRemoteHost());
+            sb.append(Request.getRemoteAddr(request));
             sb.append(':');
-            sb.append(request.getRemotePort());
-            InetSocketAddress realRemoteAddress = lookupRealAddress(request.getHttpChannel().getRemoteAddress());
+            sb.append(Request.getRemotePort(request));
+            InetSocketAddress realRemoteAddress =
+                    lookupRealAddress(request.getConnectionMetaData().getRemoteSocketAddress());
             if (realRemoteAddress != null) {
                 String realRemoteHost = HostPort.normalizeHost(realRemoteAddress.getHostString());
                 int realRemotePort = realRemoteAddress.getPort();
-                if (!realRemoteHost.equals(request.getRemoteHost()) || realRemotePort != request.getRemotePort()) {
+                if (!realRemoteHost.equals(Request.getRemoteAddr(request))
+                        || realRemotePort != Request.getRemotePort(request)) {
                     sb.append(" via ");
                     sb.append(realRemoteHost);
                     sb.append(':');
@@ -143,23 +146,25 @@ public class JettyRequestLogFactory {
                 }
             }
             sb.append("]->[L:");
-            InetSocketAddress realLocalAddress = lookupRealAddress(request.getHttpChannel().getLocalAddress());
+            InetSocketAddress realLocalAddress =
+                    lookupRealAddress(request.getConnectionMetaData().getLocalSocketAddress());
             if (realLocalAddress != null) {
                 String realLocalHost = HostPort.normalizeHost(realLocalAddress.getHostString());
                 int realLocalPort = realLocalAddress.getPort();
                 sb.append(realLocalHost);
                 sb.append(':');
                 sb.append(realLocalPort);
-                if (!realLocalHost.equals(request.getLocalAddr()) || realLocalPort != request.getLocalPort()) {
+                if (!realLocalHost.equals(Request.getLocalAddr(request))
+                        || realLocalPort != Request.getLocalPort(request)) {
                     sb.append(" dst ");
-                    sb.append(request.getLocalAddr());
+                    sb.append(Request.getLocalAddr(request));
                     sb.append(':');
-                    sb.append(request.getLocalPort());
+                    sb.append(Request.getLocalPort(request));
                 }
             } else {
-                sb.append(request.getLocalAddr());
+                sb.append(Request.getLocalAddr(request));
                 sb.append(':');
-                sb.append(request.getLocalPort());
+                sb.append(Request.getLocalPort(request));
             }
             sb.append(']');
             try {
@@ -169,19 +174,21 @@ public class JettyRequestLogFactory {
             }
         }
 
-        private InetSocketAddress lookupRealAddress(InetSocketAddress socketAddress) {
-            if (socketAddress == null) {
+        private InetSocketAddress lookupRealAddress(SocketAddress socketAddress) {
+            if (!(socketAddress instanceof InetSocketAddress)) {
                 return null;
             }
+
+            InetSocketAddress ina = (InetSocketAddress) socketAddress;
             if (proxyProtocolRealAddressMapping.isEmpty()) {
-                return socketAddress;
+                return ina;
             }
-            AddressEntry entry = proxyProtocolRealAddressMapping.get(new AddressKey(socketAddress.getHostString(),
-                    socketAddress.getPort()));
+            AddressEntry entry =
+                    proxyProtocolRealAddressMapping.get(new AddressKey(ina.getHostString(), ina.getPort()));
             if (entry != null) {
                 return entry.realAddress;
             } else {
-                return socketAddress;
+                return ina;
             }
         }
 
