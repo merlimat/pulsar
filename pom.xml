@@ -152,7 +152,7 @@ flexible messaging model and an intuitive client API.</description>
     <jetty.version>9.4.56.v20240826</jetty.version>
     <conscrypt.version>2.5.2</conscrypt.version>
     <jersey.version>2.42</jersey.version>
-    <athenz.version>1.10.62</athenz.version>
+    <athenz.version>1.12.10</athenz.version>
     <prometheus.version>0.16.0</prometheus.version>
     <vertx.version>4.5.10</vertx.version>
     <rocksdb.version>7.9.2</rocksdb.version>
@@ -993,7 +993,7 @@ flexible messaging model and an intuitive client API.</description>
 
       <dependency>
         <groupId>com.yahoo.athenz</groupId>
-        <artifactId>athenz-zts-java-client-core</artifactId>
+        <artifactId>athenz-zts-java-client</artifactId>
         <version>${athenz.version}</version>
         <exclusions>
           <exclusion>
