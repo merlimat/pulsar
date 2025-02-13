@@ -18,6 +18,7 @@
  */
 package org.apache.pulsar.websocket;
 
+import java.time.Duration;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
 
@@ -36,9 +37,9 @@ public class WebSocketConsumerServlet extends JettyWebSocketServlet {
 
     @Override
     public void configure(JettyWebSocketServletFactory factory) {
-        factory.getPolicy().setMaxTextMessageSize(service.getConfig().getWebSocketMaxTextFrameSize());
+        factory.setMaxTextMessageSize(service.getConfig().getWebSocketMaxTextFrameSize());
         if (service.getConfig().getWebSocketSessionIdleTimeoutMillis() > 0) {
-            factory.getPolicy().setIdleTimeout(service.getConfig().getWebSocketSessionIdleTimeoutMillis());
+            factory.setIdleTimeout(Duration.ofMillis(service.getConfig().getWebSocketSessionIdleTimeoutMillis()));
         }
         factory.setCreator(
                 (request, response) -> new ConsumerHandler(service, request.getHttpServletRequest(), response));

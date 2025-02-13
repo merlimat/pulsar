@@ -21,9 +21,9 @@ package org.apache.pulsar.websocket;
 import lombok.Cleanup;
 import org.apache.pulsar.common.configuration.PulsarConfigurationLoader;
 import org.apache.pulsar.websocket.service.WebSocketProxyConfiguration;
-import org.eclipse.jetty.websocket.servlet.UpgradeHttpServletRequest;
-import org.testng.Assert;
+import org.eclipse.jetty.ee10.websocket.server.internal.UpgradeHttpServletRequest;
 import org.mockito.Mockito;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
@@ -42,7 +42,7 @@ public class WebSocketHttpServletRequestWrapperTest {
     public void testTokenParamWithBearerPrefix() {
         UpgradeHttpServletRequest httpServletRequest = Mockito.mock(UpgradeHttpServletRequest.class);
         Mockito.when(httpServletRequest.getParameter(WebSocketHttpServletRequestWrapper.TOKEN))
-                .thenReturn(BEARER_TOKEN);
+                .thenReturn(TOKEN);
 
         WebSocketHttpServletRequestWrapper webSocketHttpServletRequestWrapper =
                 new WebSocketHttpServletRequestWrapper(httpServletRequest);

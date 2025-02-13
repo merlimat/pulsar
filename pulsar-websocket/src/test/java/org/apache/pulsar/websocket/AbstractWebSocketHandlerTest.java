@@ -20,11 +20,14 @@ package org.apache.pulsar.websocket;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
+import com.google.common.base.Splitter;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -36,10 +39,7 @@ import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.Cleanup;
-import com.google.common.base.Splitter;
 import lombok.Getter;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
 import org.apache.pulsar.client.api.CompressionType;
@@ -56,10 +56,9 @@ import org.apache.pulsar.client.impl.conf.ProducerConfigurationData;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.util.Codec;
 import org.apache.pulsar.websocket.service.WebSocketProxyConfiguration;
+import org.eclipse.jetty.ee10.websocket.server.JettyServerUpgradeResponse;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.mockito.Mock;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
@@ -216,7 +215,8 @@ public class AbstractWebSocketHandlerTest {
 
     static class WebSocketHandlerImpl extends AbstractWebSocketHandler {
 
-        public WebSocketHandlerImpl(WebSocketService service, HttpServletRequest request, ServletUpgradeResponse response) {
+        public WebSocketHandlerImpl(WebSocketService service, HttpServletRequest request,
+                                    JettyServerUpgradeResponse response) {
             super(service, request, response);
         }
 
@@ -236,16 +236,12 @@ public class AbstractWebSocketHandlerTest {
 
     }
 
-    static class MockedServletUpgradeResponse extends ServletUpgradeResponse {
+    static abstract class MockedServletUpgradeResponse implements JettyServerUpgradeResponse {
 
         @Getter
         private int statusCode;
         @Getter
         private String message;
-
-        public MockedServletUpgradeResponse(HttpServletResponse response) {
-            super(response);
-        }
 
         public void sendError(int statusCode, String message) {
             this.statusCode = statusCode;
@@ -264,7 +260,7 @@ public class AbstractWebSocketHandlerTest {
 
     class MockedProducerHandler extends ProducerHandler {
 
-        public MockedProducerHandler(WebSocketService service, HttpServletRequest request, ServletUpgradeResponse response) {
+        public MockedProducerHandler(WebSocketService service, HttpServletRequest request, JettyServerUpgradeResponse response) {
             super(service, request, response);
         }
 
@@ -307,7 +303,7 @@ public class AbstractWebSocketHandlerTest {
         when(service.isAuthorizationEnabled()).thenReturn(false);
         when(service.getPulsarClient()).thenReturn(newPulsarClient());
 
-        MockedServletUpgradeResponse response = new MockedServletUpgradeResponse(null);
+        MockedServletUpgradeResponse response = spy(MockedServletUpgradeResponse.class);
 
         MockedProducerHandler producerHandler = new MockedProducerHandler(service, httpServletRequest, response);
         assertEquals(response.getStatusCode(), 500);
@@ -341,7 +337,8 @@ public class AbstractWebSocketHandlerTest {
 
     class MockedConsumerHandler extends ConsumerHandler {
 
-        public MockedConsumerHandler(WebSocketService service, HttpServletRequest request, ServletUpgradeResponse response) {
+        public MockedConsumerHandler(WebSocketService service, HttpServletRequest request,
+                                     JettyServerUpgradeResponse response) {
             super(service, request, response);
         }
 
@@ -381,7 +378,7 @@ public class AbstractWebSocketHandlerTest {
         when(service.isAuthorizationEnabled()).thenReturn(false);
         when(service.getPulsarClient()).thenReturn(newPulsarClient());
 
-        MockedServletUpgradeResponse response = new MockedServletUpgradeResponse(null);
+        MockedServletUpgradeResponse response = spy(MockedServletUpgradeResponse.class);
 
         MockedConsumerHandler consumerHandler = new MockedConsumerHandler(service, httpServletRequest, response);
         assertEquals(response.getStatusCode(), 500);
@@ -435,15 +432,13 @@ public class AbstractWebSocketHandlerTest {
         when(httpServletRequest.getRequestURI()).thenReturn(consumerV2);
         when(httpServletRequest.getParameterMap()).thenReturn(queryParams);
 
-        MockedServletUpgradeResponse response = new MockedServletUpgradeResponse(null);
+        MockedServletUpgradeResponse response = spy(MockedServletUpgradeResponse.class);
         AbstractWebSocketHandler webSocketHandler = new WebSocketHandlerImpl(webSocketService, httpServletRequest, response);
 
         Session session = mock(Session.class);
-        RemoteEndpoint remoteEndpoint = mock(RemoteEndpoint.class);
-        when(session.getRemote()).thenReturn(remoteEndpoint);
 
         // onWebSocketClose
-        webSocketHandler.onWebSocketConnect(session);
+        webSocketHandler.onWebSocketOpen(session);
 
         ScheduledFuture<?> pingFuture = webSocketHandler.getPingFuture();
         assertNotNull(pingFuture);
@@ -454,7 +449,7 @@ public class AbstractWebSocketHandlerTest {
 
 
         // onWebSocketError
-        webSocketHandler.onWebSocketConnect(session);
+        webSocketHandler.onWebSocketOpen(session);
 
         pingFuture = webSocketHandler.getPingFuture();
         assertNotNull(pingFuture);
