@@ -56,16 +56,17 @@ import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.util.Codec;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.websocket.data.ConsumerCommand;
+import org.eclipse.jetty.ee10.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractWebSocketHandler extends WebSocketAdapter implements Closeable {
+public abstract class AbstractWebSocketHandler implements Closeable, Session.Listener {
 
     protected final WebSocketService service;
     protected final HttpServletRequest request;
+    private volatile Session session;
 
     protected TopicName topic;
     protected final Map<String, String> queryParams;
@@ -77,7 +78,7 @@ public abstract class AbstractWebSocketHandler extends WebSocketAdapter implemen
 
     public AbstractWebSocketHandler(WebSocketService service,
                                     HttpServletRequest request,
-                                    ServletUpgradeResponse response) {
+                                    JettyServerUpgradeResponse response) {
         this.service = service;
         this.request = new WebSocketHttpServletRequestWrapper(request);
 
@@ -88,7 +89,7 @@ public abstract class AbstractWebSocketHandler extends WebSocketAdapter implemen
         extractTopicName(request);
     }
 
-    protected boolean checkAuth(ServletUpgradeResponse response) {
+    protected boolean checkAuth(JettyServerUpgradeResponse response) {
         String authRole = "<none>";
         String authMethodName = request.getHeader(PULSAR_AUTH_METHOD_NAME);
         AuthenticationState authenticationState = null;
@@ -189,25 +190,24 @@ public abstract class AbstractWebSocketHandler extends WebSocketAdapter implemen
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
-        super.onWebSocketConnect(session);
+    public void onWebSocketOpen(Session session) {
+        this.session = session;
         int webSocketPingDurationSeconds = service.getConfig().getWebSocketPingDurationSeconds();
         if (webSocketPingDurationSeconds > 0) {
             pingFuture = service.getExecutor().scheduleAtFixedRate(() -> {
                 try {
-                    session.getRemote().sendPing(ByteBuffer.wrap("PING".getBytes(StandardCharsets.UTF_8)));
-                } catch (IOException e) {
-                    log.warn("[{}] WebSocket send ping", getSession().getRemoteAddress(), e);
+                    session.sendPing(ByteBuffer.wrap("PING".getBytes(StandardCharsets.UTF_8)), Callback.NOOP);
+                } catch (Exception e) {
+                    log.warn("[{}] WebSocket send ping", session.getRemoteSocketAddress(), e);
                 }
             }, webSocketPingDurationSeconds, webSocketPingDurationSeconds, TimeUnit.SECONDS);
         }
-        log.info("[{}] New WebSocket session on topic {}", session.getRemoteAddress(), topic);
+        log.info("[{}] New WebSocket session on topic {}", session.getRemoteSocketAddress(), topic);
     }
 
     @Override
     public void onWebSocketError(Throwable cause) {
-        super.onWebSocketError(cause);
-        log.info("[{}] WebSocket error on topic {} : {}", getSession().getRemoteAddress(), topic, cause.getMessage());
+        log.info("[{}] WebSocket error on topic {} : {}", session.getRemoteSocketAddress(), topic, cause.getMessage());
         try {
             closePingFuture();
             close();
@@ -218,26 +218,26 @@ public abstract class AbstractWebSocketHandler extends WebSocketAdapter implemen
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        log.info("[{}] Closed WebSocket session on topic {}. status: {} - reason: {}", getSession().getRemoteAddress(),
+        log.info("[{}] Closed WebSocket session on topic {}. status: {} - reason: {}", session.getRemoteSocketAddress(),
                 topic, statusCode, reason);
         try {
             closePingFuture();
             close();
         } catch (IOException e) {
-            log.warn("[{}] Failed to close handler for topic {}. ", getSession().getRemoteAddress(), topic, e);
+            log.warn("[{}] Failed to close handler for topic {}. ", session.getRemoteSocketAddress(), topic, e);
         }
     }
 
     public void close(WebSocketError error) {
         log.warn("[{}] Closing WebSocket session for topic {} - code: [{}], reason: [{}]",
-                getSession().getRemoteAddress(), topic, error.getCode(), error.getDescription());
-        getSession().close(error.getCode(), error.getDescription());
+                session.getRemoteSocketAddress(), topic, error.getCode(), error.getDescription());
+        session.close(error.getCode(), error.getDescription(), Callback.NOOP);
     }
 
     public void close(WebSocketError error, String message) {
         log.warn("[{}] Closing WebSocket session for topic {} - code: [{}], reason: [{}]",
-                getSession().getRemoteAddress(), topic, error.getCode(), error.getDescription() + ": " + message);
-        getSession().close(error.getCode(), error.getDescription() + ": " + message);
+                session.getRemoteSocketAddress(), topic, error.getCode(), error.getDescription() + ": " + message);
+        session.close(error.getCode(), error.getDescription() + ": " + message, Callback.NOOP);
     }
 
     protected String checkAuthentication() {

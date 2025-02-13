@@ -31,7 +31,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletException;
-import javax.websocket.DeploymentException;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pulsar.broker.PulsarServerException;
@@ -92,8 +91,7 @@ public class WebSocketService implements Closeable {
         this.proxyStats = new ProxyStats(this);
     }
 
-    public void start() throws PulsarServerException, PulsarClientException, MalformedURLException, ServletException,
-            DeploymentException {
+    public void start() throws PulsarServerException, PulsarClientException, MalformedURLException, ServletException {
 
         if (isNotBlank(config.getConfigurationMetadataStoreUrl())) {
             try {

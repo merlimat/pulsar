@@ -62,6 +62,7 @@ import org.apache.pulsar.websocket.data.ProducerAck;
 import org.apache.pulsar.websocket.data.ProducerMessage;
 import org.apache.pulsar.websocket.service.WSSDummyMessageCryptoImpl;
 import org.apache.pulsar.websocket.stats.StatsBuckets;
+import org.eclipse.jetty.ee10.websocket.server.JettyServerUpgradeResponse;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.slf4j.Logger;
@@ -94,7 +95,7 @@ public class ProducerHandler extends AbstractWebSocketHandler {
     private final ObjectReader producerMessageReader =
             ObjectMapperFactory.getMapper().reader().forType(ProducerMessage.class);
 
-    public ProducerHandler(WebSocketService service, HttpServletRequest request, ServletUpgradeResponse response) {
+    public ProducerHandler(WebSocketService service, HttpServletRequest request, JettyServerUpgradeResponse response) {
         super(service, request, response);
         this.numMsgsSent = new LongAdder();
         this.numBytesSent = new LongAdder();
