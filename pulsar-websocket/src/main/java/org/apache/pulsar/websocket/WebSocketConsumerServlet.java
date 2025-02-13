@@ -18,10 +18,10 @@
  */
 package org.apache.pulsar.websocket;
 
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
 
-public class WebSocketConsumerServlet extends WebSocketServlet {
+public class WebSocketConsumerServlet extends JettyWebSocketServlet {
     private static final long serialVersionUID = 1L;
 
     public static final String SERVLET_PATH = "/ws/consumer";
@@ -35,7 +35,7 @@ public class WebSocketConsumerServlet extends WebSocketServlet {
     }
 
     @Override
-    public void configure(WebSocketServletFactory factory) {
+    public void configure(JettyWebSocketServletFactory factory) {
         factory.getPolicy().setMaxTextMessageSize(service.getConfig().getWebSocketMaxTextFrameSize());
         if (service.getConfig().getWebSocketSessionIdleTimeoutMillis() > 0) {
             factory.getPolicy().setIdleTimeout(service.getConfig().getWebSocketSessionIdleTimeoutMillis());

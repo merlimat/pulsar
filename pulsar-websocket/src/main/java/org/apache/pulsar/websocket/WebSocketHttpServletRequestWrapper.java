@@ -18,9 +18,9 @@
  */
 package org.apache.pulsar.websocket;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import org.eclipse.jetty.websocket.servlet.UpgradeHttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import org.eclipse.jetty.ee10.websocket.server.internal.UpgradeHttpServletRequest;
 
 /**
  * WebSocket HttpServletRequest wrapper.

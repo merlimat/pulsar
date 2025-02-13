@@ -21,14 +21,14 @@ package org.apache.pulsar.websocket;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.LongAdder;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSubscription;
 import org.apache.pulsar.client.api.Consumer;
@@ -47,8 +47,8 @@ import org.apache.pulsar.websocket.data.ConsumerCommand;
 import org.apache.pulsar.websocket.data.ConsumerMessage;
 import org.apache.pulsar.websocket.data.EndOfTopicResponse;
 import org.eclipse.jetty.ee10.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,7 +140,7 @@ public class ReaderHandler extends AbstractWebSocketHandler {
 
         reader.readNextAsync().thenAccept(msg -> {
             if (log.isDebugEnabled()) {
-                log.debug("[{}] [{}] [{}] Got message {}", getSession().getRemoteAddress(), topic, subscription,
+                log.debug("[{}] [{}] [{}] Got message {}", getSession().getRemoteSocketAddress(), topic, subscription,
                         msg.getMessageId());
             }
 
@@ -159,23 +159,22 @@ public class ReaderHandler extends AbstractWebSocketHandler {
             final long msgSize = msg.getData().length;
 
             try {
-                getSession().getRemote()
-                        .sendString(objectWriter().writeValueAsString(dm),
-                                new WriteCallback() {
+                getSession().sendText(objectWriter().writeValueAsString(dm),
+                                new Callback() {
                             @Override
-                            public void writeFailed(Throwable th) {
+                            public void fail(Throwable th) {
                                 log.warn("[{}/{}] Failed to deliver msg to {} {}", reader.getTopic(), subscription,
-                                        getRemote().getInetSocketAddress().toString(), th.getMessage());
+                                        getSession().getRemoteSocketAddress(), th.getMessage());
                                 pendingMessages.decrementAndGet();
                                 // schedule receive as one of the delivery failed
                                 service.getExecutor().execute(() -> receiveMessage());
                             }
 
                             @Override
-                            public void writeSuccess() {
+                            public void succeed() {
                                 if (log.isDebugEnabled()) {
                                     log.debug("[{}/{}] message is delivered successfully to {} ", reader.getTopic(),
-                                            subscription, getRemote().getInetSocketAddress().toString());
+                                            subscription, getSession().getRemoteSocketAddress());
                                 }
                                 updateDeliverMsgStat(msgSize);
                             }
@@ -194,15 +193,15 @@ public class ReaderHandler extends AbstractWebSocketHandler {
                 log.info("[{}/{}] Reader was closed while receiving msg from broker", reader.getTopic(), subscription);
             } else {
                 log.warn("[{}/{}] Error occurred while reader handler was delivering msg to {}: {}", reader.getTopic(),
-                        subscription, getRemote().getInetSocketAddress().toString(), exception.getMessage());
+                        subscription,getSession().getRemoteSocketAddress(), exception.getMessage());
             }
             return null;
         });
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
-        super.onWebSocketConnect(session);
+    public void onWebSocketOpen(Session session) {
+        super.onWebSocketOpen(session);
         receiveMessage();
     }
 
@@ -236,19 +235,18 @@ public class ReaderHandler extends AbstractWebSocketHandler {
         try {
             String msg = objectWriter().writeValueAsString(
                     new EndOfTopicResponse(reader.hasReachedEndOfTopic()));
-            getSession().getRemote()
-                    .sendString(msg, new WriteCallback() {
+            getSession().sendText(msg, new Callback() {
                         @Override
-                        public void writeFailed(Throwable th) {
+                        public void fail(Throwable th) {
                             log.warn("[{}/{}] Failed to send end of topic msg to {} due to {}", reader.getTopic(),
-                                    subscription, getRemote().getInetSocketAddress().toString(), th.getMessage());
+                                    subscription, getSession().getRemoteSocketAddress(), th.getMessage());
                         }
 
                         @Override
-                        public void writeSuccess() {
+                        public void succeed() {
                             if (log.isDebugEnabled()) {
                                 log.debug("[{}/{}] End of topic message is delivered successfully to {} ",
-                                        reader.getTopic(), subscription, getRemote().getInetSocketAddress().toString());
+                                        reader.getTopic(), subscription, getSession().getRemoteSocketAddress());
                             }
                         }
                     });

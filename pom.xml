@@ -151,7 +151,7 @@ flexible messaging model and an intuitive client API.</description>
     <netty-iouring.version>0.0.26.Final</netty-iouring.version>
     <jetty.version>12.0.16</jetty.version>
     <conscrypt.version>2.5.2</conscrypt.version>
-    <jersey.version>2.42</jersey.version>
+    <jersey.version>3.1.0</jersey.version>
     <athenz.version>1.12.10</athenz.version>
     <prometheus.version>0.16.0</prometheus.version>
     <vertx.version>4.5.10</vertx.version>
@@ -166,6 +166,7 @@ flexible messaging model and an intuitive client API.</description>
     <fastutil.version>8.5.14</fastutil.version>
     <reflections.version>0.10.2</reflections.version>
     <swagger.version>1.6.2</swagger.version>
+    <jakarta.servlet.api.version>6.1.0</jakarta.servlet.api.version>
     <puppycrawl.checkstyle.version>10.14.2</puppycrawl.checkstyle.version>
     <docker-maven.version>0.45.1</docker-maven.version>
     <docker.verbose>true</docker.verbose>
@@ -223,7 +224,6 @@ flexible messaging model and an intuitive client API.</description>
     <commons-codec.version>1.15</commons-codec.version>
     <jakarta.ws.rs-api.version>2.1.6</jakarta.ws.rs-api.version>
     <hdrHistogram.version>2.1.9</hdrHistogram.version>
-    <javax.servlet-api>3.1.0</javax.servlet-api>
     <caffeine.version>2.9.1</caffeine.version>
     <java-semver.version>0.9.0</java-semver.version>
     <jline.version>2.14.6</jline.version>
@@ -663,6 +663,12 @@ flexible messaging model and an intuitive client API.</description>
         <groupId>org.apache.bookkeeper.stats</groupId>
         <artifactId>prometheus-metrics-provider</artifactId>
         <version>${bookkeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -952,9 +958,9 @@ flexible messaging model and an intuitive client API.</description>
       </dependency>
 
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>${javax.servlet-api}</version>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
+        <version>${jakarta.servlet.api.version}</version>
       </dependency>
 
       <dependency>
@@ -1063,6 +1069,12 @@ flexible messaging model and an intuitive client API.</description>
         <groupId>io.prometheus</groupId>
         <artifactId>simpleclient_jetty</artifactId>
         <version>${prometheus.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>

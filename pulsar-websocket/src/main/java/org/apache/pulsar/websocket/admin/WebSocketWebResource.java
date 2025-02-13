@@ -19,9 +19,9 @@
 package org.apache.pulsar.websocket.admin;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.naming.AuthenticationException;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
