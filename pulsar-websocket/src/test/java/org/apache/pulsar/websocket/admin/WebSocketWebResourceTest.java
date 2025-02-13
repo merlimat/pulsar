@@ -24,17 +24,21 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.lang.reflect.Method;
-
-import javax.naming.AuthenticationException;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
-
 import com.google.common.collect.Sets;
-
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+import java.lang.reflect.Method;
+import javax.naming.AuthenticationException;
+import org.apache.pulsar.broker.ServiceConfiguration;
+import org.apache.pulsar.broker.authentication.AuthenticationDataHttps;
+import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
+import org.apache.pulsar.broker.authentication.AuthenticationService;
+import org.apache.pulsar.broker.authorization.AuthorizationService;
+import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.common.util.RestException;
+import org.apache.pulsar.websocket.WebSocketService;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -43,15 +47,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import org.apache.pulsar.broker.ServiceConfiguration;
-import org.apache.pulsar.broker.authentication.AuthenticationService;
-import org.apache.pulsar.broker.authentication.AuthenticationDataHttps;
-import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
-import org.apache.pulsar.broker.authorization.AuthorizationService;
-import org.apache.pulsar.common.naming.TopicName;
-import org.apache.pulsar.common.util.RestException;
-import org.apache.pulsar.websocket.WebSocketService;
 
 public class WebSocketWebResourceTest {
 
@@ -164,7 +159,7 @@ public class WebSocketWebResourceTest {
             webResource.validateSuperUserAccess();
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
 
         try {
@@ -187,14 +182,14 @@ public class WebSocketWebResourceTest {
             webResource.validateSuperUserAccess();
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
 
         try {
             webResource.validateUserAccess(topicName);
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
     }
 
@@ -204,21 +199,21 @@ public class WebSocketWebResourceTest {
             webResource.clientAppId();
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
 
         try {
             webResource.validateSuperUserAccess();
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
 
         try {
             webResource.validateUserAccess(topicName);
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
     }
 
@@ -228,21 +223,21 @@ public class WebSocketWebResourceTest {
             webResource.clientAppId();
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
 
         try {
             webResource.validateSuperUserAccess();
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
 
         try {
             webResource.validateUserAccess(topicName);
             Assert.fail("Should fail");
         } catch (RestException e) {
-            Assert.assertEquals(e.getResponse().getStatus(), Status.UNAUTHORIZED.getStatusCode());
+            Assert.assertEquals(e.getResponse().getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
         }
     }
 

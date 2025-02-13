@@ -21,6 +21,7 @@ package org.apache.pulsar.proxy.server;
 import static org.apache.pulsar.proxy.server.AdminProxyHandler.INIT_PARAM_REQUEST_BUFFER_SIZE;
 import io.opentelemetry.api.OpenTelemetry;
 import io.prometheus.client.jetty.JettyStatisticsCollector;
+import jakarta.servlet.DispatcherType;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -32,7 +33,6 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.servlet.DispatcherType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pulsar.broker.authentication.AuthenticationService;
 import org.apache.pulsar.broker.web.AuthenticationFilter;
@@ -45,6 +45,10 @@ import org.apache.pulsar.common.util.PulsarSslConfiguration;
 import org.apache.pulsar.common.util.PulsarSslFactory;
 import org.apache.pulsar.jetty.tls.JettySslContextFactory;
 import org.apache.pulsar.proxy.stats.PulsarProxyOpenTelemetry;
+import org.eclipse.jetty.ee10.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlets.QoSFilter;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.ConnectionLimit;
 import org.eclipse.jetty.server.Connector;
@@ -59,13 +63,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.DefaultHandler;
-import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlets.QoSFilter;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -142,7 +140,7 @@ public class WebServer {
                             config.getTlsCertRefreshCheckDurationSec(),
                             config.getTlsCertRefreshCheckDurationSec(), TimeUnit.SECONDS);
                 }
-                SslContextFactory sslCtxFactory =
+                SslContextFactory.Server sslCtxFactory =
                         JettySslContextFactory.createSslContextFactory(config.getTlsProvider(),
                                 sslFactory, config.isTlsRequireTrustedClientCertOnConnect(),
                                 config.getWebServiceTlsCiphers(), config.getWebServiceTlsProtocols());
@@ -305,19 +303,17 @@ public class WebServer {
     }
 
     public void start() throws Exception {
-        RequestLogHandler requestLogHandler = new RequestLogHandler();
         boolean showDetailedAddresses = config.getWebServiceLogDetailedAddresses() != null
                 ? config.getWebServiceLogDetailedAddresses() :
                 (config.isWebServiceHaProxyProtocolEnabled() || config.isWebServiceTrustXForwardedFor());
-        requestLogHandler.setRequestLog(JettyRequestLogFactory.createRequestLogger(showDetailedAddresses, server));
+        server.setRequestLog(JettyRequestLogFactory.createRequestLogger(showDetailedAddresses, server));
         handlers.add(0, new ContextHandlerCollection());
-        handlers.add(requestLogHandler);
 
         ContextHandlerCollection contexts = new ContextHandlerCollection();
         contexts.setHandlers(handlers.toArray(new Handler[handlers.size()]));
 
-        HandlerCollection handlerCollection = new HandlerCollection();
-        handlerCollection.setHandlers(new Handler[] { contexts, new DefaultHandler(), requestLogHandler });
+        ContextHandlerCollection handlerCollection = new ContextHandlerCollection();
+        handlerCollection.setHandlers(contexts, new DefaultHandler());
 
         // Metrics handler
         StatisticsHandler stats = new StatisticsHandler();

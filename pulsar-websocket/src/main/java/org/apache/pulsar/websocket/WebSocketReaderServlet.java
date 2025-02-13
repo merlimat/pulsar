@@ -39,15 +39,10 @@ public class WebSocketReaderServlet extends JettyWebSocketServlet {
 
     @Override
     public void configure(JettyWebSocketServletFactory factory) {
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-
-        JettyWebSocketServletContainerInitializer.configure(context, (servletContext, container) -> {
-            container.setMaxTextMessageSize(service.getConfig().getWebSocketMaxTextFrameSize());
-            if (service.getConfig().getWebSocketSessionIdleTimeoutMillis() > 0) {
-                container.setIdleTimeout(Duration.ofMillis(service.getConfig().getWebSocketSessionIdleTimeoutMillis()));
-            }
-        });
+        factory.setMaxTextMessageSize(service.getConfig().getWebSocketMaxTextFrameSize());
+        if (service.getConfig().getWebSocketSessionIdleTimeoutMillis() > 0) {
+            factory.setIdleTimeout(Duration.ofMillis(service.getConfig().getWebSocketSessionIdleTimeoutMillis()));
+        }
 
         factory.setCreator(
                 (request, response) -> new ReaderHandler(service, request.getHttpServletRequest(), response));

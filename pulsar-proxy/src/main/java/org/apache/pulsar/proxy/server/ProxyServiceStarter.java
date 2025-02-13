@@ -62,9 +62,10 @@ import org.apache.pulsar.websocket.WebSocketMultiTopicConsumerServlet;
 import org.apache.pulsar.websocket.WebSocketProducerServlet;
 import org.apache.pulsar.websocket.WebSocketReaderServlet;
 import org.apache.pulsar.websocket.WebSocketService;
-import org.eclipse.jetty.proxy.ProxyServlet;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
+import org.eclipse.jetty.ee10.proxy.ProxyServlet;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -418,19 +419,19 @@ public class ProxyServiceStarter {
             if (webSocketServiceRef != null) {
                 webSocketServiceRef.set(webSocketService);
             }
-            final WebSocketServlet producerWebSocketServlet = new WebSocketProducerServlet(webSocketService);
+            final JettyWebSocketServlet producerWebSocketServlet = new WebSocketProducerServlet(webSocketService);
             server.addServlet(WebSocketProducerServlet.SERVLET_PATH,
                     new ServletHolder(producerWebSocketServlet));
             server.addServlet(WebSocketProducerServlet.SERVLET_PATH_V2,
                     new ServletHolder(producerWebSocketServlet));
 
-            final WebSocketServlet consumerWebSocketServlet = new WebSocketConsumerServlet(webSocketService);
+            final JettyWebSocketServlet consumerWebSocketServlet = new WebSocketConsumerServlet(webSocketService);
             server.addServlet(WebSocketConsumerServlet.SERVLET_PATH,
                     new ServletHolder(consumerWebSocketServlet));
             server.addServlet(WebSocketConsumerServlet.SERVLET_PATH_V2,
                     new ServletHolder(consumerWebSocketServlet));
 
-            final WebSocketServlet readerWebSocketServlet = new WebSocketReaderServlet(webSocketService);
+            final JettyWebSocketServlet readerWebSocketServlet = new WebSocketReaderServlet(webSocketService);
             server.addServlet(WebSocketReaderServlet.SERVLET_PATH,
                     new ServletHolder(readerWebSocketServlet));
             server.addServlet(WebSocketReaderServlet.SERVLET_PATH_V2,

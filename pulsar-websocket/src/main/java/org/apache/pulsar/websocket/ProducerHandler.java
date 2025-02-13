@@ -254,7 +254,7 @@ public class ProducerHandler extends AbstractWebSocketHandler {
                         producer.getTopic(), msgId, getSession().getRemoteSocketAddress());
             }
             updateSentMsgStats(msgSize, TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - now));
-            if (isConnected()) {
+            if (getSession().isOpen()) {
                 String messageId = Base64.getEncoder().encodeToString(msgId.toByteArray());
                 sendAckResponse(new ProducerAck(messageId, sendRequest.context));
             }
