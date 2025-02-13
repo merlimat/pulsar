@@ -18,10 +18,13 @@
  */
 package org.apache.pulsar.websocket;
 
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import java.time.Duration;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
+import org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer;
 
-public class WebSocketReaderServlet extends WebSocketServlet {
+public class WebSocketReaderServlet extends JettyWebSocketServlet {
     private static final transient long serialVersionUID = 1L;
 
     public static final String SERVLET_PATH = "/ws/reader";
@@ -35,11 +38,17 @@ public class WebSocketReaderServlet extends WebSocketServlet {
     }
 
     @Override
-    public void configure(WebSocketServletFactory factory) {
-        factory.getPolicy().setMaxTextMessageSize(service.getConfig().getWebSocketMaxTextFrameSize());
-        if (service.getConfig().getWebSocketSessionIdleTimeoutMillis() > 0) {
-            factory.getPolicy().setIdleTimeout(service.getConfig().getWebSocketSessionIdleTimeoutMillis());
-        }
+    public void configure(JettyWebSocketServletFactory factory) {
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+
+        JettyWebSocketServletContainerInitializer.configure(context, (servletContext, container) -> {
+            container.setMaxTextMessageSize(service.getConfig().getWebSocketMaxTextFrameSize());
+            if (service.getConfig().getWebSocketSessionIdleTimeoutMillis() > 0) {
+                container.setIdleTimeout(Duration.ofMillis(service.getConfig().getWebSocketSessionIdleTimeoutMillis()));
+            }
+        });
+
         factory.setCreator(
                 (request, response) -> new ReaderHandler(service, request.getHttpServletRequest(), response));
     }

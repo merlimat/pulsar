@@ -53,7 +53,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.SecretKey;
 import javax.naming.AuthenticationException;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Cleanup;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.pulsar.broker.ServiceConfiguration;

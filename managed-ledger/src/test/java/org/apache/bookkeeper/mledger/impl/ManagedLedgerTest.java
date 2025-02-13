@@ -149,7 +149,6 @@ import org.apache.pulsar.metadata.api.extended.SessionEvent;
 import org.apache.pulsar.metadata.impl.FaultInjectionMetadataStore;
 import org.awaitility.Awaitility;
 import org.awaitility.reflect.WhiteboxImpl;
-import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -3234,8 +3233,8 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
 
     private static class CollectCtxAddEntryCallback implements AddEntryCallback {
 
-        public List<Object> addCompleteCtxList = new BlockingArrayQueue<>();
-        public List<Object> addFailedCtxList = new BlockingArrayQueue<>();
+        public List<Object> addCompleteCtxList = Collections.synchronizedList(new ArrayList<>());
+        public List<Object> addFailedCtxList = Collections.synchronizedList(new ArrayList<>());
 
         @Override
         public void addComplete(Position position, ByteBuf entryData, Object ctx) {
