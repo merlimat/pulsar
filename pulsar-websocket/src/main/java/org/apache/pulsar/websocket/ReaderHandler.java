@@ -193,7 +193,7 @@ public class ReaderHandler extends AbstractWebSocketHandler {
                 log.info("[{}/{}] Reader was closed while receiving msg from broker", reader.getTopic(), subscription);
             } else {
                 log.warn("[{}/{}] Error occurred while reader handler was delivering msg to {}: {}", reader.getTopic(),
-                        subscription,getSession().getRemoteSocketAddress(), exception.getMessage());
+                        subscription, getSession().getRemoteSocketAddress(), exception.getMessage());
             }
             return null;
         });

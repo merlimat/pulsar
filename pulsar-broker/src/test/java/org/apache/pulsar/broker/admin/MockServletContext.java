@@ -18,6 +18,17 @@
  */
 package org.apache.pulsar.broker.admin;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.ServletRegistration.Dynamic;
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.SessionTrackingMode;
+import jakarta.servlet.descriptor.JspConfigDescriptor;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,21 +37,7 @@ import java.util.EventListener;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterRegistration;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration;
-import javax.servlet.ServletRegistration.Dynamic;
-import javax.servlet.SessionCookieConfig;
-import javax.servlet.SessionTrackingMode;
-import javax.servlet.descriptor.JspConfigDescriptor;
-
-import org.eclipse.jetty.util.AttributesMap;
-
-public class MockServletContext extends AttributesMap implements ServletContext {
+public class MockServletContext implements ServletContext {
 
     @Override
     public String getContextPath() {
@@ -103,30 +100,7 @@ public class MockServletContext extends AttributesMap implements ServletContext 
     }
 
     @Override
-    @Deprecated
-    public Servlet getServlet(String name) throws ServletException {
-        return null;
-    }
-
-    @Override
-    @Deprecated
-    public Enumeration<Servlet> getServlets() {
-        return null;
-    }
-
-    @Override
-    @Deprecated
-    public Enumeration<String> getServletNames() {
-        return null;
-    }
-
-    @Override
     public void log(String msg) {
-    }
-
-    @Override
-    @Deprecated
-    public void log(Exception exception, String msg) {
     }
 
     @Override
@@ -160,6 +134,26 @@ public class MockServletContext extends AttributesMap implements ServletContext 
     }
 
     @Override
+    public Object getAttribute(String name) {
+        return null;
+    }
+
+    @Override
+    public Enumeration<String> getAttributeNames() {
+        return null;
+    }
+
+    @Override
+    public void setAttribute(String name, Object object) {
+
+    }
+
+    @Override
+    public void removeAttribute(String name) {
+
+    }
+
+    @Override
     public String getServletContextName() {
         return null;
     }
@@ -180,6 +174,11 @@ public class MockServletContext extends AttributesMap implements ServletContext 
     }
 
     @Override
+    public Dynamic addJspFile(String s, String s1) {
+        return null;
+    }
+
+    @Override
     public <T extends Servlet> T createServlet(Class<T> clazz) throws ServletException {
         return null;
     }
@@ -195,17 +194,17 @@ public class MockServletContext extends AttributesMap implements ServletContext 
     }
 
     @Override
-    public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, String className) {
+    public FilterRegistration.Dynamic addFilter(String filterName, String className) {
         return null;
     }
 
     @Override
-    public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
+    public FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
         return null;
     }
 
     @Override
-    public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
+    public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
         return null;
     }
 
@@ -277,5 +276,35 @@ public class MockServletContext extends AttributesMap implements ServletContext 
     @Override
     public String getVirtualServerName() {
         return null;
+    }
+
+    @Override
+    public int getSessionTimeout() {
+        return 0;
+    }
+
+    @Override
+    public void setSessionTimeout(int i) {
+
+    }
+
+    @Override
+    public String getRequestCharacterEncoding() {
+        return "";
+    }
+
+    @Override
+    public void setRequestCharacterEncoding(String s) {
+
+    }
+
+    @Override
+    public String getResponseCharacterEncoding() {
+        return "";
+    }
+
+    @Override
+    public void setResponseCharacterEncoding(String s) {
+
     }
 }

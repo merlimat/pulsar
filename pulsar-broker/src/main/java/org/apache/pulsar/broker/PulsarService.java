@@ -33,6 +33,7 @@ import io.netty.util.Timer;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.InetSocketAddress;
@@ -63,7 +64,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import javax.servlet.ServletException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -195,8 +195,8 @@ import org.apache.pulsar.websocket.WebSocketMultiTopicConsumerServlet;
 import org.apache.pulsar.websocket.WebSocketProducerServlet;
 import org.apache.pulsar.websocket.WebSocketReaderServlet;
 import org.apache.pulsar.websocket.WebSocketService;
-import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1246,13 +1246,13 @@ public class PulsarService implements AutoCloseable, ShutdownService {
             webService.addServlet(WebSocketProducerServlet.SERVLET_PATH_V2,
                     new ServletHolder(producerWebSocketServlet), true, attributeMap);
 
-            final WebSocketServlet consumerWebSocketServlet = new WebSocketConsumerServlet(webSocketService);
+            final JettyWebSocketServlet consumerWebSocketServlet = new WebSocketConsumerServlet(webSocketService);
             webService.addServlet(WebSocketConsumerServlet.SERVLET_PATH,
                     new ServletHolder(consumerWebSocketServlet), true, attributeMap);
             webService.addServlet(WebSocketConsumerServlet.SERVLET_PATH_V2,
                     new ServletHolder(consumerWebSocketServlet), true, attributeMap);
 
-            final WebSocketServlet readerWebSocketServlet = new WebSocketReaderServlet(webSocketService);
+            final JettyWebSocketServlet readerWebSocketServlet = new WebSocketReaderServlet(webSocketService);
             webService.addServlet(WebSocketReaderServlet.SERVLET_PATH,
                     new ServletHolder(readerWebSocketServlet), true, attributeMap);
             webService.addServlet(WebSocketReaderServlet.SERVLET_PATH_V2,

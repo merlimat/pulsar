@@ -19,10 +19,8 @@
 package org.apache.pulsar.websocket;
 
 import java.time.Duration;
-import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
-import org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer;
 
 public class WebSocketReaderServlet extends JettyWebSocketServlet {
     private static final transient long serialVersionUID = 1L;

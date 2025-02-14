@@ -18,15 +18,15 @@
  */
 package org.apache.pulsar.broker;
 
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -96,7 +96,7 @@ public class BrokerAdditionalServletTest extends MockedPulsarServiceBaseTest {
                     }
 
                     @Override
-                    public ServletHolder getServletHolder() {
+                    public org.eclipse.jetty.ee10.servlet.ServletHolder getServletHolder() {
                         return new ServletHolder(new WithPulsarServiceServlet(pulsarService));
                     }
 

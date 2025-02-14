@@ -18,12 +18,11 @@
  */
 package org.apache.pulsar.broker.web;
 
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.common.policies.data.ErrorData;
 
@@ -78,7 +77,7 @@ public class RestException extends WebApplicationException {
             return e.getResponse();
         } else {
             return Response
-                .status(Status.INTERNAL_SERVER_ERROR.getStatusCode(), t.getMessage())
+                .status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), t.getMessage())
                 .entity(new ErrorData(getExceptionData(t)))
                 .type(MediaType.APPLICATION_JSON)
                 .build();
