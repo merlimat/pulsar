@@ -40,6 +40,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DecoderFactory;
@@ -63,12 +65,13 @@ import org.apache.pulsar.common.schema.KeyValueEncodingType;
 import org.apache.pulsar.common.schema.SchemaType;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.websocket.data.ProducerMessage;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.websocket.api.RemoteEndpoint;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketOpen;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -457,14 +460,19 @@ public class CmdProduce extends AbstractCmd {
         return String.format(uriFormat, serviceURLWithoutTrailingSlash, wsTopic);
     }
 
-    @SuppressWarnings("deprecation")
+    @SneakyThrows
     private int publishToWebSocket(String topic) {
         int numMessagesSent = 0;
         int returnCode = 0;
 
         URI produceUri = URI.create(getWebSocketProduceUri(topic));
 
-        WebSocketClient produceClient = new WebSocketClient(new SslContextFactory(true));
+        @Cleanup
+        HttpClient httpClient = new HttpClient();
+        httpClient.setSslContextFactory(new SslContextFactory.Client(true));
+
+        @Cleanup
+        WebSocketClient produceClient = new WebSocketClient(httpClient);
         ClientUpgradeRequest produceRequest = new ClientUpgradeRequest();
         try {
             if (authentication != null) {
@@ -524,7 +532,7 @@ public class CmdProduce extends AbstractCmd {
         return returnCode;
     }
 
-    @WebSocket(maxTextMessageSize = 64 * 1024)
+    @WebSocket
     public static class ProducerSocket {
 
         private final CountDownLatch closeLatch;
@@ -538,7 +546,7 @@ public class CmdProduce extends AbstractCmd {
         }
 
         public CompletableFuture<Void> send(int index, byte[] content) throws Exception {
-            this.session.getRemote().sendString(getTestJsonPayload(index, content));
+            this.session.sendText(getTestJsonPayload(index, content), Callback.NOOP);
             this.result = new CompletableFuture<>();
             return result;
         }
@@ -561,8 +569,8 @@ public class CmdProduce extends AbstractCmd {
             this.closeLatch.countDown();
         }
 
-        @OnWebSocketConnect
-        public void onConnect(Session session) {
+        @OnWebSocketOpen
+        public void onOpen(Session session) {
             LOG.info("Got connect: {}", session);
             this.session = session;
             this.connected.complete(null);
@@ -574,14 +582,6 @@ public class CmdProduce extends AbstractCmd {
             if (this.result != null) {
                 this.result.complete(null);
             }
-        }
-
-        public RemoteEndpoint getRemote() {
-            return this.session.getRemote();
-        }
-
-        public Session getSession() {
-            return this.session;
         }
 
         public void close() {

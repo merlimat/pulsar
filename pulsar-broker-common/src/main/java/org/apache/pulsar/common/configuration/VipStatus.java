@@ -18,14 +18,14 @@
  */
 package org.apache.pulsar.common.configuration;
 
+import jakarta.servlet.ServletContext;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
 import java.io.File;
 import java.util.function.Supplier;
-import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response.Status;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -56,7 +56,7 @@ public class VipStatus {
             }
         }
         log.warn("Failed to access \"status.html\". The service is not ready");
-        throw new WebApplicationException(Status.NOT_FOUND);
+        throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
 
 }

@@ -32,6 +32,10 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response.Status;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -49,10 +53,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response.Status;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -251,7 +251,8 @@ public class AsyncHttpConnector implements Connector, AsyncHttpRequestExecutor {
             } else {
                 ClientResponse jerseyResponse =
                         new ClientResponse(Status.fromStatusCode(response.getStatusCode()), jerseyRequest);
-                jerseyResponse.setStatusInfo(new javax.ws.rs.core.Response.StatusType() {
+
+                jerseyResponse.setStatusInfo(new jakarta.ws.rs.core.Response.StatusType() {
                     @Override
                     public int getStatusCode() {
                         return response.getStatusCode();

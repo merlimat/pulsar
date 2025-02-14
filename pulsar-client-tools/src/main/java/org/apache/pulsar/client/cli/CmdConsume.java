@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
 import org.apache.pulsar.client.api.AuthenticationDataProvider;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.ConsumerBuilder;
@@ -39,6 +41,7 @@ import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.SubscriptionMode;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.common.naming.TopicName;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -248,14 +251,18 @@ public class CmdConsume extends AbstractCmdConsume {
                 subscriptionType.toString(), subscriptionMode.toString());
     }
 
-    @SuppressWarnings("deprecation")
+    @SneakyThrows
     private int consumeFromWebSocket(String topic) {
         int numMessagesConsumed = 0;
         int returnCode = 0;
 
         URI consumerUri = URI.create(getWebSocketConsumeUri(topic));
 
-        WebSocketClient consumeClient = new WebSocketClient(new SslContextFactory(true));
+        @Cleanup
+        HttpClient httpClient = new HttpClient();
+        httpClient.setSslContextFactory(new SslContextFactory.Client(true));
+
+        WebSocketClient consumeClient = new WebSocketClient(httpClient);
         ClientUpgradeRequest consumeRequest = new ClientUpgradeRequest();
         try {
             if (authentication != null) {

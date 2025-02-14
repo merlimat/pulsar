@@ -40,7 +40,7 @@ import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 @Slf4j
-@WebSocket(maxTextMessageSize = 64 * 1024)
+@WebSocket()
 public class ClientSideEncryptionWssConsumer extends WebSocketAdapter implements Closeable {
 
     private Session session;

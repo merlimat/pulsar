@@ -18,35 +18,39 @@
  */
 package org.apache.pulsar.websocket;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertTrue;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Future;
-import javax.servlet.http.HttpServletRequest;
+import java.util.concurrent.CompletableFuture;
 import lombok.Cleanup;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
 import org.apache.pulsar.broker.web.WebExecutorThreadPool;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.WebSocketPingPongListener;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertTrue;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.eclipse.jetty.websocket.core.CloseStatus;
+import org.eclipse.jetty.websocket.core.CoreSession;
+import org.eclipse.jetty.websocket.core.Frame;
+import org.eclipse.jetty.websocket.core.FrameHandler;
+import org.eclipse.jetty.websocket.core.OpCode;
+import org.eclipse.jetty.websocket.core.WebSocketComponents;
+import org.eclipse.jetty.websocket.core.client.WebSocketCoreClient;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -112,18 +116,19 @@ public class PingPongSupportTest {
     public void testPingPong(String endpoint) throws Exception {
         @Cleanup("stop")
         HttpClient httpClient = new HttpClient();
-        WebSocketClient webSocketClient = new WebSocketClient(httpClient);
+        WebSocketCoreClient webSocketClient = new WebSocketCoreClient(httpClient, new WebSocketComponents());
         webSocketClient.start();
         MyWebSocket myWebSocket = new MyWebSocket();
         String webSocketUri = "ws://localhost:8080/ws/v2/" + endpoint + "/persistent/my-property/my-ns/my-topic";
-        Future<Session> sessionFuture = webSocketClient.connect(myWebSocket, URI.create(webSocketUri));
-        sessionFuture.get().getRemote().sendPing(ByteBuffer.wrap("test".getBytes()));
+        CompletableFuture<CoreSession> sessionFuture = webSocketClient.connect(myWebSocket, URI.create(webSocketUri));
+
+        sessionFuture.get().sendFrame(new Frame(OpCode.PING, ByteBuffer.wrap("test".getBytes())), null, false);
         assertTrue(myWebSocket.getResponse().contains("test"));
     }
 
     public static class GenericWebSocketHandler extends AbstractWebSocketHandler {
 
-        public GenericWebSocketHandler(WebSocketService service, HttpServletRequest request, ServletUpgradeResponse response) {
+        public GenericWebSocketHandler(WebSocketService service, HttpServletRequest request, JettyServerUpgradeResponse response) {
             super(service, request, response);
         }
 
@@ -138,7 +143,7 @@ public class PingPongSupportTest {
         }
     }
 
-    public static class GenericWebSocketServlet extends WebSocketServlet {
+    public static class GenericWebSocketServlet extends JettyWebSocketServlet {
 
         private static final long serialVersionUID = 1L;
         private final WebSocketService service;
@@ -148,32 +153,16 @@ public class PingPongSupportTest {
         }
 
         @Override
-        public void configure(WebSocketServletFactory factory) {
+        public void configure(JettyWebSocketServletFactory factory) {
             factory.setCreator((request, response) ->
                     new GenericWebSocketHandler(service, request.getHttpServletRequest(), response));
         }
     }
 
     @WebSocket
-    public static class MyWebSocket extends WebSocketAdapter implements WebSocketPingPongListener {
+    public static class MyWebSocket implements Session.Listener, FrameHandler {
 
         ArrayBlockingQueue<String> incomingMessages = new ArrayBlockingQueue<>(10);
-
-        @Override
-        public void onWebSocketClose(int i, String s) {
-        }
-
-        @Override
-        public void onWebSocketConnect(Session session) {
-        }
-
-        @Override
-        public void onWebSocketError(Throwable throwable) {
-        }
-
-        @Override
-        public void onWebSocketPing(ByteBuffer payload) {
-        }
 
         @Override
         public void onWebSocketPong(ByteBuffer payload) {
@@ -182,6 +171,26 @@ public class PingPongSupportTest {
 
         public String getResponse() throws InterruptedException {
             return incomingMessages.take();
+        }
+
+        @Override
+        public void onOpen(CoreSession coreSession, org.eclipse.jetty.util.Callback callback) {
+
+        }
+
+        @Override
+        public void onFrame(Frame frame, org.eclipse.jetty.util.Callback callback) {
+
+        }
+
+        @Override
+        public void onError(Throwable cause, org.eclipse.jetty.util.Callback callback) {
+
+        }
+
+        @Override
+        public void onClosed(CloseStatus closeStatus, org.eclipse.jetty.util.Callback callback) {
+
         }
     }
 }

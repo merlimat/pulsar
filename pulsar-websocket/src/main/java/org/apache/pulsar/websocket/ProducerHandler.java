@@ -29,6 +29,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.base.Enums;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
@@ -41,8 +43,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pulsar.broker.authentication.AuthenticationDataSource;
 import org.apache.pulsar.client.api.CompressionType;
@@ -62,8 +62,8 @@ import org.apache.pulsar.websocket.data.ProducerAck;
 import org.apache.pulsar.websocket.data.ProducerMessage;
 import org.apache.pulsar.websocket.service.WSSDummyMessageCryptoImpl;
 import org.apache.pulsar.websocket.stats.StatsBuckets;
-import org.eclipse.jetty.websocket.api.WriteCallback;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
+import org.eclipse.jetty.ee10.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +94,7 @@ public class ProducerHandler extends AbstractWebSocketHandler {
     private final ObjectReader producerMessageReader =
             ObjectMapperFactory.getMapper().reader().forType(ProducerMessage.class);
 
-    public ProducerHandler(WebSocketService service, HttpServletRequest request, ServletUpgradeResponse response) {
+    public ProducerHandler(WebSocketService service, HttpServletRequest request, JettyServerUpgradeResponse response) {
         super(service, request, response);
         this.numMsgsSent = new LongAdder();
         this.numBytesSent = new LongAdder();
@@ -159,7 +159,7 @@ public class ProducerHandler extends AbstractWebSocketHandler {
     public void onWebSocketText(String message) {
         if (log.isDebugEnabled()) {
             log.debug("[{}] Received new message from producer {} ", producer.getTopic(),
-                    getRemote().getInetSocketAddress().toString());
+                    getSession().getRemoteSocketAddress());
         }
         ProducerMessage sendRequest;
         byte[] rawPayload = null;
@@ -251,16 +251,16 @@ public class ProducerHandler extends AbstractWebSocketHandler {
         builder.sendAsync().thenAccept(msgId -> {
             if (log.isDebugEnabled()) {
                 log.debug("[{}] Success fully write the message to broker with returned message ID {} from producer {}",
-                        producer.getTopic(), msgId, getRemote().getInetSocketAddress().toString());
+                        producer.getTopic(), msgId, getSession().getRemoteSocketAddress());
             }
             updateSentMsgStats(msgSize, TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - now));
-            if (isConnected()) {
+            if (getSession().isOpen()) {
                 String messageId = Base64.getEncoder().encodeToString(msgId.toByteArray());
                 sendAckResponse(new ProducerAck(messageId, sendRequest.context));
             }
         }).exceptionally(exception -> {
             log.warn("[{}] Error occurred while producer handler was sending msg from {}", producer.getTopic(),
-                    getRemote().getInetSocketAddress().toString(), exception);
+                    getSession().getRemoteSocketAddress(), exception);
             numMsgsFailed.increment();
             sendAckResponse(
                     new ProducerAck(UnknownError, exception.getMessage(), null, sendRequest.context));
@@ -317,17 +317,17 @@ public class ProducerHandler extends AbstractWebSocketHandler {
     private void sendAckResponse(ProducerAck response) {
         try {
             String msg = objectWriter().writeValueAsString(response);
-            getSession().getRemote().sendString(msg, new WriteCallback() {
+            getSession().sendText(msg, new Callback() {
                 @Override
-                public void writeFailed(Throwable th) {
+                public void fail(Throwable th) {
                     log.warn("[{}] Failed to send ack: {}", producer.getTopic(), th.getMessage());
                 }
 
                 @Override
-                public void writeSuccess() {
+                public void succeed() {
                     if (log.isDebugEnabled()) {
                         log.debug("[{}] Ack was sent successfully to {}", producer.getTopic(),
-                                getRemote().getInetSocketAddress().toString());
+                                getSession().getRemoteSocketAddress());
                     }
                 }
             });

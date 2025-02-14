@@ -18,8 +18,8 @@
  */
 package org.apache.pulsar.broker.authentication;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.security.cert.X509Certificate;
-import javax.servlet.http.HttpServletRequest;
 
 public class AuthenticationDataHttps extends AuthenticationDataHttp {
 
