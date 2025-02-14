@@ -68,9 +68,11 @@ import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.protocol.PulsarDecoder;
 import org.apache.pulsar.common.protocol.schema.SchemaVersion;
 import org.apache.pulsar.common.util.netty.EventLoopUtil;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +82,7 @@ import org.slf4j.LoggerFactory;
 public class MockBrokerService {
     private LookupData lookupData;
 
-    private class genericResponseHandler extends AbstractHandler {
+    private class genericResponseHandler extends Handler.Abstract {
         private final ObjectMapper objectMapper = new ObjectMapper();
         private final String lookupURI = "/lookup/v2/destination/persistent";
         private final String partitionMetadataURI = "/admin/persistent";
@@ -92,20 +94,22 @@ public class MockBrokerService {
         private final Pattern multiPartPattern = Pattern.compile(".*/multi-part-.*");
 
         @Override
-        public void handle(String s, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-                throws IOException, ServletException {
+        public boolean handle(Request req, Response resp, Callback callback) throws Exception {
+            HttpServletRequest request = (HttpServletRequest) req;
+            HttpServletResponse response = (HttpServletResponse) resp;
+
             String responseString;
-            log.info("Received HTTP request {}", baseRequest.getRequestURI());
-            if (baseRequest.getRequestURI().startsWith(lookupURI)) {
+            log.info("Received HTTP request {}", request.getRequestURI());
+            if (request.getRequestURI().startsWith(lookupURI)) {
                 response.setContentType("application/json;charset=utf-8");
                 response.setStatus(HttpServletResponse.SC_OK);
                 responseString = objectMapper.writeValueAsString(lookupData);
-            } else if (baseRequest.getRequestURI().startsWith(partitionMetadataURI)) {
+            } else if (request.getRequestURI().startsWith(partitionMetadataURI)) {
                 response.setContentType("application/json;charset=utf-8");
                 response.setStatus(HttpServletResponse.SC_OK);
-                if (singlePartPattern.matcher(baseRequest.getRequestURI()).matches()) {
+                if (singlePartPattern.matcher(request.getRequestURI()).matches()) {
                     responseString = objectMapper.writeValueAsString(singlePartitionedTopicMetadata);
-                } else if (multiPartPattern.matcher(baseRequest.getRequestURI()).matches()) {
+                } else if (multiPartPattern.matcher(request.getRequestURI()).matches()) {
                     responseString = objectMapper.writeValueAsString(multiPartitionedTopicMetadata);
                 } else {
                     responseString = objectMapper.writeValueAsString(nonPartitionedTopicMetadata);
@@ -115,9 +119,10 @@ public class MockBrokerService {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 responseString = "URI NOT DEFINED";
             }
-            baseRequest.setHandled(true);
+
             response.getWriter().println(responseString);
             log.info("Sent response: {}", responseString);
+            return true;
         }
     }
 
