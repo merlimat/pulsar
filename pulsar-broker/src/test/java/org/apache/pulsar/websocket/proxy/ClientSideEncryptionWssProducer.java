@@ -42,15 +42,15 @@ import org.apache.pulsar.common.api.proto.CompressionType;
 import org.apache.pulsar.common.api.proto.MessageIdData;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.websocket.data.ProducerMessage;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 @Slf4j
-@WebSocket(maxTextMessageSize = 64 * 1024)
-public class ClientSideEncryptionWssProducer extends WebSocketAdapter implements Closeable {
+@WebSocket()
+public class ClientSideEncryptionWssProducer implements Session.Listener, Closeable {
 
     private Session session;
     private volatile CompletableFuture<MessageIdData> sendFuture;
@@ -130,7 +130,7 @@ public class ClientSideEncryptionWssProducer extends WebSocketAdapter implements
         // Do send.
         sendFuture = new CompletableFuture<>();
         String jsonMsg = ObjectMapperFactory.getMapper().writer().writeValueAsString(msg);
-        this.session.getRemote().sendString(jsonMsg);
+        this.session.sendText(jsonMsg, Callback.NOOP);
         // Wait for response.
         executor.schedule(() -> {
             synchronized (ClientSideEncryptionWssProducer.this) {
@@ -152,7 +152,7 @@ public class ClientSideEncryptionWssProducer extends WebSocketAdapter implements
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         log.info("Got connect: {}", session);
         this.session = session;
     }

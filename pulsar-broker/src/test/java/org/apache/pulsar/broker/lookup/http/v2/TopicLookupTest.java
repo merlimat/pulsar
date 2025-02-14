@@ -18,7 +18,7 @@
  */
 package org.apache.pulsar.broker.lookup.http.v2;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import org.apache.pulsar.broker.lookup.v2.TopicLookup;
 import org.apache.pulsar.broker.web.PulsarWebResourceTest;
 import org.apache.pulsar.common.lookup.data.LookupData;

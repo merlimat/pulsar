@@ -23,12 +23,11 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.ServerErrorException;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.ServerErrorException;
-
 import lombok.Cleanup;
 import org.apache.bookkeeper.mledger.ManagedLedger;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;

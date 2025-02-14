@@ -28,6 +28,7 @@ import java.security.GeneralSecurityException;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import lombok.Cleanup;
 import org.apache.pulsar.client.api.TlsProducerConsumerBase;
 import org.apache.pulsar.client.impl.auth.AuthenticationTls;
 import org.apache.pulsar.common.util.SecurityUtility;
@@ -37,6 +38,7 @@ import org.apache.pulsar.websocket.service.ProxyServer;
 import org.apache.pulsar.websocket.service.WebSocketProxyConfiguration;
 import org.apache.pulsar.websocket.service.WebSocketServiceStarter;
 import org.awaitility.Awaitility;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -102,13 +104,16 @@ public class ProxyPublishConsumeTlsTest extends TlsProducerConsumerBase {
         URI consumeUri = URI.create(consumerUri);
         URI produceUri = URI.create(producerUri);
 
-        SslContextFactory sslContextFactory = new SslContextFactory();
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
         sslContextFactory.setSslContext(SecurityUtility
                 .createSslContext(false, SecurityUtility.loadCertificatesFromPemFile(CA_CERT_FILE_PATH), null));
 
-        WebSocketClient consumeClient = new WebSocketClient(sslContextFactory);
+        @Cleanup
+        HttpClient httpClient = new HttpClient();
+        httpClient.setSslContextFactory(sslContextFactory);
+        WebSocketClient consumeClient = new WebSocketClient(httpClient);
         SimpleConsumerSocket consumeSocket = new SimpleConsumerSocket();
-        WebSocketClient produceClient = new WebSocketClient(sslContextFactory);
+        WebSocketClient produceClient = new WebSocketClient(httpClient);
 
         try {
             consumeClient.start();

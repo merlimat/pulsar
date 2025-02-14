@@ -22,7 +22,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 import org.apache.pulsar.broker.service.BrokerTestBase;
 import org.apache.pulsar.broker.web.RestException;
 import org.apache.pulsar.common.util.Codec;
