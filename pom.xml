@@ -324,7 +324,7 @@ flexible messaging model and an intuitive client API.</description>
     <awaitility.version>4.2.0</awaitility.version>
     <jettison.version>1.5.4</jettison.version>
     <woodstox.version>5.4.0</woodstox.version>
-    <wiremock.version>2.33.2</wiremock.version>
+    <wiremock.version>3.12.0</wiremock.version>
     <consolecaptor.version>1.0.3</consolecaptor.version>
 
     <!-- Plugin dependencies -->
@@ -1129,6 +1129,12 @@ flexible messaging model and an intuitive client API.</description>
         <groupId>com.carrotsearch</groupId>
         <artifactId>hppc</artifactId>
         <version>${hppc.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.wiremock</groupId>
+        <artifactId>wiremock-jetty12</artifactId>
+        <version>${wiremock.version}</version>
       </dependency>
 
       <dependency>
