@@ -29,6 +29,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
 import org.apache.pulsar.client.api.AuthenticationDataProvider;
 import org.apache.pulsar.client.api.ConsumerCryptoFailureAction;
 import org.apache.pulsar.client.api.Message;
@@ -40,6 +42,7 @@ import org.apache.pulsar.client.api.ReaderBuilder;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 import org.apache.pulsar.common.naming.TopicName;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -232,14 +235,17 @@ public class CmdRead extends AbstractCmdConsume {
         return String.format(uriFormat, serviceURLWithoutTrailingSlash, wsTopic, msgIdQueryParam);
     }
 
-    @SuppressWarnings("deprecation")
+    @SneakyThrows
     private int readFromWebSocket(String topic) {
         int numMessagesRead = 0;
         int returnCode = 0;
 
         URI readerUri = URI.create(getWebSocketReadUri(topic));
 
-        WebSocketClient readClient = new WebSocketClient(new SslContextFactory(true));
+        @Cleanup
+        HttpClient httpClient = new HttpClient();
+        httpClient.setSslContextFactory(new SslContextFactory.Client(true));
+        WebSocketClient readClient = new WebSocketClient(httpClient);
         ClientUpgradeRequest readRequest = new ClientUpgradeRequest();
         try {
             if (authentication != null) {

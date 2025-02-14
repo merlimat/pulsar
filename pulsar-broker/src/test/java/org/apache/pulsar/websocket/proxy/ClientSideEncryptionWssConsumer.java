@@ -34,14 +34,13 @@ import org.apache.pulsar.client.impl.crypto.MessageCryptoBc;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.websocket.data.ConsumerMessage;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 @Slf4j
-@WebSocket(maxTextMessageSize = 64 * 1024)
-public class ClientSideEncryptionWssConsumer extends WebSocketAdapter implements Closeable {
+@WebSocket()
+public class ClientSideEncryptionWssConsumer implements Session.Listener, Closeable {
 
     private Session session;
     private final CryptoKeyReader cryptoKeyReader;
@@ -100,7 +99,7 @@ public class ClientSideEncryptionWssConsumer extends WebSocketAdapter implements
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         log.info("Got connect: {}", session);
         this.session = session;
     }
