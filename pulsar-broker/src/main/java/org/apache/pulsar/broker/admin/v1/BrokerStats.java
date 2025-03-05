@@ -22,13 +22,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Collection;
-import java.util.Map;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import java.util.Collection;
+import java.util.Map;
 import org.apache.pulsar.broker.admin.impl.BrokerStatsBase;
 import org.apache.pulsar.broker.loadbalance.ResourceUnit;
 

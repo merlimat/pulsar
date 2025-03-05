@@ -18,19 +18,19 @@
  */
 package org.apache.pulsar.tests.integration.plugins;
 
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.pulsar.broker.web.plugin.servlet.AdditionalServlet;
 import org.apache.pulsar.common.configuration.PulsarConfiguration;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
 
 public class RandomAdditionalServlet extends HttpServlet implements AdditionalServlet {
 

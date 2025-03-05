@@ -23,8 +23,6 @@ import static org.eclipse.jetty.http.HttpStatus.PRECONDITION_FAILED_412;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.apache.pulsar.common.intercept.InterceptException;
-import org.eclipse.jetty.server.HttpChannel;
-import org.eclipse.jetty.server.Response;
 import org.mockito.Mockito;
 import org.testng.annotations.Test;
 
@@ -51,11 +49,9 @@ public class ExceptionHandlerTest {
         handler.handle(response, new IllegalArgumentException(illegal));
         Mockito.verify(response).sendError(INTERNAL_SERVER_ERROR_500, illegal);
 
-        Response response2 = Mockito.mock(Response.class);
-        HttpChannel httpChannel = Mockito.mock(HttpChannel.class);
-        Mockito.when(response2.getHttpChannel()).thenReturn(httpChannel);
+        HttpServletResponse response2 = Mockito.mock(HttpServletResponse.class);
         handler.handle(response2, new InterceptException(PRECONDITION_FAILED_412, restriction));
-        Mockito.verify(httpChannel).sendResponse(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
+        Mockito.verify(response2).sendError(Mockito.eq(PRECONDITION_FAILED_412), Mockito.anyString());
     }
 
 }

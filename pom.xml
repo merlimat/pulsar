@@ -188,7 +188,7 @@ flexible messaging model and an intuitive client API.</description>
     <netty-iouring.version>0.0.26.Final</netty-iouring.version>
     <jetty.version>12.0.21</jetty.version>
     <conscrypt.version>2.5.2</conscrypt.version>
-    <jersey.version>3.1.0</jersey.version>
+    <jersey.version>3.1.10</jersey.version>
     <athenz.version>1.12.10</athenz.version>
     <prometheus.version>0.16.0</prometheus.version>
     <vertx.version>4.5.10</vertx.version>

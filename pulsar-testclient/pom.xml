@@ -41,6 +41,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.eclipse.jetty.websocket</groupId>
+			<artifactId>jetty-websocket-jetty-client</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.apache.zookeeper</groupId>
 			<artifactId>zookeeper</artifactId>
 			<exclusions>

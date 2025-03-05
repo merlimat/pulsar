@@ -42,6 +42,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramLogWriter;
 import org.apache.commons.lang3.StringUtils;
@@ -54,6 +56,7 @@ import org.apache.pulsar.testclient.IMessageFormatter;
 import org.apache.pulsar.testclient.PerfClientUtils;
 import org.apache.pulsar.testclient.PositiveNumberParameterConvert;
 import org.apache.pulsar.testclient.utils.PaddingDecimalFormat;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -202,6 +205,7 @@ public class PerformanceClient extends CmdBase {
 
     }
 
+    @SneakyThrows
     public void runPerformanceTest() throws InterruptedException, IOException {
         // Read payload data from file if needed
         final byte[] payloadBytes = new byte[this.msgSize];
@@ -232,6 +236,7 @@ public class PerformanceClient extends CmdBase {
             }
         }
 
+        @Cleanup("shutdown")
         ExecutorService executor = Executors.newCachedThreadPool(
                 new DefaultThreadFactory("pulsar-perf-producer-exec"));
         HashMap<String, Tuple> producersMap = new HashMap<>();
@@ -239,11 +244,16 @@ public class PerformanceClient extends CmdBase {
         String restPath = TopicName.get(topicName).getRestPath();
         String produceBaseEndPoint = TopicName.get(topicName).isV2()
                 ? this.proxyURL + "ws/v2/producer/" + restPath : this.proxyURL + "ws/producer/" + restPath;
+
+        @Cleanup
+        HttpClient httpClient = new HttpClient();
+        httpClient.setSslContextFactory(new SslContextFactory.Client(true));
+
         for (int i = 0; i < this.numTopics; i++) {
             String topic = this.numTopics > 1 ? produceBaseEndPoint + i : produceBaseEndPoint;
             URI produceUri = URI.create(topic);
 
-            WebSocketClient produceClient = new WebSocketClient(new SslContextFactory(true));
+            WebSocketClient produceClient = new WebSocketClient(httpClient);
             ClientUpgradeRequest produceRequest = new ClientUpgradeRequest();
 
             if (StringUtils.isNotBlank(this.authPluginClassName) && StringUtils.isNotBlank(this.authParams)) {
