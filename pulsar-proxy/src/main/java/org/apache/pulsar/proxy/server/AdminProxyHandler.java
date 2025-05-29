@@ -22,17 +22,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.net.http.HttpRequest;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -52,10 +44,8 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.ProtocolHandlers;
 import org.eclipse.jetty.client.RedirectProtocolHandler;
 import org.eclipse.jetty.client.Request;
-import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
 import org.eclipse.jetty.ee10.proxy.ProxyServlet;
 import org.eclipse.jetty.http.HttpCookieStore;
-import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
@@ -186,97 +176,27 @@ class AdminProxyHandler extends ProxyServlet {
         }
     }
 
-
-    // This class allows the request body to be replayed, the default implementation
-    // does not
-    protected class ReplayableProxyContentProvider extends ProxyInputStreamContentProvider {
-        static final int MIN_REPLAY_BODY_BUFFER_SIZE = 64;
-        private boolean bodyBufferAvailable = false;
-        private boolean bodyBufferMaxSizeReached = false;
-        private final ByteArrayOutputStream bodyBuffer;
-        private final long httpInputMaxReplayBufferSize;
-
-        protected ReplayableProxyContentProvider(HttpServletRequest request, HttpServletResponse response,
-                                                 Request proxyRequest, InputStream input,
-                                                 int httpInputMaxReplayBufferSize) {
-            super(request, response, proxyRequest, input);
-            bodyBuffer = new ByteArrayOutputStream(
-                    Math.min(Math.max(request.getContentLength(), MIN_REPLAY_BODY_BUFFER_SIZE),
-                            httpInputMaxReplayBufferSize));
-            this.httpInputMaxReplayBufferSize = httpInputMaxReplayBufferSize;
-        }
-
-        @Override
-        public Iterator<ByteBuffer> iterator() {
-            if (bodyBufferAvailable) {
-                return Collections.singleton(ByteBuffer.wrap(bodyBuffer.toByteArray())).iterator();
-            } else {
-                bodyBufferAvailable = true;
-                return super.iterator();
-            }
-        }
-
-        @Override
-        protected ByteBuffer onRead(byte[] buffer, int offset, int length) {
-            if (!bodyBufferMaxSizeReached) {
-                if (bodyBuffer.size() + length < httpInputMaxReplayBufferSize) {
-                    bodyBuffer.write(buffer, offset, length);
-                } else {
-                    bodyBufferMaxSizeReached = true;
-                    bodyBufferAvailable = false;
-                    bodyBuffer.reset();
-                }
-            }
-            return super.onRead(buffer, offset, length);
-        }
-    }
-
-    private static class JettyHttpClient extends HttpClient {
-        private static final int NUMBER_OF_SELECTOR_THREADS = 1;
-
-        public JettyHttpClient() {
-            super(new HttpClientTransportOverHTTP(NUMBER_OF_SELECTOR_THREADS), null);
-        }
-
-        public JettyHttpClient(SslContextFactory sslContextFactory) {
-            super(new HttpClientTransportOverHTTP(NUMBER_OF_SELECTOR_THREADS), sslContextFactory);
-        }
-
-        /**
-         * Ensure the Authorization header is carried over after a 307 redirect
-         * from brokers.
-         */
-        @Override
-        protected Request copyRequest(HttpRequest oldRequest, URI newURI) {
-            String authorization = oldRequest.getHeaders().get(HttpHeader.AUTHORIZATION);
-            Request newRequest = super.copyRequest(oldRequest, newURI);
-            if (authorization != null) {
-                newRequest.header(HttpHeader.AUTHORIZATION, authorization);
-            }
-
-            return newRequest;
-        }
-
-    }
-
-    @Override
-    protected ContentProvider proxyRequestContent(HttpServletRequest request,
-                                                  HttpServletResponse response, Request proxyRequest)
-            throws IOException {
-        return new ReplayableProxyContentProvider(request, response, proxyRequest, request.getInputStream(),
-                config.getHttpInputMaxReplayBufferSize());
-    }
+//    @Override
+//    protected ContentProvider proxyRequestContent(HttpServletRequest request,
+//                                                  HttpServletResponse response, Request proxyRequest)
+//            throws IOException {
+//        return new ReplayableProxyContentProvider(request, response, proxyRequest, request.getInputStream(),
+//                config.getHttpInputMaxReplayBufferSize());
+//    }
 
     @Override
     protected HttpClient newHttpClient() {
         try {
             if (config.isTlsEnabledWithBroker()) {
                 try {
-                    SslContextFactory contextFactory = new Client(this.pulsarSslFactory);
+                    SslContextFactory.Client contextFactory = new Client(this.pulsarSslFactory);
                     if (!config.isTlsHostnameVerificationEnabled()) {
                         contextFactory.setEndpointIdentificationAlgorithm(null);
                     }
-                    return new JettyHttpClient(contextFactory);
+
+                    HttpClient httpClient = new HttpClient();
+                    httpClient.setSslContextFactory(contextFactory);
+                    return httpClient;
                 } catch (Exception e) {
                     LOG.error("new jetty http client exception ", e);
                     throw new PulsarClientException.InvalidConfigurationException(e.getMessage());
@@ -287,7 +207,7 @@ class AdminProxyHandler extends ProxyServlet {
         }
 
         // return an unauthenticated client, every request will fail.
-        return new JettyHttpClient();
+        return new HttpClient();
     }
 
     private String getWebServiceUrl() throws PulsarServerException {
@@ -356,7 +276,7 @@ class AdminProxyHandler extends ProxyServlet {
         super.addProxyHeaders(clientRequest, proxyRequest);
         String user = (String) clientRequest.getAttribute(AuthenticationFilter.AuthenticatedRoleAttributeName);
         if (user != null) {
-            proxyRequest.header(ORIGINAL_PRINCIPAL_HEADER, user);
+            proxyRequest.headers(headers -> headers.put(ORIGINAL_PRINCIPAL_HEADER, user));
         }
     }
 

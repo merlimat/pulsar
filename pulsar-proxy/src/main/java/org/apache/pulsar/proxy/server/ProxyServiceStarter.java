@@ -65,7 +65,6 @@ import org.apache.pulsar.websocket.WebSocketService;
 import org.eclipse.jetty.ee10.proxy.ProxyServlet;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
