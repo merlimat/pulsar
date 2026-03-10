@@ -42,7 +42,7 @@ function mvn_test() {
       target="install"
       shift
     fi
-    local use_fail_fast=1
+    local use_fail_fast=0
     if [[ "$GITHUB_ACTIONS" == "true" && "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
       use_fail_fast=0
     fi
