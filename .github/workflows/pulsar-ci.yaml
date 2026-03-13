@@ -359,7 +359,16 @@ jobs:
         with:
           limit-access-to-actor: true
 
-      - name: Cache Maven dependencies
+      - name: Set up JDK ${{ matrix.jdk || env.CI_JDK_MAJOR_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JDK_DISTRIBUTION }}
+          java-version: ${{ matrix.jdk || env.CI_JDK_MAJOR_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache Maven local repository (for Gradle resolved dependencies)
         uses: actions/cache@v4
         timeout-minutes: 5
         with:
@@ -370,32 +379,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-dependencies-core-modules-
 
-      - name: Set up JDK ${{ matrix.jdk || env.CI_JDK_MAJOR_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: ${{ env.JDK_DISTRIBUTION }}
-          java-version: ${{ matrix.jdk || env.CI_JDK_MAJOR_VERSION }}
-
-      - name: Install gh-actions-artifact-client.js
-        uses: apache/pulsar-test-infra/gh-actions-artifact-client/dist@master
-
-      - name: Restore maven build results from Github artifact cache
-        run: |
-          cd $HOME
-          $GITHUB_WORKSPACE/build/pulsar_ci_tool.sh restore_tar_from_github_actions_artifacts pulsar-maven-repository-binaries
-          $GITHUB_WORKSPACE/build/pulsar_ci_tool.sh snapshot_pulsar_maven_artifacts
-
       - name: Run setup commands
+        if: ${{ matrix.setup }}
         run: |
           ${{ matrix.setup }}
 
       - name: Run unit test group '${{ matrix.group }}'
         run: |
-          CHANGED_TESTS="${{ needs.preconditions.outputs.tests_files }}" ./build/run_unit_group.sh ${{ matrix.group }}
-
-      - name: Upload coverage to build artifacts
-        if: ${{ needs.preconditions.outputs.collect_coverage == 'true' }}
-        run: $GITHUB_WORKSPACE/build/pulsar_ci_tool.sh upload_unittest_coverage_files ${{ matrix.group }}
+          ./build/run_unit_group_gradle.sh ${{ matrix.group }}
 
       - name: print JVM thread dumps when cancelled
         if: cancelled()
@@ -424,13 +415,16 @@ jobs:
         if: ${{ always() && env.NETTY_LEAK_DETECTION != 'off' }}
         run: $GITHUB_WORKSPACE/build/pulsar_ci_tool.sh report_netty_leaks
 
-      - name: Upload Surefire reports
+      - name: Upload test reports
         uses: actions/upload-artifact@v4
         if: ${{ !success() || env.TRACE_TEST_RESOURCE_CLEANUP != 'off' }}
         with:
-          name: Unit-${{ matrix.group }}-surefire-reports
-          path: surefire-reports
+          name: Unit-${{ matrix.group }}-test-reports
+          path: |
+            surefire-reports
+            **/build/reports/tests/
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload possible heap dump, core dump or crash files
         uses: actions/upload-artifact@v4
