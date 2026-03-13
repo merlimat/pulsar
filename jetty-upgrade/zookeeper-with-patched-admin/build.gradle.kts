@@ -32,5 +32,30 @@ dependencies {
 
 tasks.shadowJar {
     archiveClassifier.set("")
-    relocate("org.eclipse.jetty", "org.eclipse.jetty.patched")
+    // Only include zookeeper classes (matching Maven shade artifactSet)
+    dependencies {
+        include(dependency("org.apache.zookeeper:zookeeper"))
+    }
+    // Exclude the admin classes — this module provides patched replacements
+    exclude("org/apache/zookeeper/server/admin/**")
+}
+
+// Replace the default jar with the shadow jar for downstream consumers
+tasks.jar {
+    archiveClassifier.set("original")
+}
+
+configurations {
+    runtimeElements {
+        outgoing {
+            artifacts.clear()
+            artifact(tasks.shadowJar)
+        }
+    }
+    apiElements {
+        outgoing {
+            artifacts.clear()
+            artifact(tasks.shadowJar)
+        }
+    }
 }

@@ -153,6 +153,10 @@ subprojects {
 
 apply(from = "gradle/verify-test-groups.gradle.kts")
 
+tasks.register("serverDistTar") {
+    dependsOn(":distribution:pulsar-server-distribution:serverDistTar")
+}
+
 // Access version catalog from subprojects
 val Project.libs: org.gradle.accessors.dm.LibrariesForLibs
     get() = rootProject.extensions.getByType()

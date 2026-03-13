@@ -37,9 +37,16 @@ dependencies {
 
 tasks.shadowJar {
     archiveClassifier.set("shaded")
-    relocate("io.vertx", "org.apache.pulsar.shade.io.vertx")
-    relocate("io.grpc.netty", "org.apache.pulsar.shade.io.grpc.netty")
-    relocate("io.netty", "org.apache.pulsar.shade.io.netty")
+    // Only include io.etcd and io.vertx artifacts (matching Maven shade artifactSet includes)
+    dependencies {
+        include(dependency("io.etcd:.*"))
+        include(dependency("io.vertx:.*"))
+    }
+    relocate("io.vertx", "org.apache.pulsar.jetcd.shaded.io.vertx")
+    relocate("io.grpc.netty", "io.grpc.netty.shaded.io.grpc.netty")
+    relocate("io.netty", "io.grpc.netty.shaded.io.netty")
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    mergeServiceFiles()
 }
 
 // Replace the default jar with the shadow jar for downstream consumers
