@@ -1,0 +1,154 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+val pulsarVersion = "4.2.0-SNAPSHOT"
+
+allprojects {
+    group = "org.apache.pulsar"
+    version = pulsarVersion
+}
+
+subprojects {
+    apply(plugin = "java-library")
+
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        options.release.set(17)
+        options.compilerArgs.addAll(listOf("-parameters"))
+    }
+
+    dependencies {
+        // Pin versions for all dependencies in the version catalog (Maven dependencyManagement equivalent).
+        // This ensures transitive dependencies use the versions we specify without adding them directly.
+        constraints {
+            rootProject.extensions.getByType<VersionCatalogsExtension>().named("libs").libraryAliases.forEach { alias ->
+                rootProject.extensions.getByType<VersionCatalogsExtension>().named("libs").findLibrary(alias).ifPresent { provider ->
+                    "implementation"(provider)
+                    "testImplementation"(provider)
+                }
+            }
+        }
+
+        // Annotation processing for Lombok
+        "compileOnly"(rootProject.libs.lombok)
+        "annotationProcessor"(rootProject.libs.lombok)
+        "testCompileOnly"(rootProject.libs.lombok)
+        "testAnnotationProcessor"(rootProject.libs.lombok)
+
+        // Common test dependencies (from parent POM)
+        if (project.name != "buildtools") {
+            "testRuntimeOnly"(project(":buildtools"))
+        }
+        "testImplementation"(rootProject.libs.testng)
+        "testImplementation"(rootProject.libs.mockito.core)
+        "testImplementation"(rootProject.libs.assertj.core)
+        "testImplementation"(rootProject.libs.awaitility)
+        "testImplementation"(rootProject.libs.system.lambda)
+        "testImplementation"(rootProject.libs.slf4j.api)
+    }
+
+    tasks.withType<Test> {
+        useTestNG {
+            listeners.addAll(listOf(
+                "org.apache.pulsar.tests.PulsarTestListener",
+                "org.apache.pulsar.tests.AnnotationListener",
+                "org.apache.pulsar.tests.FailFastNotifier",
+                "org.apache.pulsar.tests.MockitoCleanupListener",
+                "org.apache.pulsar.tests.FastThreadLocalCleanupListener",
+                "org.apache.pulsar.tests.ThreadLeakDetectorListener",
+                "org.apache.pulsar.tests.SingletonCleanerListener",
+            ))
+            // TestNG group filtering: -PtestGroups=broker,broker-admin -PexcludedTestGroups=flaky
+            val testGroups = findProperty("testGroups") as String?
+            if (testGroups != null) {
+                includeGroups(*testGroups.split(",").map { it.trim() }.toTypedArray())
+            }
+            val excludedTestGroups = findProperty("excludedTestGroups") as String?
+            excludeGroups(*((excludedTestGroups ?: "quarantine,flaky").split(",").map { it.trim() }.toTypedArray()))
+        }
+        maxHeapSize = "1300m"
+        systemProperty("testRetryCount", System.getProperty("testRetryCount", "1"))
+        systemProperty("testFailFast", System.getProperty("testFailFast", "true"))
+        jvmArgs(
+            "--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED",
+            "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+            "--add-opens", "java.base/java.io=ALL-UNNAMED",
+            "--add-opens", "java.base/java.util=ALL-UNNAMED",
+            "--add-opens", "java.base/sun.net=ALL-UNNAMED",
+            "--add-opens", "java.management/sun.management=ALL-UNNAMED",
+            "--add-opens", "jdk.management/com.sun.management.internal=ALL-UNNAMED",
+            "--add-opens", "java.base/jdk.internal.platform=ALL-UNNAMED",
+            "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+            "--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED",
+            "-XX:+EnableDynamicAgentLoading",
+            "-Xshare:off",
+            "-Dio.netty.tryReflectionSetAccessible=true",
+            "-Dpulsar.allocator.pooled=true",
+            "-Dpulsar.allocator.exit_on_oom=false",
+            "-Dpulsar.allocator.out_of_memory_policy=FallbackToHeap",
+        )
+    }
+
+    // Expose test classes for cross-module test dependencies (Maven test-jar equivalent)
+    val testJar by tasks.registering(Jar::class) {
+        archiveClassifier.set("tests")
+        from(project.the<SourceSetContainer>()["test"].output)
+    }
+
+    configurations.create("testJar") {
+        isCanBeConsumed = true
+        isCanBeResolved = false
+        extendsFrom(configurations["testImplementation"], configurations["testRuntimeOnly"])
+    }
+    artifacts.add("testJar", testJar)
+
+    tasks.withType<Jar> {
+        manifest {
+            attributes(
+                "Implementation-Title" to project.name,
+                "Implementation-Version" to project.version,
+            )
+        }
+    }
+}
+
+apply(from = "gradle/verify-test-groups.gradle.kts")
+
+// Access version catalog from subprojects
+val Project.libs: org.gradle.accessors.dm.LibrariesForLibs
+    get() = rootProject.extensions.getByType()
+
+// Filtered bookkeeper-server test-jar that excludes classes conflicting with testmocks
+// (BookKeeperTestClient and TestStatsProvider have Pulsar-specific versions in testmocks)
+val bkServerTestJarResolvable by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    isTransitive = false
+}
+dependencies {
+    bkServerTestJarResolvable(libs.bookkeeper.server) { artifact { classifier = "tests" } }
+}
+val filteredBkServerTestJar by tasks.registering(Jar::class) {
+    archiveFileName.set("bookkeeper-server-tests-filtered.jar")
+    destinationDirectory.set(layout.buildDirectory.dir("libs"))
+    from(zipTree(bkServerTestJarResolvable.singleFile)) {
+        exclude("org/apache/bookkeeper/client/BookKeeperTestClient*")
+        exclude("org/apache/bookkeeper/client/TestStatsProvider*")
+    }
+}
