@@ -30,13 +30,42 @@ dependencies {
     implementation("org.apache.jclouds.driver:jclouds-slf4j:${libs.versions.jclouds.get()}")
 }
 
+val shadePrefix = "org.apache.pulsar.jcloud.shade"
+
 tasks.shadowJar {
     archiveClassifier.set("")
-    relocate("com.google.common", "org.apache.pulsar.shade.com.google.common")
-    relocate("com.google.errorprone", "org.apache.pulsar.shade.com.google.errorprone")
-    relocate("com.jamesmurty.utils", "org.apache.pulsar.shade.com.jamesmurty.utils")
-    relocate("aopalliance", "org.apache.pulsar.shade.aopalliance")
-    relocate("net.iharder", "org.apache.pulsar.shade.net.iharder")
-    relocate("jakarta", "org.apache.pulsar.shade.jakarta")
-    relocate("org.aopalliance", "org.apache.pulsar.shade.org.aopalliance")
+    mergeServiceFiles()
+
+    dependencies {
+        include(dependency("com.google.guava:guava"))
+        include(dependency("com.google.guava:failureaccess"))
+        include(dependency("org.apache.jclouds:.*"))
+        include(dependency("org.apache.jclouds.api:.*"))
+        include(dependency("org.apache.jclouds.common:.*"))
+        include(dependency("org.apache.jclouds.driver:.*"))
+        include(dependency("org.apache.jclouds.provider:.*"))
+        include(dependency("com.google.inject.extensions:guice-assistedinject"))
+        include(dependency("com.google.inject:guice"))
+        include(dependency("com.google.inject.extensions:guice-multibindings"))
+        include(dependency("com.google.code.gson:gson"))
+        include(dependency("org.apache.httpcomponents:.*"))
+        include(dependency("com.jamesmurty.utils:.*"))
+        include(dependency("net.iharder:.*"))
+        include(dependency("aopalliance:.*"))
+        include(dependency("com.google.errorprone:.*"))
+        include(dependency("jakarta.inject:jakarta.inject-api"))
+        include(dependency("jakarta.annotation:jakarta.annotation-api"))
+        include(dependency("jakarta.ws.rs:jakarta.ws.rs-api"))
+    }
+
+    // Exclude vulnerable gson embedded in jclouds-core uber jar
+    exclude("lib/gson*jar")
+
+    relocate("com.google", "$shadePrefix.com.google")
+    relocate("com.jamesmurty.utils", "$shadePrefix.com.jamesmurty.utils")
+    relocate("aopalliance", "$shadePrefix.aopalliance")
+    relocate("net.iharder", "$shadePrefix.net.iharder")
+    relocate("com.google.errorprone", "$shadePrefix.com.google.errorprone")
+    relocate("jakarta", "$shadePrefix.jakarta")
+    relocate("org.aopalliance", "$shadePrefix.org.aopalliance")
 }

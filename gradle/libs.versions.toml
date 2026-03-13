@@ -557,7 +557,7 @@ datasketches-java = { module = "org.apache.datasketches:datasketches-java", vers
 
 [plugins]
 lightproto = { id = "io.streamnative.lightproto", version.ref = "lightproto" }
-nar = { id = "io.github.merlimat.nar", version = "0.1.0" }
+nar = { id = "io.github.merlimat.nar", version = "0.1.1" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 rat = { id = "org.nosphere.apache.rat", version = "0.8.1" }
 license = { id = "com.github.hierynomus.license", version = "0.16.1" }

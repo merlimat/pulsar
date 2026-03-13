@@ -28,13 +28,24 @@ val dockerImage = findProperty("docker.image") as String? ?: "pulsar"
 val dockerTag = findProperty("docker.tag") as String? ?: "latest"
 val dockerPlatforms = findProperty("docker.platforms") as String? ?: ""
 val useWolfi = project.hasProperty("docker.wolfi")
+val kinesisKplImage = findProperty("docker.kinesisKplImage") as String?
+    ?: "apachepulsar/pulsar-io-kinesis-sink-kinesis_producer:1.0.4"
 
-// Copy offloader tarball into target/
+val ioDistTask = project(":distribution:pulsar-io-distribution").tasks.named("ioDistDir")
+val offloaderDistTask = project(":distribution:pulsar-offloader-distribution").tasks.named("offloaderDistTar")
+
+// Copy IO connectors into build context
+val copyConnectors by tasks.registering(Sync::class) {
+    dependsOn(ioDistTask)
+    from(project(":distribution:pulsar-io-distribution").layout.buildDirectory
+        .dir("apache-pulsar-io-connectors-${pulsarVersion}-bin"))
+    into(layout.buildDirectory.dir("target/apache-pulsar-io-connectors-${pulsarVersion}-bin"))
+}
+
+// Copy offloader tarball into build context
 val copyOffloaderTarball by tasks.registering(Copy::class) {
-    dependsOn(":distribution:pulsar-offloader-distribution:offloaderDistTar")
-    from(project(":distribution:pulsar-offloader-distribution").tasks.named("offloaderDistTar").map {
-        (it as Tar).archiveFile
-    })
+    dependsOn(offloaderDistTask)
+    from(offloaderDistTask.map { (it as Tar).archiveFile })
     into(layout.buildDirectory.dir("target"))
 }
 
@@ -43,38 +54,35 @@ val dockerBuild by tasks.registering(Exec::class) {
     description = "Build the Pulsar All-in-One Docker image"
 
     dependsOn(":docker:pulsar-docker-image:dockerBuild")
-    dependsOn(":distribution:pulsar-io-distribution:ioDistDir")
+    dependsOn(copyConnectors)
     dependsOn(copyOffloaderTarball)
 
     val dockerfile = if (useWolfi) "Dockerfile.wolfi" else "Dockerfile"
     val imageName = "${dockerOrganization}/${dockerImage}-all:${dockerTag}"
     val pulsarImageName = "${dockerOrganization}/${dockerImage}:${dockerTag}"
     val offloaderTarballName = "apache-pulsar-offloaders-${pulsarVersion}-bin.tar.gz"
+    val ioConnectorsDir = "build/target/apache-pulsar-io-connectors-${pulsarVersion}-bin"
 
-    // IO connectors directory from the IO distribution
-    val ioDistDir = project(":distribution:pulsar-io-distribution").layout.buildDirectory
-        .dir("apache-pulsar-io-connectors-${pulsarVersion}-bin").get().asFile
-
+    // Docker build context is the project directory
     workingDir = projectDir
 
-    doFirst {
-        val args = mutableListOf(
-            "docker", "build",
-            "-f", dockerfile,
-            "-t", imageName,
-            "--build-arg", "PULSAR_IMAGE=${pulsarImageName}",
-            "--build-arg", "PULSAR_IO_DIR=${ioDistDir.absolutePath}",
-            "--build-arg", "PULSAR_OFFLOADER_TARBALL=build/target/${offloaderTarballName}",
-        )
+    val args = mutableListOf(
+        "docker", "build",
+        "-f", dockerfile,
+        "-t", imageName,
+        "--build-arg", "PULSAR_IMAGE=${pulsarImageName}",
+        "--build-arg", "PULSAR_IO_DIR=${ioConnectorsDir}",
+        "--build-arg", "PULSAR_OFFLOADER_TARBALL=build/target/${offloaderTarballName}",
+        "--build-arg", "PULSAR_IO_KINESIS_KPL_IMAGE=${kinesisKplImage}",
+    )
 
-        if (dockerPlatforms.isNotEmpty()) {
-            args.addAll(listOf("--platform", dockerPlatforms))
-        }
-
-        args.add(".")
-
-        commandLine(args)
+    if (dockerPlatforms.isNotEmpty()) {
+        args.addAll(listOf("--platform", dockerPlatforms))
     }
+
+    args.add(".")
+
+    commandLine(args)
 }
 
 tasks.named("assemble") {

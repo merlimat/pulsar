@@ -299,7 +299,10 @@ if (!settings.extra.has("coreModules")) {
 // Docker modules (enabled with -Pdocker)
 // ──────────────────────────────────────────────────────────────────────────────
 
-if (settings.extra.has("docker")) {
+// Also auto-enable when running docker-related tasks (e.g., ./gradlew docker)
+val dockerRequested = settings.extra.has("docker") ||
+    gradle.startParameter.taskNames.any { it.contains("docker", ignoreCase = true) }
+if (dockerRequested) {
     include("docker:pulsar-docker-image")
     project(":docker:pulsar-docker-image").projectDir = file("docker/pulsar")
     include("docker:pulsar-all-docker-image")

@@ -27,9 +27,11 @@ dependencies {
 
 tasks.shadowJar {
     archiveClassifier.set("")
+    mergeServiceFiles()
     dependencies {
         include(dependency("software.amazon.kinesis:amazon-kinesis-producer"))
         include(dependency("com.google.protobuf:protobuf-java"))
     }
-    relocate("com.google.protobuf", "org.apache.pulsar.shade.com.google.protobuf")
+    relocate("com.google.protobuf", "org.apache.pulsar.io.kinesis.shaded.com.google.protobuf")
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
 }

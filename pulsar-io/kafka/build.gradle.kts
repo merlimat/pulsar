@@ -23,7 +23,7 @@ plugins {
 
 dependencies {
     implementation(project(":pulsar-io:pulsar-io-common"))
-    compileOnly(project(":pulsar-io:pulsar-io-core"))
+    implementation(project(":pulsar-io:pulsar-io-core"))
     implementation(project(":pulsar-common"))
     implementation(project(":pulsar-client"))
     implementation(libs.jackson.databind)

@@ -17,6 +17,15 @@
  * under the License.
  */
 
+buildscript {
+    // The license plugin pulls in plexus-utils:2.0.6 which conflicts with
+    // the Shadow plugin's plexus-utils:4.0.2 (missing 4-arg matchPath method).
+    // Force the newer version to avoid NoSuchMethodError at shading time.
+    configurations.classpath {
+        resolutionStrategy.force("org.codehaus.plexus:plexus-utils:4.0.2")
+    }
+}
+
 plugins {
     alias(libs.plugins.rat)
     alias(libs.plugins.license) apply false
@@ -125,6 +134,38 @@ subprojects {
     }
     artifacts.add("testJar", testJar)
 
+    // NAR modules should not bundle Pulsar platform dependencies — they are provided
+    // at runtime by Pulsar's classloader hierarchy.
+    pluginManager.withPlugin("io.github.merlimat.nar") {
+        val pulsarPlatformModules = setOf(
+            "pulsar-client-api",
+            "pulsar-client-admin-api",
+            "pulsar-client-original",
+            "pulsar-client",
+            "pulsar-common",
+            "pulsar-config-validation",
+            "bouncy-castle-bc",
+            "bc",
+            "pulsar-functions-api",
+            "pulsar-functions-instance",
+            "pulsar-functions-proto",
+            "pulsar-functions-secrets",
+            "pulsar-functions-utils",
+            "pulsar-io-core",
+            "pulsar-io-common",
+            "pulsar-metadata",
+            "pulsar-opentelemetry",
+            "managed-ledger",
+            "pulsar-package-core",
+        )
+        configurations.named("runtimeClasspath") {
+            exclude(group = "org.apache.bookkeeper")
+            pulsarPlatformModules.forEach { module ->
+                exclude(group = "org.apache.pulsar", module = module)
+            }
+        }
+    }
+
     // Set archive names to match Maven artifactId for nested modules
     // e.g. :pulsar-io:pulsar-io-jdbc:postgres -> pulsar-io-jdbc-postgres
     // e.g. :pulsar-io:pulsar-io-debezium:mysql -> pulsar-io-debezium-mysql
@@ -155,6 +196,18 @@ apply(from = "gradle/verify-test-groups.gradle.kts")
 
 tasks.register("serverDistTar") {
     dependsOn(":distribution:pulsar-server-distribution:serverDistTar")
+}
+
+tasks.register("docker") {
+    description = "Build the Pulsar Docker image"
+    group = "docker"
+    dependsOn(":docker:pulsar-docker-image:dockerBuild")
+}
+
+tasks.register("docker-all") {
+    description = "Build the Pulsar All-in-One Docker image (includes connectors and offloaders)"
+    group = "docker"
+    dependsOn(":docker:pulsar-all-docker-image:dockerBuild")
 }
 
 // Access version catalog from subprojects

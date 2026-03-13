@@ -21,7 +21,7 @@ plugins {
     alias(libs.plugins.nar)
 }
 dependencies {
-    compileOnly(project(":pulsar-io:pulsar-io-core"))
+    implementation(project(":pulsar-io:pulsar-io-core"))
     implementation(project(":pulsar-io:pulsar-io-debezium:core"))
     implementation(libs.debezium.connector.sqlserver)
 }
