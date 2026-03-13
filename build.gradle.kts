@@ -17,7 +17,14 @@
  * under the License.
  */
 
+plugins {
+    alias(libs.plugins.rat)
+    alias(libs.plugins.license) apply false
+}
+
 val pulsarVersion = "4.2.0-SNAPSHOT"
+
+apply(from = "gradle/code-quality.gradle.kts")
 
 allprojects {
     group = "org.apache.pulsar"
