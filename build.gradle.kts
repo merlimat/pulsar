@@ -49,6 +49,13 @@ subprojects {
         options.compilerArgs.addAll(listOf("-parameters"))
     }
 
+    configurations.all {
+        // Exclude the old SLF4J 1.x bridge pulled in by bookkeeper-server.
+        // Pulsar uses SLF4J 2.x with log4j-slf4j2-impl; having both causes
+        // NoSuchMethodError in Log4jLoggerFactory at test startup.
+        exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
+    }
+
     dependencies {
         // Pin versions for all dependencies in the version catalog (Maven dependencyManagement equivalent).
         // This ensures transitive dependencies use the versions we specify without adding them directly.
