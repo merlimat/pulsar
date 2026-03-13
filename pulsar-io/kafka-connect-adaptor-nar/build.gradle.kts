@@ -20,6 +20,9 @@
 plugins {
     alias(libs.plugins.nar)
 }
+nar {
+    narId.set("pulsar-io-kafka-connect-adaptor")
+}
 dependencies {
     implementation(project(":pulsar-io:pulsar-io-kafka-connect-adaptor"))
 }

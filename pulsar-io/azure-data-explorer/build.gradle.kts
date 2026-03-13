@@ -20,6 +20,9 @@
 plugins {
     alias(libs.plugins.nar)
 }
+nar {
+    narId.set("pulsar-io-azuredataexplorer")
+}
 dependencies {
     implementation(project(":pulsar-io:pulsar-io-common"))
     implementation(project(":pulsar-io:pulsar-io-core"))
