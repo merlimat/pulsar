@@ -26,14 +26,14 @@ val pulsarVersion = project.version.toString()
 val rootDir = rootProject.projectDir
 
 val offloaderDistTar by tasks.registering(Tar::class) {
+    val baseDir = "apache-pulsar-offloaders-${pulsarVersion}"
+
     archiveBaseName.set("apache-pulsar-offloaders")
     archiveVersion.set(pulsarVersion)
     archiveClassifier.set("bin")
     archiveExtension.set("tar.gz")
     compression = Compression.GZIP
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-
-    val baseDir = "apache-pulsar-offloaders-${pulsarVersion}"
 
     from(rootDir.resolve("LICENSE")) {
         into(baseDir)
@@ -43,12 +43,20 @@ val offloaderDistTar by tasks.registering(Tar::class) {
     }
 
     // Tiered storage NAR files
-    from(project(":tiered-storage:tiered-storage-jcloud").tasks.named("nar")) {
+    val jcloudNarFiles = project(":tiered-storage:tiered-storage-jcloud")
+        .layout.buildDirectory.dir("libs")
+    val fileSystemNarFiles = project(":tiered-storage:tiered-storage-file-system")
+        .layout.buildDirectory.dir("libs")
+    from(jcloudNarFiles) {
         into("${baseDir}/offloaders")
+        include("*.nar")
     }
-    from(project(":tiered-storage:tiered-storage-file-system").tasks.named("nar")) {
+    from(fileSystemNarFiles) {
         into("${baseDir}/offloaders")
+        include("*.nar")
     }
+    dependsOn(":tiered-storage:tiered-storage-jcloud:nar")
+    dependsOn(":tiered-storage:tiered-storage-file-system:nar")
 }
 
 tasks.named("assemble") {

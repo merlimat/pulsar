@@ -25,7 +25,7 @@ tasks.named("jar") { enabled = false }
 val pulsarVersion = project.version.toString()
 val rootDir = rootProject.projectDir
 
-// Collect NAR files from all IO connector projects
+// IO connector project paths
 val connectorNarProjects = listOf(
     ":pulsar-io:pulsar-io-cassandra",
     ":pulsar-io:pulsar-io-kafka",
@@ -72,12 +72,14 @@ val ioDistDir by tasks.registering(Sync::class) {
         into(".")
     }
 
-    // Collect NAR files from each connector project
+    // Collect NAR files from each connector project's build/libs directory
     connectorNarProjects.forEach { projectPath ->
-        val proj = project(projectPath)
-        from(proj.tasks.named("nar")) {
+        val narDir = project(projectPath).layout.buildDirectory.dir("libs")
+        from(narDir) {
             into(".")
+            include("*.nar")
         }
+        dependsOn("${projectPath}:nar")
     }
 }
 
