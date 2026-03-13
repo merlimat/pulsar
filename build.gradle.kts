@@ -121,6 +121,20 @@ subprojects {
         )
     }
 
+    // Add shared test certificates as a test resource directory for modules that need them.
+    // These modules rely on the shared tests/certificate-authority directory for TLS test certs.
+    // By adding it as a source set resource (under "certificate-authority/"), Gradle's
+    // processTestResources handles the copy and all downstream tasks see it automatically.
+    val modulesNeedingCerts = setOf(
+        "pulsar-broker", "pulsar-broker-common", "pulsar-broker-auth-oidc",
+        "pulsar-common", "pulsar-proxy", "bcfips-include-test",
+    )
+    if (project.name in modulesNeedingCerts) {
+        project.the<SourceSetContainer>()["test"].resources.srcDir(
+            rootProject.file("tests").absolutePath
+        )
+    }
+
     // Expose test classes for cross-module test dependencies (Maven test-jar equivalent)
     val testJar by tasks.registering(Jar::class) {
         archiveClassifier.set("tests")
