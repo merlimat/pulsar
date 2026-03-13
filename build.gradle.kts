@@ -118,6 +118,22 @@ subprojects {
     }
     artifacts.add("testJar", testJar)
 
+    // Set archive names to match Maven artifactId for nested modules
+    // e.g. :pulsar-io:pulsar-io-jdbc:postgres -> pulsar-io-jdbc-postgres
+    // e.g. :pulsar-io:pulsar-io-debezium:mysql -> pulsar-io-debezium-mysql
+    val parentProject = project.parent
+    if (parentProject != null && parentProject != rootProject && parentProject.parent != rootProject) {
+        val qualifiedName = "${parentProject.name}-${project.name}"
+        the<BasePluginExtension>().archivesName.set(qualifiedName)
+        // Also set NAR plugin's narId if NAR plugin is applied
+        pluginManager.withPlugin("io.github.merlimat.nar") {
+            @Suppress("UNCHECKED_CAST")
+            val narExt = extensions.getByName("nar")
+            val narIdProp = narExt.javaClass.getMethod("getNarId").invoke(narExt) as Property<String>
+            narIdProp.set(qualifiedName)
+        }
+    }
+
     tasks.withType<Jar> {
         manifest {
             attributes(
