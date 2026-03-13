@@ -304,6 +304,9 @@ zookeeper-tests = { module = "org.apache.zookeeper:zookeeper", version.ref = "zo
 # Curator
 curator-recipes = { module = "org.apache.curator:curator-recipes", version.ref = "curator" }
 
+# Conscrypt
+conscrypt-openjdk-uber = { module = "org.conscrypt:conscrypt-openjdk-uber", version.ref = "conscrypt" }
+
 # Jetty
 jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty" }
 jetty-util = { module = "org.eclipse.jetty:jetty-util", version.ref = "jetty" }
