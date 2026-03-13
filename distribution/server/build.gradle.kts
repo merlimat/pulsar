@@ -139,7 +139,7 @@ val serverDistTar by tasks.registering(Tar::class) {
     }
 
     // Runtime dependency JARs into lib/
-    // Use groupId-artifactId-version naming to match Maven assembly output
+    // Include groupId in jar names to identify provenance (matches Maven assembly outputFileNameMapping)
     from(distLib) {
         into("${baseDir}/lib")
         // Exclude items that go elsewhere or shouldn't be in lib/
@@ -152,9 +152,29 @@ val serverDistTar by tasks.registering(Tar::class) {
         exclude("**/jna-*.jar")
         // Exclude original zookeeper (patched version is included)
         exclude("**/zookeeper-${libs.versions.zookeeper.get()}.jar")
-        rename { name ->
-            // Prefix with groupId for provenance tracking (Maven assembly does this)
-            name
+    }
+
+    // Build file-name -> groupId-prefixed-name map from resolved artifacts
+    val renameMap = distLib.incoming.artifacts.resolvedArtifacts.map { artifacts ->
+        artifacts.associate { result ->
+            val id = result.id.componentIdentifier
+            val file = result.file
+            val ext = file.extension
+            val newName = when (id) {
+                is org.gradle.api.artifacts.component.ModuleComponentIdentifier ->
+                    "${id.group}-${id.module}-${id.version}.${ext}"
+                is org.gradle.api.artifacts.component.ProjectComponentIdentifier ->
+                    "org.apache.pulsar-${file.nameWithoutExtension}.${ext}"
+                else -> file.name
+            }
+            file.name to newName
+        }
+    }
+    // Rename JARs to groupId-artifactId-version.jar format
+    eachFile {
+        if (path.startsWith("${baseDir}/lib/")) {
+            val map = renameMap.get()
+            map[name]?.let { name = it }
         }
     }
 
