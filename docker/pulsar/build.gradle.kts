@@ -47,29 +47,31 @@ val dockerBuild by tasks.registering(Exec::class) {
     val dockerfile = if (useWolfi) "Dockerfile.wolfi" else "Dockerfile"
     val imageName = "${dockerOrganization}/${dockerImage}:${dockerTag}"
     val tarballName = "apache-pulsar-${pulsarVersion}-bin.tar.gz"
+    // Resolve version catalog values at configuration time (not in doFirst)
+    val pythonClientVersion = libs.versions.pulsar.client.python.get()
+    val snappyVersion = libs.versions.snappy.get()
+    val jdkMajorVersion = libs.versions.docker.jdk.get()
 
     // Docker build context is the project directory
     workingDir = projectDir
 
-    doFirst {
-        val args = mutableListOf(
-            "docker", "build",
-            "-f", dockerfile,
-            "-t", imageName,
-            "--build-arg", "PULSAR_TARBALL=build/target/${tarballName}",
-            "--build-arg", "PULSAR_CLIENT_PYTHON_VERSION=${libs.versions.pulsar.client.python.get()}",
-            "--build-arg", "SNAPPY_VERSION=${libs.versions.snappy.get()}",
-            "--build-arg", "IMAGE_JDK_MAJOR_VERSION=${libs.versions.docker.jdk.get()}",
-        )
+    val args = mutableListOf(
+        "docker", "build",
+        "-f", dockerfile,
+        "-t", imageName,
+        "--build-arg", "PULSAR_TARBALL=build/target/${tarballName}",
+        "--build-arg", "PULSAR_CLIENT_PYTHON_VERSION=${pythonClientVersion}",
+        "--build-arg", "SNAPPY_VERSION=${snappyVersion}",
+        "--build-arg", "IMAGE_JDK_MAJOR_VERSION=${jdkMajorVersion}",
+    )
 
-        if (dockerPlatforms.isNotEmpty()) {
-            args.addAll(listOf("--platform", dockerPlatforms))
-        }
-
-        args.add(".")
-
-        commandLine(args)
+    if (dockerPlatforms.isNotEmpty()) {
+        args.addAll(listOf("--platform", dockerPlatforms))
     }
+
+    args.add(".")
+
+    commandLine(args)
 }
 
 tasks.named("assemble") {
