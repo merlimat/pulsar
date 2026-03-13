@@ -243,22 +243,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Cache Maven local repository (for license/checkstyle checks)
-        uses: actions/cache@v4
-        timeout-minutes: 5
-        with:
-          path: |
-            ~/.m2/repository/*/*/*
-            !~/.m2/repository/org/apache/pulsar
-          key: ${{ runner.os }}-m2-dependencies-core-modules-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-m2-dependencies-core-modules-
-
       - name: Check source code license headers
-        run: mvn -B -T 8 -ntp initialize apache-rat:check license:check
+        run: ./gradlew rat licenseMain licenseTest
 
       - name: Check source code style
-        run: mvn -B -T 8 -ntp initialize checkstyle:check
+        run: ./gradlew checkstyleMain checkstyleTest
 
       - name: Build with Gradle
         run: ./gradlew assemble
