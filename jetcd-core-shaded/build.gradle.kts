@@ -54,18 +54,26 @@ tasks.jar {
     archiveClassifier.set("original")
 }
 
-// Expose shadow jar as the primary artifact
+// Expose shadow jar as the primary artifact.
+// Must also clear secondary variants (classes, resources) so Gradle doesn't prefer
+// the empty classes directory over the shadow jar for compilation.
 configurations {
     runtimeElements {
         outgoing {
             artifacts.clear()
             artifact(tasks.shadowJar)
+            afterEvaluate {
+                variants.removeIf { true }
+            }
         }
     }
     apiElements {
         outgoing {
             artifacts.clear()
             artifact(tasks.shadowJar)
+            afterEvaluate {
+                variants.removeIf { true }
+            }
         }
     }
 }

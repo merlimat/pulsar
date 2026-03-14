@@ -26,8 +26,7 @@ dependencies {
     implementation(libs.zookeeper) {
         exclude(group = "org.slf4j")
     }
-    @Suppress("GradleDependency")
-    implementation("org.apache.pulsar:jetcd-core-shaded:${project.version}:shaded")
+    implementation(project(":jetcd-core-shaded"))
     implementation(libs.grpc.netty.shaded)
     implementation(libs.jackson.dataformat.yaml)
     implementation(libs.oxia.client)
