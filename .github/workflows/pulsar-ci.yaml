@@ -244,10 +244,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Check source code license headers
-        run: ./gradlew rat licenseMain licenseTest
+        run: ./gradlew rat licenseMain licenseTest --no-configuration-cache
 
       - name: Check source code style
-        run: ./gradlew checkstyleMain checkstyleTest
+        run: ./gradlew checkstyleMain checkstyleTest --no-configuration-cache
 
       - name: Build with Gradle
         run: ./gradlew assemble
