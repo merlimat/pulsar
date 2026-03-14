@@ -190,8 +190,8 @@ jobs:
       - name: Save build outputs for test jobs
         run: |
           # Tar up compiled classes and resources so test jobs don't need to recompile
-          find . -path '*/build/classes/*' -o -path '*/build/generated/*' -o -path '*/build/resources/*' \
-            -o -path '*/build/libs/*.jar' -o -path '*/build/tmp/jar/*' \
+          find . \( -path '*/build/classes/*' -o -path '*/build/generated/*' -o -path '*/build/resources/*' \
+            -o -path '*/build/libs/*' -o -path '*/build/tmp/jar/*' \) -print \
             | tar cf /tmp/gradle-build-outputs.tar --files-from=-
 
       - name: Upload build outputs
@@ -218,11 +218,11 @@ jobs:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
       CI_JDK_MAJOR_VERSION: ${{ needs.preconditions.outputs.jdk_major_version }}
       TRACE_TEST_RESOURCE_CLEANUP: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.trace_test_resource_cleanup || 'off' }}
-      TRACE_TEST_RESOURCE_CLEANUP_DIR: ${{ github.workspace }}/target/trace-test-resource-cleanup
+      TRACE_TEST_RESOURCE_CLEANUP_DIR: ${{ github.workspace }}/build/trace-test-resource-cleanup
       THREAD_LEAK_DETECTOR_WAIT_MILLIS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.thread_leak_detector_wait_millis || 10000 }}
-      THREAD_LEAK_DETECTOR_DIR: ${{ github.workspace }}/target/thread-leak-dumps
+      THREAD_LEAK_DETECTOR_DIR: ${{ github.workspace }}/build/thread-leak-dumps
       NETTY_LEAK_DETECTION: "${{ needs.preconditions.outputs.netty_leak_detection }}"
-      NETTY_LEAK_DUMP_DIR: ${{ github.workspace }}/target/netty-leak-dumps
+      NETTY_LEAK_DUMP_DIR: ${{ github.workspace }}/build/netty-leak-dumps
     runs-on: ubuntu-24.04
     timeout-minutes: ${{ matrix.timeout || 60 }}
     needs: ['preconditions', 'build-and-license-check']

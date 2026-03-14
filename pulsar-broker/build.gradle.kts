@@ -132,6 +132,33 @@ dependencies {
     testImplementation(libs.opentelemetry.sdk.testing)
 }
 
+// NAR/JAR files needed by broker tests (mirrors Maven's maven-dependency-plugin config).
+tasks.withType<Test> {
+    dependsOn(
+        ":pulsar-functions:pulsar-functions-api-examples:jar",
+        ":pulsar-functions:pulsar-functions-api-examples-builtin:nar",
+        ":pulsar-io:pulsar-io-data-generator:nar",
+        ":pulsar-io:pulsar-io-batch-data-generator:nar",
+    )
+    doFirst {
+        fun narPath(projectPath: String): String {
+            val p = rootProject.project(projectPath)
+            return p.tasks.named("nar").get().outputs.files.singleFile.absolutePath
+        }
+        fun jarPath(projectPath: String): String {
+            val p = rootProject.project(projectPath)
+            return p.tasks.named<Jar>("jar").get().archiveFile.get().asFile.absolutePath
+        }
+        val examplesJarPath = jarPath(":pulsar-functions:pulsar-functions-api-examples")
+        systemProperty("pulsar-functions-api-examples.jar.path", examplesJarPath)
+        systemProperty("pulsar-functions-api-examples.nar.path", narPath(":pulsar-functions:pulsar-functions-api-examples-builtin"))
+        systemProperty("pulsar-io-data-generator.nar.path", narPath(":pulsar-io:pulsar-io-data-generator"))
+        systemProperty("pulsar-io-batch-data-generator.nar.path", narPath(":pulsar-io:pulsar-io-batch-data-generator"))
+        // A valid jar that is not a valid nar — used for invalid-nar tests
+        systemProperty("pulsar-io-invalid.nar.path", examplesJarPath)
+    }
+}
+
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}"

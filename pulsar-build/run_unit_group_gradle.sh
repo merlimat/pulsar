@@ -41,7 +41,7 @@ function gradle_test() {
       failfast_args="-DtestFailFast=false"
     fi
     echo "::group::Run tests for " "$@"
-    ./gradlew "$@" $failfast_args "${COMMANDLINE_ARGS[@]}"
+    ./gradlew --no-configuration-cache "$@" $failfast_args "${COMMANDLINE_ARGS[@]}"
     echo "::endgroup::"
     set +x
     "$SCRIPT_DIR/pulsar_ci_tool.sh" move_test_reports
