@@ -72,3 +72,33 @@ dependencies {
     testImplementation(libs.protobuf.java.util)
     testImplementation(project(":pulsar-functions:pulsar-functions-api-examples"))
 }
+
+// NAR/JAR files needed by tests (mirrors Maven's maven-dependency-plugin config).
+// Use task path strings so we don't force cross-project configuration at config time.
+tasks.withType<Test> {
+    dependsOn(
+        ":pulsar-functions:pulsar-functions-api-examples:jar",
+        ":pulsar-functions:pulsar-functions-api-examples-builtin:nar",
+        ":pulsar-io:pulsar-io-data-generator:nar",
+        ":pulsar-io:pulsar-io-netty:nar",
+        ":pulsar-io:pulsar-io-cassandra:nar",
+    )
+    doFirst {
+        fun narPath(projectPath: String): String {
+            val p = rootProject.project(projectPath)
+            return p.tasks.named("nar").get().outputs.files.singleFile.absolutePath
+        }
+        fun jarPath(projectPath: String): String {
+            val p = rootProject.project(projectPath)
+            return p.tasks.named<Jar>("jar").get().archiveFile.get().asFile.absolutePath
+        }
+        val examplesJarPath = jarPath(":pulsar-functions:pulsar-functions-api-examples")
+        systemProperty("pulsar-functions-api-examples.jar.path", examplesJarPath)
+        systemProperty("pulsar-functions-api-examples.nar.path", narPath(":pulsar-functions:pulsar-functions-api-examples-builtin"))
+        systemProperty("pulsar-io-data-generator.nar.path", narPath(":pulsar-io:pulsar-io-data-generator"))
+        systemProperty("pulsar-io-netty.nar.path", narPath(":pulsar-io:pulsar-io-netty"))
+        systemProperty("pulsar-io-cassandra.nar.path", narPath(":pulsar-io:pulsar-io-cassandra"))
+        // A valid jar that is not a valid nar — used for invalid-nar tests
+        systemProperty("pulsar-io-invalid.nar.path", examplesJarPath)
+    }
+}

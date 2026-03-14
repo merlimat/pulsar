@@ -17,6 +17,10 @@
  * under the License.
  */
 
+plugins {
+    alias(libs.plugins.nar)
+}
+
 dependencies {
     implementation(project(":pulsar-functions:pulsar-functions-api-examples"))
 }

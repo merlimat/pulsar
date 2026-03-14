@@ -19,6 +19,16 @@
 
 sourceSets["test"].resources.srcDir(rootProject.layout.projectDirectory.dir("tests"))
 
+// Exclude the non-FIPS BouncyCastle module — this module tests with FIPS provider only.
+// Having both bc (bcprov) and bcfips (bc-fips) causes CryptoServicesRegistrar conflicts.
+configurations.all {
+    exclude(group = "org.apache.pulsar", module = "bc")
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk18on")
+    exclude(group = "org.bouncycastle", module = "bcprov-ext-jdk18on")
+    exclude(group = "org.bouncycastle", module = "bcpkix-jdk18on")
+    exclude(group = "org.bouncycastle", module = "bcutil-jdk18on")
+}
+
 dependencies {
     testImplementation(project(":bouncy-castle:bcfips"))
     testImplementation(project(":pulsar-common"))

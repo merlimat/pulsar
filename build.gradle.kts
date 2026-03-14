@@ -55,6 +55,27 @@ subprojects {
         // NoSuchMethodError in Log4jLoggerFactory at test startup.
         exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
 
+        // Force Jackson version to match the version catalog. Transitive dependencies
+        // (e.g. from jackson-bom) can pull in newer versions that break API compatibility
+        // (EnumResolver.constructUsingToString signature changed in 2.19+).
+        resolutionStrategy.eachDependency {
+            if (requested.group.startsWith("com.fasterxml.jackson")) {
+                useVersion(rootProject.libs.versions.jackson.get())
+            }
+        }
+    }
+
+    // Exclude bc-fips from modules that don't need it. bc-fips's CryptoServicesRegistrar
+    // conflicts with bcprov-jdk18on's version — having both causes NoSuchMethodError.
+    // Only the FIPS-specific modules and modules with explicit FIPS tests should have it.
+    val modulesUsingBcFips = setOf(
+        "bcfips", "bcfips-include-test",
+        "pulsar-common", "pulsar-broker-common", "kafka-connect-adaptor",
+    )
+    if (project.name !in modulesUsingBcFips) {
+        configurations.all {
+            exclude(group = "org.bouncycastle", module = "bc-fips")
+        }
     }
 
     dependencies {
@@ -149,7 +170,8 @@ subprojects {
     // processTestResources handles the copy and all downstream tasks see it automatically.
     val modulesNeedingCerts = setOf(
         "pulsar-broker", "pulsar-broker-common", "pulsar-broker-auth-oidc",
-        "pulsar-common", "pulsar-proxy", "bcfips-include-test",
+        "pulsar-broker-auth-sasl", "pulsar-common", "pulsar-proxy",
+        "bcfips-include-test",
     )
     if (project.name in modulesNeedingCerts) {
         project.the<SourceSetContainer>()["test"].resources.srcDir(

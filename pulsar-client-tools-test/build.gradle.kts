@@ -33,3 +33,22 @@ dependencies {
     testImplementation(project(":pulsar-functions:pulsar-functions-api"))
     testImplementation(libs.picocli)
 }
+
+// Copy the custom commands NAR from the example module into test resources
+val copyCustomCommandsNar by tasks.registering(Copy::class) {
+    dependsOn(":pulsar-client-tools-customcommand-example:nar")
+    from(project(":pulsar-client-tools-customcommand-example").layout.buildDirectory.dir("libs"))
+    include("customCommands-nar.nar")
+    into(layout.buildDirectory.dir("resources/test/cliextensions"))
+}
+
+tasks.withType<Test> {
+    dependsOn(copyCustomCommandsNar)
+}
+
+// checkstyleTest also scans test resources — ensure NAR copy runs first
+plugins.withId("checkstyle") {
+    tasks.named("checkstyleTest") {
+        dependsOn(copyCustomCommandsNar)
+    }
+}

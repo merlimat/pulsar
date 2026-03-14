@@ -17,8 +17,19 @@
  * under the License.
  */
 
+plugins {
+    alias(libs.plugins.nar)
+}
+
 dependencies {
     compileOnly(project(":pulsar-client-tools-api"))
     compileOnly(libs.picocli)
     compileOnly(libs.slf4j.api)
+}
+
+// Match Maven's nifi-nar-maven-plugin output: customCommands-nar.nar
+tasks.named<io.github.merlimat.gradle.nar.NarTask>("nar") {
+    archiveBaseName.set("customCommands")
+    archiveClassifier.set("nar")
+    archiveVersion.set("")
 }

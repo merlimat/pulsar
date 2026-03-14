@@ -60,3 +60,7 @@ dependencies {
     implementation(libs.bcpkix.jdk18on)
     implementation(libs.bookkeeper.circe.checksum)
 }
+
+tasks.withType<Test> {
+    environment("TEST_JAVA_INSTANCE_PARSE_ENV_VAR", "some-configuration")
+}

@@ -28,4 +28,6 @@ dependencies {
         (it as Jar).archiveFile
     }))
     testImplementation(libs.zookeeper) { artifact { classifier = "tests" } }
+    testRuntimeOnly(libs.dropwizardmetrics.core)
+    testRuntimeOnly(libs.snappy.java)
 }
