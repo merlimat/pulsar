@@ -149,10 +149,6 @@ lightproto {
     // Exclude protos handled by the protobuf plugin
     excludes.addAll("SchemaRegistryFormat.proto", "SchemaStorageFormat.proto",
             "DelayedMessageIndexBucketMetadata.proto")
-    // TransactionPendingAck.proto imports PulsarApi.proto which has conflicting enum values
-    // (COMMIT/ABORT) in the same pulsar.proto package, causing protoc to fail.
-    excludes.add("TransactionPendingAck.proto")
+    // TransactionPendingAck.proto imports PulsarApi.proto from pulsar-common
+    extraProtoPaths.from(rootProject.layout.projectDirectory)
 }
-
-// Pre-generated lightproto sources for TransactionPendingAck (excluded from lightproto plugin above)
-sourceSets["main"].java.srcDir("src/main/generated-lightproto")
