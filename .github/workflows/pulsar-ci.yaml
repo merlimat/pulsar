@@ -187,6 +187,21 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assemble
 
+      - name: Save build outputs for test jobs
+        run: |
+          # Tar up compiled classes and resources so test jobs don't need to recompile
+          find . -path '*/build/classes/*' -o -path '*/build/generated/*' -o -path '*/build/resources/*' \
+            -o -path '*/build/libs/*.jar' -o -path '*/build/tmp/jar/*' \
+            | tar cf /tmp/gradle-build-outputs.tar --files-from=-
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-outputs
+          path: /tmp/gradle-build-outputs.tar
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+          compression-level: 1
+
       - name: Wait for ssh connection when build fails
         # ssh access is enabled for builds in own forks
         uses: ./.github/actions/ssh-access
@@ -274,6 +289,14 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Restore build outputs from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: gradle-build-outputs
+
+      - name: Extract build outputs
+        run: tar xf gradle-build-outputs.tar
 
       - name: Run setup commands
         if: ${{ matrix.setup }}
@@ -454,3 +477,12 @@ jobs:
             echo "Required jobs haven't been completed successfully."
             exit 1
           fi
+
+      - name: Delete build outputs artifact
+        if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
+            --jq '.artifacts[] | select(.name == "gradle-build-outputs") | .id' \
+            | xargs -I{} gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/{} || true
