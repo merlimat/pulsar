@@ -556,7 +556,7 @@ datasketches-memory = { module = "org.apache.datasketches:datasketches-memory", 
 datasketches-java = { module = "org.apache.datasketches:datasketches-java", version = "6.1.1" }
 
 [plugins]
-lightproto = { id = "io.streamnative.lightproto", version.ref = "lightproto" }
+lightproto = { id = "io.github.merlimat.lightproto", version.ref = "lightproto" }
 nar = { id = "io.github.merlimat.nar", version = "0.1.1" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 rat = { id = "org.nosphere.apache.rat", version = "0.8.1" }

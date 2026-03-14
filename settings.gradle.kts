@@ -19,7 +19,6 @@
 
 pluginManagement {
     repositories {
-        mavenLocal()
         gradlePluginPortal()
         mavenCentral()
     }
@@ -28,7 +27,6 @@ pluginManagement {
 dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
     repositories {
-        mavenLocal()
         mavenCentral()
         maven { url = uri("https://packages.confluent.io/maven/") }
     }
