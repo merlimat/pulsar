@@ -33,10 +33,14 @@ val generatePulsarVersion by tasks.registering {
         .standardOutput.asText.map { it.isNotBlank().toString() }
     val gitBranch = providers.exec { commandLine("git", "rev-parse", "--abbrev-ref", "HEAD") }
         .standardOutput.asText.map { it.trim() }
-    val gitUserEmail = providers.exec { commandLine("git", "config", "user.email") }
-        .standardOutput.asText.map { it.trim() }
-    val gitUserName = providers.exec { commandLine("git", "config", "user.name") }
-        .standardOutput.asText.map { it.trim() }
+    val gitUserEmail = providers.exec {
+        commandLine("git", "config", "user.email")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.map { it.trim() }
+    val gitUserName = providers.exec {
+        commandLine("git", "config", "user.name")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.map { it.trim() }
     val buildHost = providers.exec { commandLine("hostname") }
         .standardOutput.asText.map { it.trim() }
     val buildTime = providers.exec { commandLine("date", "-u", "+%Y-%m-%dT%H:%M:%SZ") }
