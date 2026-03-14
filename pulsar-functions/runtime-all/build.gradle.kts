@@ -43,3 +43,7 @@ tasks.jar {
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+tasks.withType<Test> {
+    dependsOn(tasks.jar)
+}
