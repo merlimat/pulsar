@@ -34,6 +34,7 @@ dependencies {
 
 tasks.shadowJar {
     archiveClassifier.set("benchmarks")
+    isZip64 = true
     manifest {
         attributes("Main-Class" to "org.openjdk.jmh.Main")
     }
