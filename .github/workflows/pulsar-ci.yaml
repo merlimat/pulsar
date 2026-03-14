@@ -178,14 +178,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Check source code license headers
-        run: ./gradlew rat licenseMain licenseTest --no-configuration-cache
-
-      - name: Check source code style
-        run: ./gradlew checkstyleMain checkstyleTest
-
-      - name: Build with Gradle
-        run: ./gradlew assemble
+      - name: Build, check licenses and code style
+        run: ./gradlew assemble rat licenseMain licenseTest checkstyleMain checkstyleTest --no-configuration-cache
 
       - name: Save build outputs for test jobs
         run: |
