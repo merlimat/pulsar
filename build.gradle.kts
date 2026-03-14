@@ -177,6 +177,11 @@ subprojects {
         project.the<SourceSetContainer>()["test"].resources.srcDir(
             rootProject.file("tests").absolutePath
         )
+        // Some modules already have certificate-authority files in their own test resources,
+        // creating duplicates with the shared directory above.
+        tasks.named<ProcessResources>("processTestResources") {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        }
     }
 
     // Expose test classes for cross-module test dependencies (Maven test-jar equivalent)
