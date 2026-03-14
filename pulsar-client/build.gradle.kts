@@ -85,7 +85,7 @@ protobuf {
 // Only generate protobuf for test sources (no main protos)
 sourceSets["main"].proto { exclude("**/*") }
 
-// Generate Avro test classes from .avsc files
+// Generate Avro test classes from .avsc schema files
 val avroTools by configurations.creating
 dependencies {
     avroTools("org.apache.avro:avro-tools:${libs.versions.avro.get()}")

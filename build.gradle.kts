@@ -54,9 +54,23 @@ subprojects {
         // Pulsar uses SLF4J 2.x with log4j-slf4j2-impl; having both causes
         // NoSuchMethodError in Log4jLoggerFactory at test startup.
         exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
+
     }
 
     dependencies {
+        // Exclude all BouncyCastle from bookkeeper-server (matches Maven parent POM exclusion).
+        // BookKeeper's bc-fips transitive dependency contains a CryptoServicesRegistrar that
+        // conflicts with the non-FIPS version in bcprov-jdk18on. Pulsar manages its own BC deps.
+        components {
+            withModule("org.apache.bookkeeper:bookkeeper-server") {
+                allVariants {
+                    withDependencies {
+                        removeAll { it.group == "org.bouncycastle" }
+                    }
+                }
+            }
+        }
+
         // Pin versions for all dependencies in the version catalog (Maven dependencyManagement equivalent).
         // This ensures transitive dependencies use the versions we specify without adding them directly.
         constraints {
@@ -67,6 +81,7 @@ subprojects {
                 }
             }
         }
+
 
         // Annotation processing for Lombok
         "compileOnly"(rootProject.libs.lombok)

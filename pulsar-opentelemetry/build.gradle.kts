@@ -35,3 +35,7 @@ dependencies {
     testImplementation(libs.awaitility)
     testImplementation(libs.opentelemetry.sdk.testing)
 }
+
+tasks.withType<Test> {
+    systemProperty("otel.semconv-stability.opt-in", "jvm")
+}
