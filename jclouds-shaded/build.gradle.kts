@@ -69,3 +69,30 @@ tasks.shadowJar {
     relocate("jakarta", "$shadePrefix.jakarta")
     relocate("org.aopalliance", "$shadePrefix.org.aopalliance")
 }
+
+// Replace the default jar with the shadow jar for downstream consumers
+tasks.jar {
+    archiveClassifier.set("original")
+}
+
+// Expose shadow jar as the primary artifact
+configurations {
+    runtimeElements {
+        outgoing {
+            artifacts.clear()
+            artifact(tasks.shadowJar)
+            afterEvaluate {
+                variants.removeIf { true }
+            }
+        }
+    }
+    apiElements {
+        outgoing {
+            artifacts.clear()
+            artifact(tasks.shadowJar)
+            afterEvaluate {
+                variants.removeIf { true }
+            }
+        }
+    }
+}
