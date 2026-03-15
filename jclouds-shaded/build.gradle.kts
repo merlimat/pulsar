@@ -1,0 +1,98 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+plugins {
+    alias(libs.plugins.shadow)
+}
+
+dependencies {
+    implementation(libs.jclouds.allblobstore)
+    implementation("org.apache.jclouds.driver:jclouds-apachehc:${libs.versions.jclouds.get()}")
+    implementation("org.apache.jclouds.driver:jclouds-okhttp:${libs.versions.jclouds.get()}") {
+        exclude(group = "com.squareup.okhttp")
+    }
+    implementation("org.apache.jclouds.driver:jclouds-slf4j:${libs.versions.jclouds.get()}")
+}
+
+val shadePrefix = "org.apache.pulsar.jcloud.shade"
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+    mergeServiceFiles()
+
+    dependencies {
+        include(dependency("com.google.guava:guava"))
+        include(dependency("com.google.guava:failureaccess"))
+        include(dependency("org.apache.jclouds:.*"))
+        include(dependency("org.apache.jclouds.api:.*"))
+        include(dependency("org.apache.jclouds.common:.*"))
+        include(dependency("org.apache.jclouds.driver:.*"))
+        include(dependency("org.apache.jclouds.provider:.*"))
+        include(dependency("com.google.inject.extensions:guice-assistedinject"))
+        include(dependency("com.google.inject:guice"))
+        include(dependency("com.google.inject.extensions:guice-multibindings"))
+        include(dependency("com.google.code.gson:gson"))
+        include(dependency("org.apache.httpcomponents:.*"))
+        include(dependency("com.jamesmurty.utils:.*"))
+        include(dependency("net.iharder:.*"))
+        include(dependency("aopalliance:.*"))
+        include(dependency("com.google.errorprone:.*"))
+        include(dependency("jakarta.inject:jakarta.inject-api"))
+        include(dependency("jakarta.annotation:jakarta.annotation-api"))
+        include(dependency("jakarta.ws.rs:jakarta.ws.rs-api"))
+    }
+
+    // Exclude vulnerable gson embedded in jclouds-core uber jar
+    exclude("lib/gson*jar")
+
+    relocate("com.google", "$shadePrefix.com.google")
+    relocate("com.jamesmurty.utils", "$shadePrefix.com.jamesmurty.utils")
+    relocate("aopalliance", "$shadePrefix.aopalliance")
+    relocate("net.iharder", "$shadePrefix.net.iharder")
+    relocate("com.google.errorprone", "$shadePrefix.com.google.errorprone")
+    relocate("jakarta", "$shadePrefix.jakarta")
+    relocate("org.aopalliance", "$shadePrefix.org.aopalliance")
+}
+
+// Replace the default jar with the shadow jar for downstream consumers
+tasks.jar {
+    archiveClassifier.set("original")
+}
+
+// Expose shadow jar as the primary artifact
+configurations {
+    runtimeElements {
+        outgoing {
+            artifacts.clear()
+            artifact(tasks.shadowJar)
+            afterEvaluate {
+                variants.removeIf { true }
+            }
+        }
+    }
+    apiElements {
+        outgoing {
+            artifacts.clear()
+            artifact(tasks.shadowJar)
+            afterEvaluate {
+                variants.removeIf { true }
+            }
+        }
+    }
+}

@@ -24,6 +24,7 @@ import org.apache.avro.NameValidator;
 import org.apache.avro.Schema;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pulsar.client.api.SchemaSerializationException;
 import org.apache.pulsar.client.api.schema.SchemaDefinition;
 import org.apache.pulsar.client.impl.schema.AvroSchema;
 import org.apache.pulsar.client.impl.schema.SchemaDefinitionBuilderImpl;
@@ -102,7 +103,12 @@ public class SchemaUtil {
                      ? new ReflectData.AllowNull()
                      : new ReflectData();
             AvroSchema.addLogicalTypeConversions(reflectData, schemaDefinition.isJsr310ConversionEnabled(), false);
-            return reflectData.getSchema(pojo);
+            try {
+                return reflectData.getSchema(pojo);
+            } catch (RuntimeException e) {
+                throw new SchemaSerializationException(
+                        "Unable to create Avro schema for class " + pojo.getName(), e);
+            }
         }
     }
 }

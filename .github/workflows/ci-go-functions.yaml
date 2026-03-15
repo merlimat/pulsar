@@ -66,7 +66,7 @@ jobs:
           GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          build/pulsar_ci_tool.sh check_ready_to_test
+          pulsar-build/pulsar_ci_tool.sh check_ready_to_test
 
   check-style:
     needs: preconditions

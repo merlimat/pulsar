@@ -139,7 +139,10 @@ function ci_move_test_reports() {
     # aggregate all junit xml reports in a single directory
     if [ -d test-reports ]; then
       # copy test reports to single directory, rename duplicates
+      # Maven surefire reports
       find . -path '*/target/surefire-reports/junitreports/TEST-*.xml' -print0 | xargs -0 -r -n 1 mv -t test-reports --backup=numbered
+      # Gradle test reports
+      find . -path '*/build/test-results/test/TEST-*.xml' -print0 | xargs -0 -r -n 1 mv -t test-reports --backup=numbered
       # rename possible duplicates to have ".xml" extension
       (
         for f in test-reports/*~; do
@@ -150,6 +153,7 @@ function ci_move_test_reports() {
     # aggregate all surefire-reports in a single directory
     if [ -d surefire-reports ]; then
       (
+        # Maven surefire-reports directories
         find . -type d -path '*/target/surefire-reports' -not -path './surefire-reports/*' |
           while IFS=$'\n' read -r directory; do
             echo "Copying reports from $directory"
@@ -163,6 +167,18 @@ function ci_move_test_reports() {
             # copy files
             cp -R --parents "$directory" surefire-reports
             # remove the original directory
+            rm -rf "$directory"
+          done
+        # Gradle test-results directories
+        find . -type d -path '*/build/test-results/test' -not -path './surefire-reports/*' |
+          while IFS=$'\n' read -r directory; do
+            echo "Copying Gradle reports from $directory"
+            target_dir="surefire-reports/${directory}"
+            if [ -d "$target_dir" ]; then
+              ( command ls -vr1d "${target_dir}~"* 2> /dev/null | awk '{print "mv "$0" "substr($0,0,length-1)substr($0,length,1)+1}' | sh ) || true
+              mv "$target_dir" "${target_dir}~1"
+            fi
+            cp -R --parents "$directory" surefire-reports
             rm -rf "$directory"
           done
       )
@@ -630,13 +646,13 @@ ci_report_netty_leaks() {
       echo "Details:"
       cat $temp_file
     } | tee $NETTY_LEAK_DUMP_DIR/leak_report.txt
-    touch target/netty_leaks_found
+    touch build/netty_leaks_found
     if [[ "$NETTY_LEAK_DETECTION" == "fail_on_leak" ]]; then
       exit 1
     fi
   else
     echo "No netty leaks found."
-    touch target/netty_leaks_not_found
+    touch build/netty_leaks_not_found
   fi
   rm $temp_file
 }
