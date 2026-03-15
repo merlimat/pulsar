@@ -136,22 +136,42 @@ function test_group_other() {
 }
 
 function test_group_pulsar_io() {
-  echo "::group::Running pulsar-io tests"
-  # Pulsar IO connector tests not yet migrated to Gradle
-  echo "::warning::Pulsar IO tests are not yet available in the Gradle build"
-  echo "::endgroup::"
+  # Run all pulsar-io module tests except elastic-search and kafka-connect-adaptor
+  # (those have their own dedicated CI groups)
+  gradle_test :pulsar-io:pulsar-io-core:test \
+    :pulsar-io:pulsar-io-common:test \
+    :pulsar-io:pulsar-io-cassandra:test \
+    :pulsar-io:pulsar-io-data-generator:test \
+    :pulsar-io:pulsar-io-netty:test \
+    :pulsar-io:pulsar-io-file:test \
+    :pulsar-io:pulsar-io-http:test \
+    :pulsar-io:pulsar-io-aws:test \
+    :pulsar-io:pulsar-io-alluxio:test \
+    :pulsar-io:pulsar-io-azure-data-explorer:test \
+    :pulsar-io:pulsar-io-canal:test \
+    :pulsar-io:pulsar-io-dynamodb:test \
+    :pulsar-io:pulsar-io-hbase:test \
+    :pulsar-io:pulsar-io-hdfs3:test \
+    :pulsar-io:pulsar-io-influxdb:test \
+    :pulsar-io:pulsar-io-kafka:test \
+    :pulsar-io:pulsar-io-mongo:test \
+    :pulsar-io:pulsar-io-nsq:test \
+    :pulsar-io:pulsar-io-rabbitmq:test \
+    :pulsar-io:pulsar-io-redis:test \
+    :pulsar-io:pulsar-io-solr:test \
+    :pulsar-io:pulsar-io-kinesis:test \
+    :pulsar-io:pulsar-io-debezium:test \
+    :pulsar-io:pulsar-io-jdbc:test \
+    :pulsar-io:pulsar-io-batch-data-generator:test \
+    :pulsar-io:pulsar-io-batch-discovery-triggerers:test
 }
 
 function test_group_pulsar_io_elastic() {
-  echo "::group::Running elastic-search tests"
-  echo "::warning::Pulsar IO Elastic tests are not yet available in the Gradle build"
-  echo "::endgroup::"
+  gradle_test :pulsar-io:pulsar-io-elastic-search:test
 }
 
 function test_group_pulsar_io_kafka_connect() {
-  echo "::group::Running Pulsar IO Kafka connect adaptor tests"
-  echo "::warning::Pulsar IO Kafka Connect tests are not yet available in the Gradle build"
-  echo "::endgroup::"
+  gradle_test :pulsar-io:pulsar-io-kafka-connect-adaptor:test
 }
 
 function test_group_protobufv4() {

@@ -17,6 +17,12 @@
  * under the License.
  */
 
+// Each test class gets its own JVM fork because AuthenticationSasl has static JAAS state
+// (jaasCredentialsContainer, initializedJAAS) that leaks between test classes sharing a fork.
+tasks.withType<Test> {
+    forkEvery = 1
+}
+
 dependencies {
     implementation(project(":pulsar-broker"))
     implementation(project(":pulsar-broker-common"))
