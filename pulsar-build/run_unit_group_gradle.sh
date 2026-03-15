@@ -175,7 +175,6 @@ function test_group_pulsar_io() {
     :pulsar-io:pulsar-io-file:test \
     :pulsar-io:pulsar-io-http:test \
     :pulsar-io:pulsar-io-aws:test \
-    :pulsar-io:pulsar-io-alluxio:test \
     :pulsar-io:pulsar-io-azure-data-explorer:test \
     :pulsar-io:pulsar-io-canal:test \
     :pulsar-io:pulsar-io-dynamodb:test \

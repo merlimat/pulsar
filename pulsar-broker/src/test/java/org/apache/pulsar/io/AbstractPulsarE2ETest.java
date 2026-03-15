@@ -314,14 +314,22 @@ public abstract class AbstractPulsarE2ETest {
         workerConfig.setAuthenticationEnabled(true);
         workerConfig.setAuthorizationEnabled(true);
 
-        // Allow test class directories (for tests using classes defined in test sources)
-        // and the examples JAR directory as valid function/connector package URLs
+        // Allow test class directories, examples JAR/NAR directories, and IO NAR directories
+        // as valid function/connector package URLs
         String testClassesUri = AbstractPulsarE2ETest.class.getProtectionDomain()
                 .getCodeSource().getLocation().toURI().toString();
-        List<String> urlPatterns =
-                List.of(getPulsarApiExamplesJar().getParentFile().toURI() + ".*", "http://127\\.0\\.0\\.1:.*",
-                        tempDirectory.getTempDirectory().toURI() + ".*",
-                        testClassesUri + ".*");
+        List<String> urlPatterns = new java.util.ArrayList<>(List.of(
+                getPulsarApiExamplesJar().getParentFile().toURI() + ".*",
+                "http://127\\.0\\.0\\.1:.*",
+                tempDirectory.getTempDirectory().toURI() + ".*",
+                testClassesUri + ".*"));
+        // Also allow NAR file directories (may differ from JAR directory in Gradle builds)
+        if (getPulsarApiExamplesNar().getParentFile() != null) {
+            urlPatterns.add(getPulsarApiExamplesNar().getParentFile().toURI() + ".*");
+        }
+        if (getPulsarIODataGeneratorNar().getParentFile() != null) {
+            urlPatterns.add(getPulsarIODataGeneratorNar().getParentFile().toURI() + ".*");
+        }
         workerConfig.setAdditionalEnabledConnectorUrlPatterns(urlPatterns);
         workerConfig.setAdditionalEnabledFunctionsUrlPatterns(urlPatterns);
 

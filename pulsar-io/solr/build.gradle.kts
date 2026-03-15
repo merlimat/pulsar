@@ -33,8 +33,9 @@ dependencies {
     implementation(libs.commons.collections4)
 
     // Solr 9.x requires Jetty 10.x — force Jetty 10 for test deps to avoid
-    // conflicts with Pulsar's Jetty 12 which has incompatible class locations
+    // conflicts with Pulsar's Jetty 12 which has incompatible class locations.
+    // Use enforcedPlatform to override Gradle's default highest-version-wins resolution.
+    testImplementation(enforcedPlatform("org.eclipse.jetty:jetty-bom:10.0.24"))
     testImplementation(libs.solr.test.framework)
     testImplementation(libs.solr.core)
-    testImplementation(platform("org.eclipse.jetty:jetty-bom:10.0.24"))
 }
