@@ -172,7 +172,7 @@ subprojects {
     val modulesNeedingCerts = setOf(
         "pulsar-broker", "pulsar-broker-common", "pulsar-broker-auth-oidc",
         "pulsar-broker-auth-sasl", "pulsar-common", "pulsar-proxy",
-        "bcfips-include-test",
+        "bcfips-include-test", "pulsar-testclient",
     )
     if (project.name in modulesNeedingCerts) {
         project.the<SourceSetContainer>()["test"].resources.srcDir(

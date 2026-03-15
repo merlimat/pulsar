@@ -30,6 +30,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
@@ -275,7 +276,8 @@ public abstract class AbstractPulsarE2ETest {
         }
     }
 
-    private PulsarWorkerService createPulsarFunctionWorker(ServiceConfiguration config) throws IOException {
+    private PulsarWorkerService createPulsarFunctionWorker(ServiceConfiguration config)
+            throws IOException, URISyntaxException {
 
         System.setProperty(JAVA_INSTANCE_JAR_PROPERTY,
                 FutureUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath());
@@ -312,9 +314,14 @@ public abstract class AbstractPulsarE2ETest {
         workerConfig.setAuthenticationEnabled(true);
         workerConfig.setAuthorizationEnabled(true);
 
+        // Allow test class directories (for tests using classes defined in test sources)
+        // and the examples JAR directory as valid function/connector package URLs
+        String testClassesUri = AbstractPulsarE2ETest.class.getProtectionDomain()
+                .getCodeSource().getLocation().toURI().toString();
         List<String> urlPatterns =
                 List.of(getPulsarApiExamplesJar().getParentFile().toURI() + ".*", "http://127\\.0\\.0\\.1:.*",
-                        tempDirectory.getTempDirectory().toURI() + ".*");
+                        tempDirectory.getTempDirectory().toURI() + ".*",
+                        testClassesUri + ".*");
         workerConfig.setAdditionalEnabledConnectorUrlPatterns(urlPatterns);
         workerConfig.setAdditionalEnabledFunctionsUrlPatterns(urlPatterns);
 
