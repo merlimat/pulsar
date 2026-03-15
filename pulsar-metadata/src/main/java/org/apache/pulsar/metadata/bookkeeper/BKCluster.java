@@ -140,6 +140,11 @@ public class BKCluster implements AutoCloseable {
         baseConf.setJournalRemovePagesFromCache(false);
         baseConf.setProperty(AbstractMetadataDriver.METADATA_STORE_INSTANCE, store);
         baseClientConf.setProperty(AbstractMetadataDriver.METADATA_STORE_INSTANCE, store);
+        // Explicitly trigger class initialization to run static blocks that register
+        // drivers with MetadataDrivers. The .class literal only loads (but does not
+        // initialize) the class, so the static registration block may not have run yet.
+        PulsarMetadataBookieDriver.init();
+        PulsarMetadataClientDriver.init();
         System.setProperty("bookkeeper.metadata.bookie.drivers", PulsarMetadataBookieDriver.class.getName());
         System.setProperty("bookkeeper.metadata.client.drivers", PulsarMetadataClientDriver.class.getName());
         startBKCluster(bkClusterConf.numBookies);

@@ -130,6 +130,9 @@ dependencies {
     testImplementation(libs.jetty.ee8.proxy)
     testImplementation(libs.jetty.websocket.jetty.client)
     testImplementation(libs.opentelemetry.sdk.testing)
+    testRuntimeOnly(libs.avro.protobuf) {
+        exclude(group = "com.google.protobuf")
+    }
 }
 
 // NAR/JAR files needed by broker tests (mirrors Maven's maven-dependency-plugin config).
@@ -176,6 +179,8 @@ lightproto {
     // Exclude protos handled by the protobuf plugin
     excludes.addAll("SchemaRegistryFormat.proto", "SchemaStorageFormat.proto",
             "DelayedMessageIndexBucketMetadata.proto")
+    // Test protos that need standard protobuf (GeneratedMessageV3), not lightproto
+    excludes.addAll("ProtobufSchemaTest.proto", "DataRecord.proto")
     // TransactionPendingAck.proto imports PulsarApi.proto from pulsar-common
     extraProtoPaths.from(rootProject.layout.projectDirectory)
 }
