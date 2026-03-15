@@ -121,12 +121,41 @@ function test_group_broker_flaky() {
 
 # The OTHER group runs tests in all modules except broker, proxy, client, metadata, and IO modules
 function test_group_other() {
-  # Run tests in all modules except the ones that have dedicated CI groups
+  # Run tests in all modules except the ones that have dedicated CI groups.
+  # Uses Gradle's -x flag to exclude tasks by path.
   gradle_test \
     --exclude-task :pulsar-broker:test \
     --exclude-task :pulsar-proxy:test \
     --exclude-task :pulsar-client:test \
     --exclude-task :pulsar-metadata:test \
+    -x :pulsar-io:pulsar-io-core:test \
+    -x :pulsar-io:pulsar-io-common:test \
+    -x :pulsar-io:pulsar-io-cassandra:test \
+    -x :pulsar-io:pulsar-io-data-generator:test \
+    -x :pulsar-io:pulsar-io-netty:test \
+    -x :pulsar-io:pulsar-io-file:test \
+    -x :pulsar-io:pulsar-io-http:test \
+    -x :pulsar-io:pulsar-io-aws:test \
+    -x :pulsar-io:pulsar-io-alluxio:test \
+    -x :pulsar-io:pulsar-io-azure-data-explorer:test \
+    -x :pulsar-io:pulsar-io-canal:test \
+    -x :pulsar-io:pulsar-io-dynamodb:test \
+    -x :pulsar-io:pulsar-io-hbase:test \
+    -x :pulsar-io:pulsar-io-hdfs3:test \
+    -x :pulsar-io:pulsar-io-influxdb:test \
+    -x :pulsar-io:pulsar-io-kafka:test \
+    -x :pulsar-io:pulsar-io-mongo:test \
+    -x :pulsar-io:pulsar-io-nsq:test \
+    -x :pulsar-io:pulsar-io-rabbitmq:test \
+    -x :pulsar-io:pulsar-io-redis:test \
+    -x :pulsar-io:pulsar-io-solr:test \
+    -x :pulsar-io:pulsar-io-kinesis:test \
+    -x :pulsar-io:pulsar-io-debezium:test \
+    -x :pulsar-io:pulsar-io-jdbc:test \
+    -x :pulsar-io:pulsar-io-batch-data-generator:test \
+    -x :pulsar-io:pulsar-io-batch-discovery-triggerers:test \
+    -x :pulsar-io:pulsar-io-elastic-search:test \
+    -x :pulsar-io:pulsar-io-kafka-connect-adaptor:test \
     test
 
   # Run DnsResolverTest separately since it relies on static field values
