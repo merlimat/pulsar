@@ -142,6 +142,7 @@ subprojects {
             excludeGroups(*((excludedTestGroups ?: "quarantine,flaky").split(",").map { it.trim() }.toTypedArray()))
         }
         maxHeapSize = "1300m"
+        maxParallelForks = 4
         systemProperty("testRetryCount", System.getProperty("testRetryCount", "1"))
         systemProperty("testFailFast", System.getProperty("testFailFast", "true"))
         jvmArgs(
