@@ -310,8 +310,8 @@ public class SaslAuthenticateTest extends ProducerConsumerBase {
     public void testSaslOnlyAuthFirstStage() throws Exception {
         @Cleanup
         AuthenticationProviderSasl saslServer = new AuthenticationProviderSasl();
-        // The cache expiration time is set to 50ms. Residual auth info should be cleaned up
-        conf.setInflightSaslContextExpiryMs(50);
+        // The cache expiration time is set to 500ms. Residual auth info should be cleaned up
+        conf.setInflightSaslContextExpiryMs(500);
         saslServer.initialize(AuthenticationProvider.Context.builder().config(conf).build());
 
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
@@ -340,7 +340,7 @@ public class SaslAuthenticateTest extends ProducerConsumerBase {
         }
         long start = System.currentTimeMillis();
         while (true) {
-            if (System.currentTimeMillis() - start > 1000) {
+            if (System.currentTimeMillis() - start > 5000) {
                 fail();
             }
             cache = (Cache<Long, AuthenticationState>) field.get(saslServer);

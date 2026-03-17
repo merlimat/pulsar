@@ -350,7 +350,7 @@ public class PulsarStandalone implements AutoCloseable {
         broker = new PulsarService(config,
                 workerConfig,
                 Optional.ofNullable(fnWorkerService),
-                PulsarStandalone::processTerminator);
+                this::processTerminator);
         broker.start();
 
         final String cluster = config.getClusterName();
@@ -502,7 +502,7 @@ public class PulsarStandalone implements AutoCloseable {
         }
     }
 
-    private static void processTerminator(int exitCode) {
+    protected void processTerminator(int exitCode) {
         log.info("Halting standalone process with code {}", exitCode);
         ShutdownUtil.triggerImmediateForcefulShutdown(exitCode);
     }

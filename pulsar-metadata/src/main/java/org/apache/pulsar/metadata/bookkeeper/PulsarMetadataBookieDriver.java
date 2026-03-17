@@ -35,6 +35,10 @@ public class PulsarMetadataBookieDriver extends AbstractMetadataDriver implement
         MetadataDrivers.registerBookieDriver(METADATA_STORE_SCHEME, PulsarMetadataBookieDriver.class);
     }
 
+    public static void init() {
+        // cause <clinit> to be invoked
+    }
+
     @Override
     protected void initialize(AbstractConfiguration serverConfiguration) throws MetadataException {
         super.initialize(serverConfiguration);
