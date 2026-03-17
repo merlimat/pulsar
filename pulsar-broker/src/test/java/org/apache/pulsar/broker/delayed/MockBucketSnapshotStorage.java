@@ -19,7 +19,6 @@
 package org.apache.pulsar.broker.delayed;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import java.util.ArrayList;
