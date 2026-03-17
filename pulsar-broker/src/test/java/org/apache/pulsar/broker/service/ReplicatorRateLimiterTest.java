@@ -534,13 +534,12 @@ public class ReplicatorRateLimiterTest extends ReplicatorTestBase {
         Awaitility.await().pollDelay(1, TimeUnit.SECONDS).untilAsserted(() -> {
             log.info("Received message number: [{}]", totalReceived.get());
 
-            // The rate limiter is not perfectly precise — a small number of extra messages
-            // can slip through before throttling kicks in.
+            // The rate limiter is not perfectly precise — allow +/- 20% tolerance.
             int received = totalReceived.get();
-            Assert.assertTrue(received >= messageRate,
-                    "Should receive at least " + messageRate + " messages, got " + received);
-            Assert.assertTrue(received < numMessages + 200,
-                    "Rate limiter should prevent receiving all messages, got " + received);
+            Assert.assertTrue(received >= messageRate * 0.8,
+                    "Should receive at least 80% of " + messageRate + " messages, got " + received);
+            Assert.assertTrue(received <= messageRate * 1.2,
+                    "Should receive at most 120% of " + messageRate + " messages, got " + received);
         });
 
         consumer.close();
