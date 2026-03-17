@@ -62,18 +62,13 @@ public class FileSystemOffloaderLocalFileTest {
         }
     }
 
-    private String getResourceFilePath(String name) {
-        return getClass().getClassLoader().getResource(name).getPath();
-    }
-
     @Test
     public void testReadWriteWithLocalFileUsingFileSystemURI() throws Exception {
         // prepare the offload policies
-        final String basePath = "/tmp";
+        final String basePath = Files.createTempDirectory("pulsar-offload-local-test").toAbsolutePath().toString();
         OffloadPoliciesImpl offloadPolicies = new OffloadPoliciesImpl();
         offloadPolicies.setFileSystemURI("file://" + basePath);
         offloadPolicies.setManagedLedgerOffloadDriver("filesystem");
-        offloadPolicies.setFileSystemProfilePath(getResourceFilePath("filesystem_offload_core_site.xml"));
 
         // initialize the offloader with the offload policies
         @Cleanup

@@ -23,12 +23,12 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import java.io.IOException;
-import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
-import lombok.Cleanup;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.client.PulsarMockBookKeeper;
@@ -39,9 +39,6 @@ import org.apache.bookkeeper.client.api.ReadHandle;
 import org.apache.bookkeeper.mledger.LedgerOffloader;
 import org.apache.bookkeeper.mledger.impl.LedgerOffloaderStatsImpl;
 import org.apache.bookkeeper.mledger.offload.filesystem.FileStoreTestBase;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.pulsar.common.naming.TopicName;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -51,7 +48,6 @@ public class FileSystemManagedLedgerOffloaderTest extends FileStoreTestBase {
     private PulsarMockBookKeeper bk;
     private String managedLedgerName = "public/default/persistent/testOffload";
     private String topicName = TopicName.fromPersistenceNamingEncoding(managedLedgerName);
-    private String storagePath = createStoragePath(managedLedgerName);
     private LedgerHandle lh;
     private ReadHandle toWrite;
     private final int numberOfEntries = 601;
@@ -173,25 +169,14 @@ public class FileSystemManagedLedgerOffloaderTest extends FileStoreTestBase {
         LedgerOffloader offloader = fileSystemManagedLedgerOffloader;
         UUID uuid = UUID.randomUUID();
         offloader.offload(toWrite, uuid, map).get();
-        Configuration configuration = new Configuration();
-        @Cleanup
-        FileSystem fileSystem = FileSystem.get(new URI(getURI()), configuration);
-        assertTrue(fileSystem.exists(new Path(createDataFilePath(storagePath, lh.getId(), uuid))));
-        assertTrue(fileSystem.exists(new Path(createIndexFilePath(storagePath, lh.getId(), uuid))));
+
+        // MapFile creates a directory with data and index files
+        String storagePath = basePath + "/" + managedLedgerName + "/";
+        Path mapFileDir = Path.of(storagePath + lh.getId() + "-" + uuid);
+        assertTrue(Files.exists(mapFileDir.resolve("data")));
+        assertTrue(Files.exists(mapFileDir.resolve("index")));
+
         offloader.deleteOffloaded(lh.getId(), uuid, map).get();
-        assertFalse(fileSystem.exists(new Path(createDataFilePath(storagePath, lh.getId(), uuid))));
-        assertFalse(fileSystem.exists(new Path(createIndexFilePath(storagePath, lh.getId(), uuid))));
-    }
-
-    private String createStoragePath(String managedLedgerName) {
-        return basePath == null ? managedLedgerName + "/" : basePath + "/" +  managedLedgerName + "/";
-    }
-
-    private String createIndexFilePath(String storagePath, long ledgerId, UUID uuid) {
-        return storagePath + ledgerId + "-" + uuid + "/index";
-    }
-
-    private String createDataFilePath(String storagePath, long ledgerId, UUID uuid) {
-        return storagePath + ledgerId + "-" + uuid + "/data";
+        assertFalse(Files.exists(mapFileDir));
     }
 }
