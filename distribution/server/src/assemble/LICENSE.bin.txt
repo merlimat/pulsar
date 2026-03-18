@@ -435,10 +435,8 @@ The Apache Software License, Version 2.0
  * Apache Thrift - org.apache.thrift-libthrift-0.14.2.jar
  * OkHttp3
      - com.squareup.okhttp3-logging-interceptor-5.3.1.jar
-     - com.squareup.okhttp3-okhttp-5.3.1.jar
      - com.squareup.okhttp3-okhttp-jvm-5.3.1.jar
  * Okio
-     - com.squareup.okio-okio-3.16.3.jar
      - com.squareup.okio-okio-jvm-3.16.3.jar
  * Javassist -- org.javassist-javassist-3.25.0-GA.jar
  * Kotlin Standard Lib
@@ -462,7 +460,7 @@ The Apache Software License, Version 2.0
     - io.grpc-grpc-rls-1.75.0.jar
     - io.grpc-grpc-servlet-1.75.0.jar
     - io.grpc-grpc-servlet-jakarta-1.75.0.jar
-    - io.grpc-grpc-util-1.60.0.jar
+    - io.grpc-grpc-util-1.75.0.jar
     - io.grpc-grpc-opentelemetry-1.75.0.jar
     - io.grpc-grpc-gcp-csm-observability-1.75.0.jar
     - io.grpc-grpc-inprocess-1.75.0.jar

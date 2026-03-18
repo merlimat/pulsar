@@ -1,0 +1,114 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// Include parent module's test resources (YAML config files)
+// This mirrors Maven's maven-antrun-plugin that copies pulsar-functions/src/test/resources/*.yml
+sourceSets {
+    test {
+        resources {
+            srcDir("${project.projectDir}/../src/test/resources")
+        }
+    }
+}
+
+dependencies {
+    api(project(":pulsar-functions:pulsar-functions-runtime"))
+    implementation(project(":pulsar-broker-common"))
+    implementation(project(":pulsar-opentelemetry"))
+    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-admin"))
+    implementation(project(":pulsar-functions:pulsar-functions-proto"))
+    implementation(project(":pulsar-functions:pulsar-functions-secrets"))
+    implementation(project(":pulsar-docs-tools")) {
+        exclude(group = "io.swagger")
+    }
+    implementation(project(":pulsar-package-management:pulsar-package-core"))
+
+    implementation(libs.commons.lang3)
+    implementation(libs.commons.io)
+    implementation(libs.guava)
+    implementation(libs.gson)
+    implementation(libs.picocli)
+    implementation(libs.jackson.core)
+    implementation(libs.jackson.databind)
+    implementation(libs.netty.common)
+    implementation(libs.byte.buddy)
+
+    implementation(libs.distributedlog.core) {
+        exclude(group = "net.jpountz.lz4", module = "lz4")
+    }
+    implementation(libs.bookkeeper.server)
+    implementation(libs.zookeeper)
+
+    implementation(libs.jersey.server)
+    implementation(libs.jersey.container.servlet)
+    implementation(libs.jersey.container.servlet.core)
+    implementation(libs.jersey.media.json.jackson)
+    implementation(libs.jersey.media.multipart)
+
+    implementation(libs.jetty.server)
+    implementation(libs.jetty.alpn.conscrypt.server)
+    implementation(libs.jetty.ee8.servlet)
+    implementation(libs.jetty.ee8.servlets)
+
+    implementation(libs.jakarta.activation.api)
+    implementation(libs.jakarta.ws.rs.api)
+
+    implementation(libs.simpleclient)
+    implementation(libs.simpleclient.hotspot)
+    implementation(libs.simpleclient.common)
+
+    compileOnly(libs.swagger.core) {
+        exclude(group = "com.fasterxml.jackson.core")
+        exclude(group = "com.fasterxml.jackson.dataformat")
+    }
+
+    testImplementation(libs.protobuf.java.util)
+    testImplementation(project(":pulsar-functions:pulsar-functions-api-examples"))
+}
+
+// NAR/JAR files needed by tests (mirrors Maven's maven-dependency-plugin config).
+// Use task path strings so we don't force cross-project configuration at config time.
+tasks.withType<Test> {
+    dependsOn(
+        ":pulsar-functions:pulsar-functions-api-examples:jar",
+        ":pulsar-functions:pulsar-functions-api-examples-builtin:nar",
+        ":pulsar-io:pulsar-io-data-generator:nar",
+        ":pulsar-io:pulsar-io-netty:nar",
+        ":pulsar-io:pulsar-io-cassandra:nar",
+    )
+    doFirst {
+        fun narPath(projectPath: String): String {
+            val p = rootProject.project(projectPath)
+            return p.tasks.named("nar").get().outputs.files.singleFile.absolutePath
+        }
+        fun jarPath(projectPath: String): String {
+            val p = rootProject.project(projectPath)
+            return p.tasks.named<Jar>("jar").get().archiveFile.get().asFile.absolutePath
+        }
+        val examplesJarPath = jarPath(":pulsar-functions:pulsar-functions-api-examples")
+        systemProperty("pulsar-functions-api-examples.jar.path", examplesJarPath)
+        systemProperty("pulsar-functions-api-examples.nar.path", narPath(":pulsar-functions:pulsar-functions-api-examples-builtin"))
+        systemProperty("pulsar-io-data-generator.nar.path", narPath(":pulsar-io:pulsar-io-data-generator"))
+        systemProperty("pulsar-io-netty.nar.path", narPath(":pulsar-io:pulsar-io-netty"))
+        systemProperty("pulsar-io-cassandra.nar.path", narPath(":pulsar-io:pulsar-io-cassandra"))
+        // A valid jar that is not a valid nar — used for invalid-nar tests
+        systemProperty("pulsar-io-invalid.nar.path", examplesJarPath)
+    }
+}
