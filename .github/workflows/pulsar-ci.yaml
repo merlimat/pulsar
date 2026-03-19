@@ -192,6 +192,10 @@ jobs:
           rat licenseMain licenseTest checkstyleMain checkstyleTest
           --no-configuration-cache
 
+      - name: Check binary licenses
+        run: |
+          src/check-binary-license.sh ./distribution/server/build/distributions/apache-pulsar-*-bin.tar.gz
+
       - name: Save build outputs for test jobs
         run: |
           # Tar up compiled classes, resources, and distribution archives so test jobs
@@ -694,6 +698,11 @@ jobs:
 
       - name: Build pulsar-test-latest-version Docker image
         run: ./gradlew -Pdocker :tests:latest-version-image:dockerBuild
+
+      - name: Check binary licenses
+        run: |
+          src/check-binary-license.sh ./distribution/server/build/distributions/apache-pulsar-*-bin.tar.gz
+          src/check-binary-license.sh ./distribution/shell/build/distributions/apache-pulsar-shell-*-bin.tar.gz
 
       - name: Save docker image to file
         run: |
