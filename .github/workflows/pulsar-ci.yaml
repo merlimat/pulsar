@@ -180,6 +180,7 @@ jobs:
         with:
           cache-read-only: false
           develocity-injection-enabled: false
+          add-job-summary: always
 
       - name: Build, check licenses and code style
         run: >-
@@ -305,6 +306,7 @@ jobs:
         with:
           cache-read-only: false
           develocity-injection-enabled: false
+          add-job-summary: always
 
       - name: Restore build outputs from build job
         uses: actions/download-artifact@v4
@@ -411,6 +413,7 @@ jobs:
         with:
           cache-read-only: false
           develocity-injection-enabled: false
+          add-job-summary: always
 
       - name: Build with Gradle
         run: ./gradlew assemble
@@ -449,6 +452,7 @@ jobs:
         with:
           cache-read-only: false
           develocity-injection-enabled: false
+          add-job-summary: always
 
       - name: Restore build outputs from build job
         uses: actions/download-artifact@v4
@@ -565,6 +569,7 @@ jobs:
         with:
           cache-read-only: false
           develocity-injection-enabled: false
+          add-job-summary: always
 
       - name: Restore build outputs from build job
         uses: actions/download-artifact@v4
@@ -687,6 +692,7 @@ jobs:
         with:
           cache-read-only: false
           develocity-injection-enabled: false
+          add-job-summary: always
 
       - name: Restore build outputs from build job
         uses: actions/download-artifact@v4
@@ -810,6 +816,7 @@ jobs:
         with:
           cache-read-only: false
           develocity-injection-enabled: false
+          add-job-summary: always
 
       - name: Restore build outputs from build job
         uses: actions/download-artifact@v4
@@ -926,6 +933,7 @@ jobs:
         with:
           cache-read-only: false
           develocity-injection-enabled: false
+          add-job-summary: always
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
