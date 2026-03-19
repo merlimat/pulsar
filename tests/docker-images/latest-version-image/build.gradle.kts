@@ -26,7 +26,7 @@ val pulsarVersion = project.version.toString()
 val dockerOrganization = findProperty("docker.organization") as String? ?: "apachepulsar"
 val dockerTag = findProperty("docker.tag") as String? ?: "latest"
 val dockerPlatforms = findProperty("docker.platforms") as String? ?: ""
-val golangImage = findProperty("docker.golang.image") as String? ?: "golang:1.23-alpine"
+val golangImage = findProperty("docker.golang.image") as String? ?: "golang:1.24-alpine"
 
 // Dependencies: pulsar-all image, java-test-functions jar, java-test-plugins jar, buildtools jar
 val pulsarAllDockerBuild = project(":docker:pulsar-all-docker-image").tasks.named("dockerBuild")
