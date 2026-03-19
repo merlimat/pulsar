@@ -1943,6 +1943,9 @@ public class PersistentTopicTest extends MockedBookKeeperTestCase {
         pulsarTestContext.getConfig().setManagedLedgerCursorBackloggedThreshold(backloggedThreshold);
 
         ManagedLedgerImpl ledger = (ManagedLedgerImpl) factory.open("cache_backlog_ledger");
+        // Disable cache eviction by expected read count so that checkBackloggedCursors
+        // actually deactivates cursors based on backlog threshold.
+        ledger.getConfig().setCacheEvictionByExpectedReadCount(false);
         PersistentTopic topic = new PersistentTopic(successTopicName, ledger, brokerService);
 
         // STEP1: prepare cursors
@@ -2372,7 +2375,7 @@ public class PersistentTopicTest extends MockedBookKeeperTestCase {
         Position lastPosition = PositionFactory.create(1, 0);
         when(ledgerMock.getLastConfirmedEntry()).thenReturn(lastPosition);
         when(ledgerMock.getLedgersInfo()).thenReturn(new java.util.TreeMap<>(Map.of(1L,
-                mock(org.apache.bookkeeper.mledger.proto.MLDataFormats.ManagedLedgerInfo.LedgerInfo.class))));
+                mock(org.apache.bookkeeper.mledger.proto.ManagedLedgerInfo.LedgerInfo.class))));
 
         // Mock the last entry to return a timestamp
         Entry entryMock = mock(Entry.class);
