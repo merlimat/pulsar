@@ -96,7 +96,8 @@ public class ThreadLeakDetectorListener extends BetweenTestClassesListenerAdapte
                     ThreadUtils.getAllThreads().stream()
                             .filter(thread -> !shouldSkipThread(thread))
                             .map(ThreadKey::of)
-                            .collect(Collectors.toCollection(LinkedHashSet::new)));
+                            .collect(Collectors.<ThreadKey, Set<ThreadKey>>toCollection(
+                                    LinkedHashSet::new)));
         }
     }
 
