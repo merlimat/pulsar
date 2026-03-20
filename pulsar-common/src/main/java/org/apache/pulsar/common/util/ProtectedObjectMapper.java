@@ -67,6 +67,7 @@ import java.util.TimeZone;
  * those classes are immutable.
  */
 final class ProtectedObjectMapper extends ObjectMapper {
+    private static final long serialVersionUID = 1L;
 
     private final ObjectMapper src;
 
