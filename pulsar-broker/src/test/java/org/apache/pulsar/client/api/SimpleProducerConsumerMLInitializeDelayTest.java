@@ -18,7 +18,6 @@
  */
 package org.apache.pulsar.client.api;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

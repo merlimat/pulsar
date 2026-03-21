@@ -28,7 +28,6 @@ import lombok.AllArgsConstructor;
 import lombok.Cleanup;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pulsar.broker.BrokerTestUtil;
 import org.apache.pulsar.broker.service.ServerCnx;
 import org.apache.pulsar.broker.service.SharedPulsarBaseTest;
 import org.apache.pulsar.broker.service.SharedPulsarCluster;
