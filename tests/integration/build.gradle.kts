@@ -55,7 +55,7 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.docker.java.core)
     testImplementation(libs.bcpkix.jdk18on)
-    testImplementation(project(":pulsar-io:pulsar-io-jdbc:postgres"))
+    testImplementation(project(":pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-postgres"))
     testImplementation(libs.jackson.databind)
     testImplementation(libs.jackson.dataformat.yaml)
     testImplementation(libs.opensearch.rest.high.level.client)

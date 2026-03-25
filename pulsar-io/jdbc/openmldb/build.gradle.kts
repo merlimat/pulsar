@@ -21,7 +21,7 @@ plugins {
     alias(libs.plugins.nar)
 }
 dependencies {
-    implementation(project(":pulsar-io:pulsar-io-jdbc:core"))
+    implementation(project(":pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-core"))
     runtimeOnly(libs.openmldb.jdbc)
     runtimeOnly(libs.openmldb.native)
 }

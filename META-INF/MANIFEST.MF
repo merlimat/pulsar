@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Implementation-Title: postgres
+Implementation-Version: 4.3.0-SNAPSHOT
+Nar-Id: pulsar-io-debezium-postgres
+Nar-Group: org.apache.pulsar
+Nar-Version: 4.3.0-SNAPSHOT
+Clone-During-Instance-Class-Loading: false
+Created-By: Pulsar NAR Gradle Plugin
+Build-Timestamp: 2026-03-25T05:43:16Z
+Build-Tag: vx.y.z.m-4976-g21932e86e95
+

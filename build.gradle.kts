@@ -260,11 +260,13 @@ subprojects {
         }
     }
 
-    // Set archive names to match Maven artifactId for nested modules
-    // e.g. :pulsar-io:pulsar-io-jdbc:postgres -> pulsar-io-jdbc-postgres
-    // e.g. :pulsar-io:pulsar-io-debezium:mysql -> pulsar-io-debezium-mysql
+    // Set archive names to match Maven artifactId for nested modules.
+    // Skip if the project name is already qualified (starts with parent name),
+    // which happens for JDBC and Debezium sub-modules that use qualified names
+    // in settings.gradle.kts to avoid Gradle name clashes.
     val parentProject = project.parent
-    if (parentProject != null && parentProject != rootProject && parentProject.parent != rootProject) {
+    if (parentProject != null && parentProject != rootProject && parentProject.parent != rootProject
+            && !project.name.startsWith(parentProject.name)) {
         val qualifiedName = "${parentProject.name}-${project.name}"
         the<BasePluginExtension>().archivesName.set(qualifiedName)
         // Also set NAR plugin's narId if NAR plugin is applied

@@ -22,7 +22,7 @@ plugins {
 }
 dependencies {
     implementation(project(":pulsar-io:pulsar-io-core"))
-    implementation(project(":pulsar-io:pulsar-io-debezium:core"))
+    implementation(project(":pulsar-io:pulsar-io-debezium:pulsar-io-debezium-core"))
     implementation(libs.debezium.connector.postgres)
     runtimeOnly(libs.postgresql.jdbc)
 }
