@@ -63,6 +63,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
+        with:
+          develocity-injection-enabled: true
+          develocity-url: https://develocity.apache.org
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL

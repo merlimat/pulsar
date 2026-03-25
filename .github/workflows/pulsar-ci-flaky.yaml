@@ -206,7 +206,8 @@ jobs:
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
         with:
           cache-read-only: false
-          develocity-injection-enabled: false
+          develocity-injection-enabled: true
+          develocity-url: https://develocity.apache.org
 
       - name: Run unit test group BROKER_FLAKY
         run: |

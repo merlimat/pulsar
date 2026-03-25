@@ -24,24 +24,6 @@ pluginManagement {
     }
 }
 
-plugins {
-    // Version must be hardcoded here — settings.gradle.kts is evaluated before
-    // the version catalog. Keep in sync with libs.plugins.develocity.
-    id("com.gradle.develocity") version "4.0.2"
-}
-
-develocity {
-    projectId = "pulsar"
-    server = "https://develocity.apache.org"
-    buildScan {
-        uploadInBackground = System.getenv("GITHUB_ACTIONS") == null
-        publishing.onlyIf { it.isAuthenticated }
-        obfuscation {
-            ipAddresses { it.map { _ -> "0.0.0.0" } }
-        }
-    }
-}
-
 dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
     repositories {
