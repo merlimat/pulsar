@@ -74,7 +74,7 @@ jobs:
 
       - name: Setup Gradle
         if: ${{ github.event_name == 'schedule' || steps.changes.outputs.build_files == 'true' }}
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
 
       - name: Download dependencies
         if: ${{ github.event_name == 'schedule' || steps.changes.outputs.build_files == 'true' }}
