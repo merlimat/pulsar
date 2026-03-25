@@ -247,7 +247,7 @@ val serverDistTar by tasks.registering(Tar::class) {
             val newName = when (id) {
                 is org.gradle.api.artifacts.component.ModuleComponentIdentifier -> {
                     // Include classifier from the file name if present
-                    // e.g. netty-transport-native-epoll-4.1.131.Final-linux-x86_64.jar
+                    // e.g. netty-transport-native-epoll-x.y.z.Final-linux-x86_64.jar
                     val expectedBase = "${id.module}-${id.version}"
                     val nameWithoutExt = file.nameWithoutExtension
                     val classifier = if (nameWithoutExt.startsWith(expectedBase) && nameWithoutExt.length > expectedBase.length) {

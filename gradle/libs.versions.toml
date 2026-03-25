@@ -32,7 +32,7 @@ checkstyle = "10.14.2"
 # Major frameworks
 bookkeeper = "4.17.3"
 zookeeper = "3.9.5"
-netty = "4.1.131.Final"
+netty = "4.1.132.Final"
 netty-iouring = "0.0.26.Final"
 jetty = "12.1.5"
 jersey = "2.42"
