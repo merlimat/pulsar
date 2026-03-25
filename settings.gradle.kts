@@ -186,7 +186,12 @@ include("pulsar-client-auth-sasl")
 // Tier 9 — shaded utility modules (in core-modules)
 include("pulsar-client-dependencies-minimized")
 
-// Tier 10 — distribution (server is in core-modules)
+// Tier 10 — shaded client modules (in core-modules)
+include("pulsar-client-shaded")
+include("pulsar-client-all")
+include("pulsar-client-admin-shaded")
+
+// Tier 11 — distribution (server is in core-modules)
 include("distribution:pulsar-server-distribution")
 project(":distribution:pulsar-server-distribution").projectDir = file("distribution/server")
 
@@ -294,11 +299,6 @@ if (!settings.extra.has("coreModules")) {
     // Athenz auth
     include("pulsar-broker-auth-athenz")
     include("pulsar-client-auth-athenz")
-
-    // Shaded client modules
-    include("pulsar-client-shaded")
-    include("pulsar-client-all")
-    include("pulsar-client-admin-shaded")
 
     // Distribution — extra (shell, IO, offloaders)
     include("distribution:pulsar-shell-distribution")

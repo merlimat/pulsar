@@ -46,7 +46,6 @@ dependencies {
         api(project(":pulsar-client-admin-original"))
 
         // Client auth
-        api(project(":pulsar-client-auth-athenz"))
         api(project(":pulsar-client-auth-sasl"))
         api(project(":pulsar-client-messagecrypto-bc"))
 
@@ -64,7 +63,6 @@ dependencies {
         // Broker
         api(project(":pulsar-broker"))
         api(project(":pulsar-broker-common"))
-        api(project(":pulsar-broker-auth-athenz"))
         api(project(":pulsar-broker-auth-oidc"))
         api(project(":pulsar-broker-auth-sasl"))
 
@@ -90,7 +88,6 @@ dependencies {
         api(project(":pulsar-functions:pulsar-functions-runtime"))
         api(project(":pulsar-functions:pulsar-functions-worker"))
         api(project(":pulsar-functions:pulsar-functions-local-runner-original"))
-        api(project(":pulsar-functions:pulsar-functions-local-runner-shaded"))
         api(project(":pulsar-functions:pulsar-functions-proto"))
         api(project(":pulsar-functions:pulsar-functions-secrets"))
         api(project(":pulsar-functions:pulsar-functions-utils"))
@@ -99,8 +96,11 @@ dependencies {
         api(project(":bouncy-castle:bouncy-castle-bc"))
         api(project(":bouncy-castle:bcfips"))
 
-        // Tiered storage
-        api(project(":tiered-storage:tiered-storage-jcloud"))
-        api(project(":tiered-storage:tiered-storage-file-system"))
+        // Modules only available in full build (not -PcoreModules)
+        findProject(":pulsar-client-auth-athenz")?.let { api(it) }
+        findProject(":pulsar-broker-auth-athenz")?.let { api(it) }
+        findProject(":pulsar-functions:pulsar-functions-local-runner-shaded")?.let { api(it) }
+        findProject(":tiered-storage:tiered-storage-jcloud")?.let { api(it) }
+        findProject(":tiered-storage:tiered-storage-file-system")?.let { api(it) }
     }
 }
