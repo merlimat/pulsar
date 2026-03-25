@@ -28,6 +28,10 @@ val pulsarVersion = project.version.toString()
 val offloaderNars by configurations.creating {
     isCanBeResolved = true
     isCanBeConsumed = false
+    isTransitive = false
+    attributes {
+        attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "nar")
+    }
 }
 
 dependencies {
@@ -52,13 +56,8 @@ val offloaderDistTar by tasks.registering(Tar::class) {
         into(baseDir)
     }
 
-    // Select only NAR artifacts from the offloader projects
-    val narFiles = offloaderNars.incoming.artifactView {
-        attributes {
-            attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "nar")
-        }
-    }.files
-    from(narFiles) {
+    // NAR artifacts resolved automatically via the offloaderNars configuration
+    from(offloaderNars) {
         into("${baseDir}/offloaders")
     }
 }

@@ -30,6 +30,10 @@ val pulsarVersion = project.version.toString()
 val connectorNars by configurations.creating {
     isCanBeResolved = true
     isCanBeConsumed = false
+    isTransitive = false
+    attributes {
+        attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "nar")
+    }
 }
 
 dependencies {
@@ -78,13 +82,8 @@ val ioDistDir by tasks.registering(Sync::class) {
         into(".")
     }
 
-    // Select only NAR artifacts from the connector projects
-    val narFiles = connectorNars.incoming.artifactView {
-        attributes {
-            attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "nar")
-        }
-    }.files
-    from(narFiles) {
+    // NAR artifacts resolved automatically via the connectorNars configuration
+    from(connectorNars) {
         into(".")
     }
 }
