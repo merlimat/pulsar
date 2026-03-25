@@ -69,14 +69,14 @@ function fail() {
   exit 1
 }
 
-# copies test reports into test-reports and surefire-reports directory
+# copies test reports into test-reports and test-results directories
 # subsequent runs of tests might overwrite previous reports. This ensures that all test runs get reported.
 function ci_move_test_reports() {
   (
     if [ -n "${GITHUB_WORKSPACE}" ]; then
       cd "${GITHUB_WORKSPACE}"
       mkdir -p test-reports
-      mkdir -p surefire-reports
+      mkdir -p test-results
     fi
     # aggregate all junit xml reports in a single directory
     if [ -d test-reports ]; then
@@ -90,19 +90,19 @@ function ci_move_test_reports() {
         done 2>/dev/null
       ) || true
     fi
-    # aggregate all surefire-reports in a single directory
-    if [ -d surefire-reports ]; then
+    # aggregate all test-results in a single directory
+    if [ -d test-results ]; then
       (
         # Gradle test-results directories
-        find . -type d -path '*/build/test-results/test' -not -path './surefire-reports/*' |
+        find . -type d -path '*/build/test-results/test' -not -path './test-results/*' |
           while IFS=$'\n' read -r directory; do
             echo "Copying Gradle reports from $directory"
-            target_dir="surefire-reports/${directory}"
+            target_dir="test-results/${directory}"
             if [ -d "$target_dir" ]; then
               ( command ls -vr1d "${target_dir}~"* 2> /dev/null | awk '{print "mv "$0" "substr($0,0,length-1)substr($0,length,1)+1}' | sh ) || true
               mv "$target_dir" "${target_dir}~1"
             fi
-            cp -R --parents "$directory" surefire-reports
+            cp -R --parents "$directory" test-results
             rm -rf "$directory"
           done
       )
