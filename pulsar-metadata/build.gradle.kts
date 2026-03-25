@@ -35,7 +35,7 @@ dependencies {
     testImplementation(project(":buildtools"))
     testImplementation(project(":testmocks"))
     testImplementation(project(path = ":managed-ledger", configuration = "testJar"))
-    testImplementation(files(rootProject.tasks.named("filteredBkServerTestJar").map { (it as Jar).archiveFile }))
+    testImplementation(project(path = ":", configuration = "filteredBkServerTestJar"))
     testImplementation(libs.bookkeeper.common) { artifact { classifier = "tests" } }
     testImplementation(libs.zookeeper) { artifact { classifier = "tests" } }
     testImplementation(libs.oxia.testcontainers)

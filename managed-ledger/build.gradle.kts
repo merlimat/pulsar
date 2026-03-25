@@ -42,5 +42,5 @@ dependencies {
     testImplementation(libs.opentelemetry.sdk.testing)
     testImplementation(libs.opentelemetry.sdk.extension.autoconfigure)
     testImplementation(libs.zookeeper) { artifact { classifier = "tests" } }
-    testImplementation(files(rootProject.tasks.named("filteredBkServerTestJar").map { (it as Jar).archiveFile }))
+    testImplementation(project(path = ":", configuration = "filteredBkServerTestJar"))
 }

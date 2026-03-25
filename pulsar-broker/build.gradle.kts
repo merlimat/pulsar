@@ -108,7 +108,7 @@ dependencies {
     testImplementation(project(path = ":managed-ledger", configuration = "testJar"))
     testImplementation(project(path = ":pulsar-metadata", configuration = "testJar"))
     testImplementation(project(path = ":pulsar-package-management:pulsar-package-core", configuration = "testJar"))
-    testImplementation(files(rootProject.tasks.named("filteredBkServerTestJar").map { (it as Jar).archiveFile }))
+    testImplementation(project(path = ":", configuration = "filteredBkServerTestJar"))
     testImplementation(libs.bookkeeper.common) { artifact { classifier = "tests" } }
     testImplementation(libs.zookeeper) { artifact { classifier = "tests" } }
     testImplementation(project(":pulsar-functions:pulsar-functions-local-runner-original"))

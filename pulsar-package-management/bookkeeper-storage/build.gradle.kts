@@ -24,9 +24,7 @@ dependencies {
     testImplementation(project(":managed-ledger"))
     testImplementation(project(":testmocks"))
     testImplementation(libs.bookkeeper.server)
-    testImplementation(files(rootProject.tasks.named("filteredBkServerTestJar").map {
-        (it as Jar).archiveFile
-    }))
+    testImplementation(project(path = ":", configuration = "filteredBkServerTestJar"))
     testImplementation(libs.zookeeper) { artifact { classifier = "tests" } }
     testRuntimeOnly(libs.dropwizardmetrics.core)
     testRuntimeOnly(libs.snappy.java)
