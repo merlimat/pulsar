@@ -182,6 +182,8 @@ jobs:
           add-job-summary: always
 
       - name: Build, check licenses and code style
+        # --no-configuration-cache: Shadow plugin's filesMatching { filter { } } lambdas
+        # capture Gradle script references that can't be serialized by the configuration cache.
         run: >-
           ./gradlew assemble
           -x :pulsar-client-shaded:shadowJar
