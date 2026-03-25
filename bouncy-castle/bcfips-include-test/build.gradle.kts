@@ -34,6 +34,6 @@ dependencies {
     testImplementation(project(":pulsar-common"))
     testImplementation(project(":pulsar-broker"))
     testImplementation(project(path = ":pulsar-broker", configuration = "testJar"))
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-original"))
     testImplementation(libs.guava)
 }

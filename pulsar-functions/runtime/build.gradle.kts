@@ -47,7 +47,7 @@ dependencies {
     implementation(libs.protobuf.java.util)
     implementation(libs.guava)
     implementation(project(":pulsar-functions:pulsar-functions-proto"))
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
     implementation(libs.grpc.all)
     implementation(libs.grpc.stub)
     implementation(libs.jetty.util)

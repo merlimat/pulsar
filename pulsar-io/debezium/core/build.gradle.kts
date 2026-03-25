@@ -50,6 +50,6 @@ dependencies {
     testImplementation(project(":pulsar-broker"))
     testImplementation(project(path = ":pulsar-broker", configuration = "testJar"))
     testImplementation(project(":testmocks"))
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-original"))
     testImplementation(libs.debezium.connector.mysql)
 }

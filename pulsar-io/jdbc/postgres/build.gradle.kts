@@ -25,5 +25,5 @@ dependencies {
     runtimeOnly(libs.postgresql.jdbc)
     implementation(libs.avro)
 
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-original"))
 }

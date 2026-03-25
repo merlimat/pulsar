@@ -28,6 +28,6 @@ dependencies {
     implementation(libs.avro)
 
     testImplementation(project(":pulsar-common"))
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-original"))
     testImplementation(libs.wiremock)
 }

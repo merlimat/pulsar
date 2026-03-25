@@ -22,7 +22,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
 }
 
 tasks.shadowJar {

@@ -49,7 +49,7 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://packages.confluent.io/maven/")
             content {
-                includeGroupByRegex("io\\.confluent\\..*")
+                includeGroupByRegex("io\\.confluent(\\..*)?")
             }
         }
     }
@@ -82,13 +82,17 @@ include("pulsar-common")
 
 // Tier 3
 include("pulsar-cli-utils")
-include("pulsar-client")
+// Maven artifactId is "pulsar-client-original" (directory is "pulsar-client")
+include("pulsar-client-original")
+project(":pulsar-client-original").projectDir = file("pulsar-client")
 include("pulsar-metadata")
 include("pulsar-opentelemetry")
 include("pulsar-client-messagecrypto-bc")
 
 // Tier 4
-include("pulsar-client-admin")
+// Maven artifactId is "pulsar-client-admin-original" (directory is "pulsar-client-admin")
+include("pulsar-client-admin-original")
+project(":pulsar-client-admin-original").projectDir = file("pulsar-client-admin")
 include("managed-ledger")
 include("pulsar-broker-common")
 
@@ -114,8 +118,9 @@ project(":pulsar-functions:pulsar-functions-runtime").projectDir = file("pulsar-
 include("pulsar-functions:pulsar-functions-worker")
 project(":pulsar-functions:pulsar-functions-worker").projectDir = file("pulsar-functions/worker")
 
-include("pulsar-functions:pulsar-functions-local-runner")
-project(":pulsar-functions:pulsar-functions-local-runner").projectDir = file("pulsar-functions/localrun")
+// Maven artifactId is "pulsar-functions-local-runner-original" (directory is "pulsar-functions/localrun")
+include("pulsar-functions:pulsar-functions-local-runner-original")
+project(":pulsar-functions:pulsar-functions-local-runner-original").projectDir = file("pulsar-functions/localrun")
 
 include("pulsar-functions:pulsar-functions-api-examples")
 project(":pulsar-functions:pulsar-functions-api-examples").projectDir = file("pulsar-functions/java-examples")

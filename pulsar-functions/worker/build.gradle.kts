@@ -31,8 +31,8 @@ dependencies {
     api(project(":pulsar-functions:pulsar-functions-runtime"))
     implementation(project(":pulsar-broker-common"))
     implementation(project(":pulsar-opentelemetry"))
-    implementation(project(":pulsar-client"))
-    implementation(project(":pulsar-client-admin"))
+    implementation(project(":pulsar-client-original"))
+    implementation(project(":pulsar-client-admin-original"))
     implementation(project(":pulsar-functions:pulsar-functions-proto"))
     implementation(project(":pulsar-functions:pulsar-functions-secrets"))
     implementation(project(":pulsar-docs-tools")) {

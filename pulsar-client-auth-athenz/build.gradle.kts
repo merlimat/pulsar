@@ -19,7 +19,7 @@
 
 dependencies {
     implementation(project(":pulsar-client-api"))
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
     implementation(libs.athenz.zts.java.client)
     implementation(libs.athenz.cert.refresher)
     implementation(libs.athenz.auth.core)

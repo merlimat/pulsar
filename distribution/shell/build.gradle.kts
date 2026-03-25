@@ -96,8 +96,6 @@ val rootDir = rootProject.projectDir
 val shellDistTar by tasks.registering(Tar::class) {
     val baseDir = "apache-pulsar-shell-${pulsarVersion}"
     val projectNameMapping = mapOf(
-        "pulsar-client" to "pulsar-client-original",
-        "pulsar-client-admin" to "pulsar-client-admin-original",
         "bc" to "bouncy-castle-bc",
     )
     val renameMap = distLib.incoming.artifacts.resolvedArtifacts.map { artifacts ->
@@ -186,8 +184,6 @@ val shellDistTar by tasks.registering(Tar::class) {
 val shellDistZip by tasks.registering(Zip::class) {
     val baseDir = "apache-pulsar-shell-${pulsarVersion}"
     val projectNameMapping = mapOf(
-        "pulsar-client" to "pulsar-client-original",
-        "pulsar-client-admin" to "pulsar-client-admin-original",
         "bc" to "bouncy-castle-bc",
     )
     val renameMap = distLib.incoming.artifacts.resolvedArtifacts.map { artifacts ->

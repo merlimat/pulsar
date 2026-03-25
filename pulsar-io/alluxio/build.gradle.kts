@@ -26,6 +26,6 @@ dependencies {
     implementation(libs.jackson.dataformat.yaml)
     implementation(libs.guava)
 
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-original"))
     testImplementation("org.alluxio:alluxio-minicluster:2.9.3")
 }

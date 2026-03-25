@@ -47,7 +47,7 @@ dependencies {
     implementation(libs.kafka.connect.json)
     implementation(libs.kafka.connect.api)
     implementation(libs.kafka.connect.transforms)
-    compileOnly(project(":pulsar-client")) {
+    compileOnly(project(":pulsar-client-original")) {
         exclude(group = "org.apache.bookkeeper")
     }
     implementation(libs.netty.buffer)

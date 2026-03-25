@@ -22,7 +22,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":pulsar-client-admin")) {
+    implementation(project(":pulsar-client-admin-original")) {
         exclude(group = "it.unimi.dsi", module = "fastutil")
     }
     implementation(project(":pulsar-client-dependencies-minimized"))
@@ -37,8 +37,8 @@ tasks.shadowJar {
     mergeServiceFiles()
 
     dependencies {
-        include(project(":pulsar-client"))
-        include(project(":pulsar-client-admin"))
+        include(project(":pulsar-client-original"))
+        include(project(":pulsar-client-admin-original"))
         include(project(":pulsar-common"))
         include(project(":pulsar-client-messagecrypto-bc"))
         include(project(":pulsar-client-dependencies-minimized"))

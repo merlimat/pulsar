@@ -37,7 +37,7 @@ dependencies {
 
     testImplementation(libs.commons.io)
     testImplementation(libs.kerby.simplekdc)
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-original"))
     testImplementation(project(":pulsar-proxy"))
     testImplementation(project(":pulsar-client-auth-sasl"))
     testImplementation(project(path = ":pulsar-broker", configuration = "testJar"))

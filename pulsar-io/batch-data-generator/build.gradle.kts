@@ -27,5 +27,5 @@ dependencies {
     implementation(libs.jfairy)
     implementation(libs.avro)
 
-    testImplementation(project(":pulsar-functions:pulsar-functions-local-runner"))
+    testImplementation(project(":pulsar-functions:pulsar-functions-local-runner-original"))
 }

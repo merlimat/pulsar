@@ -30,7 +30,7 @@ dependencies {
     implementation(libs.opensearch.rest.high.level.client)
     implementation(libs.elasticsearch.java)
 
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-original"))
     testImplementation(libs.avro)
     testImplementation(libs.awaitility)
     testImplementation(libs.testcontainers.elasticsearch)

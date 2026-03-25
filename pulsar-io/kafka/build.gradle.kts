@@ -42,7 +42,7 @@ dependencies {
     implementation(project(":pulsar-io:pulsar-io-common"))
     implementation(project(":pulsar-io:pulsar-io-core"))
     implementation(project(":pulsar-common"))
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
     narExtraDeps(project(":pulsar-common"))
     implementation(libs.jackson.databind)
     implementation(libs.jackson.dataformat.yaml)

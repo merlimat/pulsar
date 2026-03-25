@@ -18,7 +18,7 @@
  */
 
 dependencies {
-    compileOnly(project(":pulsar-client"))
+    compileOnly(project(":pulsar-client-original"))
     implementation(project(":pulsar-common"))
     implementation(libs.slf4j.api)
     implementation(libs.guava)

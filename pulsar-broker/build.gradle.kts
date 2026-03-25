@@ -25,8 +25,8 @@ plugins {
 dependencies {
     api(project(":managed-ledger"))
     api(project(":pulsar-broker-common"))
-    implementation(project(":pulsar-client"))
-    implementation(project(":pulsar-client-admin"))
+    implementation(project(":pulsar-client-original"))
+    implementation(project(":pulsar-client-admin-original"))
     implementation(project(":pulsar-websocket"))
     implementation(project(":pulsar-cli-utils"))
     implementation(project(":pulsar-transaction:pulsar-transaction-common"))
@@ -111,7 +111,7 @@ dependencies {
     testImplementation(files(rootProject.tasks.named("filteredBkServerTestJar").map { (it as Jar).archiveFile }))
     testImplementation(libs.bookkeeper.common) { artifact { classifier = "tests" } }
     testImplementation(libs.zookeeper) { artifact { classifier = "tests" } }
-    testImplementation(project(":pulsar-functions:pulsar-functions-local-runner"))
+    testImplementation(project(":pulsar-functions:pulsar-functions-local-runner-original"))
     testImplementation(project(":pulsar-functions:pulsar-functions-api-examples"))
     testImplementation(project(":pulsar-io:pulsar-io-batch-discovery-triggerers"))
     testImplementation(libs.zt.zip)

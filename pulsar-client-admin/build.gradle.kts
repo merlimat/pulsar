@@ -19,7 +19,7 @@
 
 dependencies {
     api(project(":pulsar-client-admin-api"))
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
     implementation(project(":pulsar-common"))
     implementation(project(":pulsar-package-management:pulsar-package-core"))
     implementation(libs.jersey.client)

@@ -91,7 +91,7 @@ dependencies {
         exclude(group = "io.grpc")
         exclude(group = "org.bouncycastle")
     }
-    distLib(project(":pulsar-functions:pulsar-functions-local-runner")) {
+    distLib(project(":pulsar-functions:pulsar-functions-local-runner-original")) {
         exclude(group = "io.grpc")
     }
 
@@ -175,11 +175,7 @@ val rootDir = rootProject.projectDir
 
 val serverDistTar by tasks.registering(Tar::class) {
     // Map of Gradle project names to Maven artifact names for renaming.
-    // Only exact matches are applied (the name after the key must start with a version digit).
     val projectNameMapping = mapOf(
-        "pulsar-client" to "pulsar-client-original",
-        "pulsar-client-admin" to "pulsar-client-admin-original",
-        "pulsar-functions-local-runner" to "pulsar-functions-local-runner-original",
         "bc" to "bouncy-castle-bc",
     )
     archiveBaseName.set("apache-pulsar")

@@ -25,7 +25,7 @@ dependencies {
     runtimeOnly(libs.sqlite.jdbc)
 
     testImplementation(project(":pulsar-functions:pulsar-functions-instance"))
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-original"))
     testImplementation(libs.guava)
     testImplementation(libs.avro)
     testImplementation(libs.commons.lang3)

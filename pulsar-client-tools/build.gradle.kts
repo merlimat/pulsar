@@ -20,8 +20,8 @@
 dependencies {
     api(project(":pulsar-client-tools-api"))
     implementation(project(":pulsar-client-admin-api"))
-    implementation(project(":pulsar-client-admin"))
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-admin-original"))
+    implementation(project(":pulsar-client-original"))
     implementation(project(":pulsar-common"))
     implementation(project(":pulsar-client-messagecrypto-bc"))
     implementation(project(":pulsar-cli-utils"))

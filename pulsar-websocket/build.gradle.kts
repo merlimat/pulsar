@@ -20,7 +20,7 @@
 dependencies {
     api(project(":pulsar-broker-common"))
     implementation(project(":pulsar-common"))
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
     implementation(project(":pulsar-docs-tools"))
     implementation(libs.commons.lang3)
     implementation(libs.jersey.container.servlet.core)

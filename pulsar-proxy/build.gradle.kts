@@ -19,7 +19,7 @@
 
 dependencies {
     api(project(":pulsar-broker-common"))
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
     implementation(project(":pulsar-common"))
     implementation(project(":pulsar-opentelemetry"))
     implementation(project(":pulsar-docs-tools"))
@@ -61,7 +61,7 @@ dependencies {
 
     testImplementation(project(":pulsar-broker"))
     testImplementation(project(path = ":pulsar-broker", configuration = "testJar"))
-    testImplementation(project(":pulsar-client-admin"))
+    testImplementation(project(":pulsar-client-admin-original"))
     testImplementation(project(":testmocks"))
     testImplementation(libs.asynchttpclient)
     testImplementation(libs.avro)

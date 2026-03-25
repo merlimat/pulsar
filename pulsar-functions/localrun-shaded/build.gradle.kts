@@ -22,7 +22,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":pulsar-functions:pulsar-functions-local-runner"))
+    implementation(project(":pulsar-functions:pulsar-functions-local-runner-original"))
 }
 
 val shadePrefix = "org.apache.pulsar.functions.runtime.shaded"
@@ -34,10 +34,10 @@ tasks.shadowJar {
 
     dependencies {
         include(dependency("org.apache.pulsar:.*"))
-        include(project(":pulsar-functions:pulsar-functions-local-runner"))
-        include(project(":pulsar-client"))
+        include(project(":pulsar-functions:pulsar-functions-local-runner-original"))
+        include(project(":pulsar-client-original"))
         include(project(":pulsar-common"))
-        include(project(":pulsar-client-admin"))
+        include(project(":pulsar-client-admin-original"))
         include(dependency("org.apache.bookkeeper:.*"))
         include(dependency("commons-.*:.*"))
         include(dependency("org.apache.commons:.*"))

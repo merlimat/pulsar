@@ -26,7 +26,7 @@ dependencies {
     implementation(libs.commons.lang3)
     implementation(libs.gson)
     implementation(libs.jackson.databind)
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
     implementation(libs.protobuf.java)
     implementation(libs.protobuf.java.util)
     implementation(libs.byte.buddy)

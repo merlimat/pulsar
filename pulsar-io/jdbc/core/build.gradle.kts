@@ -20,7 +20,7 @@
 dependencies {
     api(project(":pulsar-io:pulsar-io-common"))
     api(project(":pulsar-io:pulsar-io-core"))
-    api(project(":pulsar-client"))
+    api(project(":pulsar-client-original"))
     implementation(libs.avro)
     implementation(libs.jackson.databind)
     implementation(libs.guava)

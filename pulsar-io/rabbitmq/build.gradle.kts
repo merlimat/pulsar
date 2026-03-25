@@ -24,7 +24,7 @@ dependencies {
     implementation(project(":pulsar-io:pulsar-io-common"))
     implementation(project(":pulsar-io:pulsar-io-core"))
     implementation(project(":pulsar-functions:pulsar-functions-instance"))
-    implementation(project(":pulsar-client"))
+    implementation(project(":pulsar-client-original"))
     implementation(libs.jackson.databind)
     implementation(libs.jackson.dataformat.yaml)
     implementation(libs.guava)

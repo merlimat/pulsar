@@ -28,8 +28,8 @@ dependencies {
     testImplementation(libs.awaitility)
     testImplementation(libs.jackson.databind)
     testImplementation(libs.guava)
-    testImplementation(project(":pulsar-client-admin"))
-    testImplementation(project(":pulsar-client"))
+    testImplementation(project(":pulsar-client-admin-original"))
+    testImplementation(project(":pulsar-client-original"))
     testImplementation(project(":pulsar-functions:pulsar-functions-api"))
     testImplementation(libs.picocli)
 }
