@@ -67,6 +67,8 @@ val distLib by configurations.creating {
     exclude(group = "org.apache.zookeeper", module = "zookeeper")
     // Android annotations not in server dist
     exclude(group = "com.google.android", module = "annotations")
+    // Annotation libraries not needed at runtime
+    exclude(group = "org.codehaus.mojo", module = "animal-sniffer-annotations")
 }
 
 dependencies {
@@ -226,11 +228,9 @@ val serverDistTar by tasks.registering(Tar::class) {
     // Include groupId in jar names to identify provenance (matches Maven assembly outputFileNameMapping)
     from(distLib) {
         into("${baseDir}/lib")
-        // Exclude items that go elsewhere or shouldn't be in lib/
+        // These JARs go into other directories (instances/, examples/), not lib/
         exclude("**/pulsar-functions-runtime-all-*.jar")
         exclude("**/pulsar-functions-api-examples-*.jar")
-        // Exclude annotation libraries
-        exclude("**/animal-sniffer-annotations-*.jar")
         // Exclude .nar files (BookKeeper NAR artifacts — we add .jar variants explicitly)
         exclude("**/*.nar")
         // Exclude the non-classified netty-transport-native-epoll jar
