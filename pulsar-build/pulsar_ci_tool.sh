@@ -252,13 +252,13 @@ ci_report_netty_leaks() {
       echo "Details:"
       cat $temp_file
     } | tee $NETTY_LEAK_DUMP_DIR/leak_report.txt
-    touch build/netty_leaks_found
+    touch pulsar-build/netty_leaks_found
     if [[ "$NETTY_LEAK_DETECTION" == "fail_on_leak" ]]; then
       exit 1
     fi
   else
     echo "No netty leaks found."
-    touch build/netty_leaks_not_found
+    touch pulsar-build/netty_leaks_not_found
   fi
   rm $temp_file
 }
