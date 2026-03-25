@@ -219,7 +219,6 @@ subprojects {
             "pulsar-common",
             "pulsar-config-validation",
             "bouncy-castle-bc",
-            "bc",
             "pulsar-functions-api",
             "pulsar-functions-instance",
             "pulsar-functions-proto",

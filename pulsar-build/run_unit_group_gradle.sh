@@ -101,7 +101,7 @@ function test_group_broker_client_impl() {
 }
 
 function test_group_client() {
-  gradle_test :pulsar-client:test
+  gradle_test :pulsar-client-original:test
 }
 
 function test_group_metadata() {
@@ -133,7 +133,7 @@ function test_group_other() {
   gradle_test \
     --exclude-task :pulsar-broker:test \
     --exclude-task :pulsar-proxy:test \
-    --exclude-task :pulsar-client:test \
+    --exclude-task :pulsar-client-original:test \
     --exclude-task :pulsar-metadata:test \
     -x :pulsar-io:pulsar-io-core:test \
     -x :pulsar-io:pulsar-io-common:test \
@@ -213,7 +213,7 @@ function test_group_protobufv4() {
   # Rebuild and test with protobuf v4 (overriding the default v3 version)
   gradle_test \
     -PprotobufVersion=4.31.1 \
-    :pulsar-client:test \
+    :pulsar-client-original:test \
     --tests "org.apache.pulsar.client.api.ProtobufSchemaApiSignatureTest" \
     --tests "org.apache.pulsar.client.impl.schema.ProtobufSchemaTest" \
     --tests "org.apache.pulsar.client.impl.schema.ProtobufNativeSchemaTest"

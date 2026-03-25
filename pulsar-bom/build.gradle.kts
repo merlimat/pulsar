@@ -96,7 +96,7 @@ dependencies {
         api(project(":pulsar-functions:pulsar-functions-utils"))
 
         // Bouncy Castle
-        api(project(":bouncy-castle:bc"))
+        api(project(":bouncy-castle:bouncy-castle-bc"))
         api(project(":bouncy-castle:bcfips"))
 
         // Tiered storage

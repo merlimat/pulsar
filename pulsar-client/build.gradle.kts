@@ -26,7 +26,7 @@ dependencies {
     implementation(project(":pulsar-common")) {
         exclude(group = "io.prometheus", module = "simpleclient_caffeine")
     }
-    implementation(project(":bouncy-castle:bc"))
+    implementation(project(":bouncy-castle:bouncy-castle-bc"))
     compileOnly(project(":pulsar-client-messagecrypto-bc"))
 
     implementation(libs.opentelemetry.api)

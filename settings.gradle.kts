@@ -69,7 +69,9 @@ include("pulsar-bom")
 
 // Tier 0 — no internal dependencies
 include("buildtools")
-include("bouncy-castle:bc")
+// Maven artifactId is "bouncy-castle-bc" (directory is "bouncy-castle/bc")
+include("bouncy-castle:bouncy-castle-bc")
+project(":bouncy-castle:bouncy-castle-bc").projectDir = file("bouncy-castle/bc")
 include("bouncy-castle:bcfips")
 include("pulsar-config-validation")
 include("structured-event-log")

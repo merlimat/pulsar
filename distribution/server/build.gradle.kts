@@ -135,7 +135,7 @@ dependencies {
     distLib(libs.vertx.web)
 
     // Bouncy Castle
-    distLib(project(":bouncy-castle:bc"))
+    distLib(project(":bouncy-castle:bouncy-castle-bc"))
 
     // BookKeeper native JARs (these modules publish .nar artifacts by default;
     // we exclude .nar files below and add the .jar variants explicitly)
@@ -176,10 +176,6 @@ val pulsarVersion = project.version.toString()
 val rootDir = rootProject.projectDir
 
 val serverDistTar by tasks.registering(Tar::class) {
-    // Map of Gradle project names to Maven artifact names for renaming.
-    val projectNameMapping = mapOf(
-        "bc" to "bouncy-castle-bc",
-    )
     archiveBaseName.set("apache-pulsar")
     archiveVersion.set(pulsarVersion)
     archiveClassifier.set("bin")
@@ -260,20 +256,7 @@ val serverDistTar by tasks.registering(Tar::class) {
                     "${id.group}-${id.module}-${id.version}${classifier}.${ext}"
                 }
                 is org.gradle.api.artifacts.component.ProjectComponentIdentifier -> {
-                    val nameWithoutExt = file.nameWithoutExtension
-                    // Map project names to Maven artifact names.
-                    // Only match when the character after the project name is '-' followed by a digit
-                    // (i.e., the version number), to avoid matching longer project names like
-                    // "pulsar-client-admin-api" when the mapping key is "pulsar-client".
-                    var mappedName = nameWithoutExt
-                    for ((gradleName, mavenName) in projectNameMapping) {
-                        val suffix = nameWithoutExt.removePrefix(gradleName)
-                        if (suffix != nameWithoutExt && suffix.startsWith("-") &&
-                            suffix.length > 1 && suffix[1].isDigit()) {
-                            mappedName = mavenName + suffix
-                            break
-                        }
-                    }
+                    var mappedName = file.nameWithoutExtension
                     // For bouncy-castle-bc, add -pkg classifier
                     if (mappedName.startsWith("bouncy-castle-bc-")) {
                         mappedName = mappedName + "-pkg"
