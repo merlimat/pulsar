@@ -42,9 +42,8 @@ allprojects {
 }
 
 subprojects {
-    // The pulsar-dependencies module uses java-platform (enforced BOM),
-    // which is mutually exclusive with java-library.
-    if (project.name == "pulsar-dependencies") {
+    // Platform modules use java-platform which is mutually exclusive with java-library.
+    if (project.name == "pulsar-dependencies" || project.name == "pulsar-bom") {
         return@subprojects
     }
 

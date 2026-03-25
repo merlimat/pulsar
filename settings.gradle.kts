@@ -64,6 +64,8 @@ rootProject.name = "pulsar"
 
 // Enforced platform for dependency version management (Maven dependencyManagement equivalent)
 include("pulsar-dependencies")
+// BOM for external consumers to align Pulsar module versions
+include("pulsar-bom")
 
 // Tier 0 — no internal dependencies
 include("buildtools")
