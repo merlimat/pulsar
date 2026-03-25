@@ -17,6 +17,11 @@
  * under the License.
  */
 
+import java.net.InetAddress
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 plugins {
     alias(libs.plugins.lightproto)
 }
@@ -41,10 +46,10 @@ val generatePulsarVersion by tasks.registering {
         commandLine("git", "config", "user.name")
         isIgnoreExitValue = true
     }.standardOutput.asText.map { it.trim() }
-    val buildHost = providers.exec { commandLine("hostname") }
-        .standardOutput.asText.map { it.trim() }
-    val buildTime = providers.exec { commandLine("date", "-u", "+%Y-%m-%dT%H:%M:%SZ") }
-        .standardOutput.asText.map { it.trim() }
+    val buildHost = provider<String> { InetAddress.getLocalHost().hostName }
+    val buildTime = provider<String> {
+        ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+    }
 
     inputs.file(templateFile)
     inputs.property("version", projectVersion)

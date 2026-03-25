@@ -23,10 +23,8 @@ plugins {
 
 dependencies {
     // The shaded KPL project bundles amazon-kinesis-producer with relocated protobuf.
-    // Exclude the transitive unshaded KPL to prevent it from being bundled in the NAR.
-    implementation(project(":pulsar-io:pulsar-io-kinesis-kpl-shaded")) {
-        exclude(group = "software.amazon.kinesis", module = "amazon-kinesis-producer")
-    }
+    // Use shadowElements to get the shadow JAR (which has relocated protobuf).
+    implementation(project(path = ":pulsar-io:pulsar-io-kinesis-kpl-shaded", configuration = "shadowElements"))
     // CompileOnly: needed for compilation against KPL classes but NOT bundled in NAR.
     // At runtime, KPL classes come from the shaded project's shadow JAR.
     compileOnly(libs.amazon.kinesis.producer)
@@ -52,9 +50,3 @@ dependencies {
     testImplementation(libs.jsonassert)
 }
 
-// The KPL shaded project's default jar is disabled (shadow JAR replaces it).
-// Gradle can't infer the task dependency from runtimeClasspath alone, so
-// declare it explicitly for the NAR task.
-tasks.named("nar") {
-    dependsOn(":pulsar-io:pulsar-io-kinesis-kpl-shaded:shadowJar")
-}

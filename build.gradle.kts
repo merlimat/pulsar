@@ -102,8 +102,17 @@ subprojects {
         // This is the Gradle equivalent of Maven's dependencyManagement section.
         "implementation"(enforcedPlatform(project(":pulsar-dependencies")))
 
+        // Resolve lz4-java capability conflict: at.yawk.lz4:lz4-java (used by Pulsar) and
+        // org.lz4:lz4-java (used by kafka-clients) both provide the org.lz4:lz4-java capability.
+        // Prefer at.yawk.lz4 which is the version Pulsar standardizes on.
+        configurations.all {
+            resolutionStrategy.capabilitiesResolution.withCapability("org.lz4:lz4-java") {
+                select("at.yawk.lz4:lz4-java:0")
+            }
+        }
+
         // Allow overriding protobuf version via -PprotobufVersion=4.31.1 for protobuf v4 tests
-        findProperty("protobufVersion")?.let { protobufVersion ->
+        providers.gradleProperty("protobufVersion").orNull?.let { protobufVersion ->
             configurations.all {
                 resolutionStrategy {
                     force("com.google.protobuf:protobuf-java:$protobufVersion")
@@ -141,12 +150,11 @@ subprojects {
                 "org.apache.pulsar.tests.SingletonCleanerListener",
             ))
             // TestNG group filtering: -PtestGroups=broker,broker-admin -PexcludedTestGroups=flaky
-            val testGroups = findProperty("testGroups") as String?
-            if (testGroups != null) {
-                includeGroups(*testGroups.split(",").map { it.trim() }.toTypedArray())
+            providers.gradleProperty("testGroups").orNull?.let { groups ->
+                includeGroups(*groups.split(",").map { it.trim() }.toTypedArray())
             }
-            val excludedTestGroups = findProperty("excludedTestGroups") as String?
-            excludeGroups(*((excludedTestGroups ?: "quarantine,flaky").split(",").map { it.trim() }.toTypedArray()))
+            val excludedTestGroups = providers.gradleProperty("excludedTestGroups").getOrElse("quarantine,flaky")
+            excludeGroups(*(excludedTestGroups.split(",").map { it.trim() }.toTypedArray()))
         }
         maxHeapSize = "1300m"
         maxParallelForks = 4
@@ -205,6 +213,20 @@ subprojects {
         extendsFrom(configurations["testImplementation"], configurations["testRuntimeOnly"])
     }
     artifacts.add("testJar", testJar)
+
+    // Shadow JAR modules: expose the shadow JAR as a consumable configuration so other
+    // projects can depend on it via project(path = "...", configuration = "shadowElements")
+    pluginManager.withPlugin("com.gradleup.shadow") {
+        val shadowElements by configurations.creating {
+            isCanBeConsumed = true
+            isCanBeResolved = false
+            attributes {
+                attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+                attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
+            }
+        }
+        artifacts.add("shadowElements", tasks.named("shadowJar"))
+    }
 
     // NAR modules should not bundle Pulsar platform dependencies — they are provided
     // at runtime by Pulsar's classloader hierarchy.

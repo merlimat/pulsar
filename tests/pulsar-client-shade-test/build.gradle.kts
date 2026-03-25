@@ -21,13 +21,11 @@
 // In Maven, pulsar-client-shaded produces the "pulsar-client" artifact and
 // pulsar-client-admin-shaded produces the "pulsar-client-admin" artifact,
 // so the Maven shade tests depend on the shaded JARs, not the originals.
-val shadedClientJar = project(":pulsar-client-shaded").tasks.named<Jar>("shadowJar")
-val shadedAdminJar = project(":pulsar-client-admin-shaded").tasks.named<Jar>("shadowJar")
 
 dependencies {
-    // Shadow JARs for compilation (provides relocated classes like org.apache.pulsar.shade.io.netty)
-    testImplementation(files(shadedClientJar.map { it.archiveFile }))
-    testImplementation(files(shadedAdminJar.map { it.archiveFile }))
+    // Shadow JARs (provides relocated classes like org.apache.pulsar.shade.io.netty)
+    testImplementation(project(path = ":pulsar-client-shaded", configuration = "shadowElements"))
+    testImplementation(project(path = ":pulsar-client-admin-shaded", configuration = "shadowElements"))
     // API modules are not bundled in the shaded JARs
     testImplementation(project(":pulsar-client-api"))
     testImplementation(project(":pulsar-client-admin-api"))

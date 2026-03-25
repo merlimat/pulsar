@@ -78,7 +78,7 @@ dependencies {
 
 protobuf {
     protoc {
-        val protocVersion = findProperty("protobufVersion") ?: libs.versions.protobuf.get()
+        val protocVersion = providers.gradleProperty("protobufVersion").getOrElse(libs.versions.protobuf.get())
         artifact = "com.google.protobuf:protoc:$protocVersion"
     }
 }

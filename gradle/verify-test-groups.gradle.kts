@@ -22,7 +22,7 @@
 //        ./gradlew verifyTestGroups -PverifyModule=pulsar-broker
 run {
     // Resolve project directories at configuration time for configuration cache compatibility
-    val filterModule = findProperty("verifyModule") as String?
+    val filterModule = providers.gradleProperty("verifyModule").orNull
     val testDirs = subprojects
         .filter { p -> filterModule == null || p.name == filterModule }
         .filter { p -> p.file("src/test/java").exists() }

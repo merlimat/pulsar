@@ -17,14 +17,6 @@
  * under the License.
  */
 
-// Resolve lz4-java capability conflict: at.yawk.lz4:lz4-java (used by Pulsar) and
-// org.lz4:lz4-java (used by kafka-clients) both provide the org.lz4:lz4-java capability.
-configurations.all {
-    resolutionStrategy.capabilitiesResolution.withCapability("org.lz4:lz4-java") {
-        select("at.yawk.lz4:lz4-java:0")
-    }
-}
-
 dependencies {
     testImplementation(libs.gson)
     testImplementation(project(":pulsar-functions:pulsar-functions-api-examples"))
@@ -100,9 +92,9 @@ tasks.test {
 }
 
 // Register a task for each integration test suite
-val integrationTestSuiteFile = project.findProperty("integrationTestSuiteFile") as String? ?: "pulsar.xml"
-val integrationTestGroups = project.findProperty("testGroups") as String?
-val integrationTestExcludedGroups = project.findProperty("excludedTestGroups") as String?
+val integrationTestSuiteFile = providers.gradleProperty("integrationTestSuiteFile").getOrElse("pulsar.xml")
+val integrationTestGroups = providers.gradleProperty("testGroups").orNull
+val integrationTestExcludedGroups = providers.gradleProperty("excludedTestGroups").orNull
 val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 val kafkaVersion = catalog.findVersion("kafka-client").get().requiredVersion
 val debeziumVersion = catalog.findVersion("debezium").get().requiredVersion

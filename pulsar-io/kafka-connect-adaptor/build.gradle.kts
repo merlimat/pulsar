@@ -17,14 +17,6 @@
  * under the License.
  */
 
-// Resolve lz4-java capability conflict: at.yawk.lz4:lz4-java (used by Pulsar) and
-// org.lz4:lz4-java (used by kafka-clients) both provide the org.lz4:lz4-java capability.
-// Prefer at.yawk.lz4 which is the version Pulsar standardizes on.
-configurations.all {
-    resolutionStrategy.capabilitiesResolution.withCapability("org.lz4:lz4-java") {
-        select("at.yawk.lz4:lz4-java:0")
-    }
-}
 
 dependencies {
     compileOnly(project(":pulsar-io:pulsar-io-core"))

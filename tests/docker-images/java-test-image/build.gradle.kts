@@ -23,9 +23,9 @@ tasks.named("compileTestJava") { enabled = false }
 tasks.named("jar") { enabled = false }
 
 val pulsarVersion = project.version.toString()
-val dockerOrganization = findProperty("docker.organization") as String? ?: "apachepulsar"
-val dockerTag = findProperty("docker.tag") as String? ?: "latest"
-val dockerPlatforms = findProperty("docker.platforms") as String? ?: ""
+val dockerOrganization = providers.gradleProperty("docker.organization").getOrElse("apachepulsar")
+val dockerTag = providers.gradleProperty("docker.tag").getOrElse("latest")
+val dockerPlatforms = providers.gradleProperty("docker.platforms").getOrElse("")
 
 // Dependencies: base pulsar image, java-test-functions jar, buildtools jar
 val pulsarDockerBuild = project(":docker:pulsar-docker-image").tasks.named("dockerBuild")

@@ -18,11 +18,10 @@
  */
 
 // Use the shadow JAR from pulsar-client-all which contains relocated netty/jackson/etc classes.
-val shadedAllJar = project(":pulsar-client-all").tasks.named<Jar>("shadowJar")
 
 dependencies {
-    // Shadow JAR for compilation (provides relocated classes like org.apache.pulsar.shade.io.netty)
-    testImplementation(files(shadedAllJar.map { it.archiveFile }))
+    // Shadow JAR (provides relocated classes like org.apache.pulsar.shade.io.netty)
+    testImplementation(project(path = ":pulsar-client-all", configuration = "shadowElements"))
     // API modules are not bundled in the shaded JAR
     testImplementation(project(":pulsar-client-api"))
     testImplementation(project(":pulsar-client-admin-api"))

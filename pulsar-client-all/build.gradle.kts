@@ -38,7 +38,6 @@ dependencies {
 val shadePrefix = "org.apache.pulsar.shade"
 
 tasks.shadowJar {
-    dependsOn(":pulsar-client-dependencies-minimized:shadowJar")
     archiveClassifier.set("")
     mergeServiceFiles()
 
@@ -183,5 +182,12 @@ tasks.shadowJar {
     // "org.asynchttpclient." which must be updated to the relocated package name.
     filesMatching("org/asynchttpclient/config/ahc-default.properties") {
         filter { line -> line.replace("org.asynchttpclient.", "org.apache.pulsar.shade.org.asynchttpclient.") }
+    }
+
+    // Relocate Netty native library filenames to avoid conflicts with unshaded Netty
+    filesMatching("META-INF/native/**") {
+        if (name.matches(Regex("netty.+\\.(so|jnilib|dll)"))) {
+            path = path.replace(name, "org_apache_pulsar_shade_$name")
+        }
     }
 }

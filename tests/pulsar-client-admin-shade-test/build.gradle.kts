@@ -20,11 +20,10 @@
 // Use the shadow JAR which contains relocated netty/jackson/etc classes.
 // In Maven, pulsar-client-admin-shaded produces the "pulsar-client-admin" artifact,
 // so the Maven shade test depends on the shaded JAR, not the original.
-val shadedAdminJar = project(":pulsar-client-admin-shaded").tasks.named<Jar>("shadowJar")
 
 dependencies {
-    // Shadow JAR for compilation (provides relocated classes like org.apache.pulsar.shade.io.netty)
-    testImplementation(files(shadedAdminJar.map { it.archiveFile }))
+    // Shadow JAR (provides relocated classes like org.apache.pulsar.shade.io.netty)
+    testImplementation(project(path = ":pulsar-client-admin-shaded", configuration = "shadowElements"))
     // API modules and messagecrypto are not bundled in the shaded JAR
     testImplementation(project(":pulsar-client-admin-api"))
     testImplementation(project(":pulsar-client-messagecrypto-bc"))
