@@ -24,10 +24,16 @@ tasks.named("jar") { enabled = false }
 
 val pulsarVersion = project.version.toString()
 
-val offloaderProjects = listOf(
-    ":tiered-storage:tiered-storage-jcloud",
-    ":tiered-storage:tiered-storage-file-system",
-)
+// Resolvable configuration for offloader NAR artifacts
+val offloaderNars by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
+dependencies {
+    offloaderNars(project(":tiered-storage:tiered-storage-jcloud"))
+    offloaderNars(project(":tiered-storage:tiered-storage-file-system"))
+}
 
 val offloaderDistTar by tasks.registering(Tar::class) {
     val baseDir = "apache-pulsar-offloaders-${pulsarVersion}"
@@ -46,14 +52,14 @@ val offloaderDistTar by tasks.registering(Tar::class) {
         into(baseDir)
     }
 
-    // Collect NAR files from offloader projects
-    offloaderProjects.forEach { projectPath ->
-        val narDir = project(projectPath).layout.buildDirectory.dir("libs")
-        from(narDir) {
-            into("${baseDir}/offloaders")
-            include("*.nar")
+    // Select only NAR artifacts from the offloader projects
+    val narFiles = offloaderNars.incoming.artifactView {
+        attributes {
+            attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "nar")
         }
-        dependsOn("${projectPath}:nar")
+    }.files
+    from(narFiles) {
+        into("${baseDir}/offloaders")
     }
 }
 
