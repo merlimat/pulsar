@@ -23,10 +23,9 @@ tasks.named("compileTestJava") { enabled = false }
 tasks.named("jar") { enabled = false }
 
 val pulsarVersion = project.version.toString()
-val rootDir = rootProject.projectDir
 
 // IO connector project paths
-val connectorNarProjects = listOf(
+val connectorProjects = listOf(
     ":pulsar-io:pulsar-io-cassandra",
     ":pulsar-io:pulsar-io-kafka",
     ":pulsar-io:pulsar-io-http",
@@ -65,15 +64,15 @@ val connectorNarProjects = listOf(
 val ioDistDir by tasks.registering(Sync::class) {
     destinationDir = layout.buildDirectory.dir("apache-pulsar-io-connectors-${pulsarVersion}-bin").get().asFile
 
-    from(rootDir.resolve("LICENSE")) {
+    from(rootProject.projectDir.resolve("LICENSE")) {
         into(".")
     }
     from("src/assemble/README") {
         into(".")
     }
 
-    // Collect NAR files from each connector project's build/libs directory
-    connectorNarProjects.forEach { projectPath ->
+    // Collect NAR files from each connector project
+    connectorProjects.forEach { projectPath ->
         val narDir = project(projectPath).layout.buildDirectory.dir("libs")
         from(narDir) {
             into(".")
