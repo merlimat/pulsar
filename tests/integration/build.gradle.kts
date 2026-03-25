@@ -66,7 +66,7 @@ dependencies {
     testImplementation(libs.awaitility)
     testImplementation(libs.restassured)
     testImplementation(libs.testcontainers.localstack)
-    testImplementation("software.amazon.kinesis:amazon-kinesis-client:3.1.2")
+    testImplementation(libs.amazon.kinesis.client.v3)
     testImplementation(libs.aws.java.sdk.core)
     testImplementation(libs.testcontainers.mongodb)
     testImplementation(libs.mongodb.driver.reactivestreams)

@@ -23,13 +23,13 @@ tasks.named("compileTestJava") { enabled = false }
 tasks.named("jar") { enabled = false }
 
 val pulsarVersion = project.version.toString()
-val dockerOrganization = findProperty("docker.organization") as String? ?: "apachepulsar"
-val dockerImage = findProperty("docker.image") as String? ?: "pulsar"
-val dockerTag = findProperty("docker.tag") as String? ?: "latest"
-val dockerPlatforms = findProperty("docker.platforms") as String? ?: ""
-val useWolfi = project.hasProperty("docker.wolfi")
-val kinesisKplImage = findProperty("docker.kinesisKplImage") as String?
-    ?: "apachepulsar/pulsar-io-kinesis-sink-kinesis_producer:1.0.4"
+val dockerOrganization = providers.gradleProperty("docker.organization").getOrElse("apachepulsar")
+val dockerImage = providers.gradleProperty("docker.image").getOrElse("pulsar")
+val dockerTag = providers.gradleProperty("docker.tag").getOrElse("latest")
+val dockerPlatforms = providers.gradleProperty("docker.platforms").getOrElse("")
+val useWolfi = providers.gradleProperty("docker.wolfi").isPresent
+val kinesisKplImage = providers.gradleProperty("docker.kinesisKplImage")
+    .getOrElse("apachepulsar/pulsar-io-kinesis-sink-kinesis_producer:1.0.4")
 
 val ioDistTask = project(":distribution:pulsar-io-distribution").tasks.named("ioDistDir")
 val offloaderDistTask = project(":distribution:pulsar-offloader-distribution").tasks.named("offloaderDistTar")

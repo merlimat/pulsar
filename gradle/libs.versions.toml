@@ -495,6 +495,7 @@ aws-sdk2-sts = { module = "software.amazon.awssdk:sts", version.ref = "aws-sdk2"
 aws-sdk2-utils = { module = "software.amazon.awssdk:utils", version.ref = "aws-sdk2" }
 dynamodb-streams-kinesis-adapter = { module = "com.amazonaws:dynamodb-streams-kinesis-adapter", version = "1.6.0" }
 amazon-kinesis-client = { module = "software.amazon.kinesis:amazon-kinesis-client", version = "2.6.0" }
+amazon-kinesis-client-v3 = { module = "software.amazon.kinesis:amazon-kinesis-client", version = "3.1.2" }
 amazon-kinesis-producer = { module = "software.amazon.kinesis:amazon-kinesis-producer", version = "1.0.4" }
 
 # Kafka / Confluent
