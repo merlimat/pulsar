@@ -22,20 +22,15 @@ tasks.named("compileJava") { enabled = false }
 tasks.named("compileTestJava") { enabled = false }
 tasks.named("jar") { enabled = false }
 
-// Extract version catalog values for use in resolutionStrategy
-val snakeyamlVersion: String = libs.versions.snakeyaml.get()
-val javassistVersion: String = libs.versions.javassist.get()
-val jline3Version: String = libs.versions.jline3.get()
-val errorproneVersion: String = libs.versions.errorprone.get()
 val nettyTcnativeVersion: String = libs.versions.netty.tcnative.get()
-val j2objcAnnotationsVersion: String = libs.versions.j2objc.annotations.get()
-val bouncycastleBcprovVersion: String = versionCatalogs.named("libs").findVersion("bouncycastle-bcprov").get().toString()
 val bookkeeperVersion: String = libs.versions.bookkeeper.get()
 
 val distLib by configurations.creating {
     isCanBeResolved = true
     isCanBeConsumed = false
     isTransitive = true
+    // Inherit version constraints from the enforced platform (via implementation)
+    extendsFrom(configurations["implementation"])
     exclude(group = "org.projectlombok", module = "lombok")
     // Exclude jars not in the shell distribution
     exclude(group = "javax.xml.bind", module = "jaxb-api")
@@ -44,21 +39,6 @@ val distLib by configurations.creating {
     exclude(group = "io.netty", module = "netty-transport-native-kqueue")
     exclude(group = "com.github.ben-manes.caffeine", module = "caffeine")
     exclude(group = "io.prometheus", module = "simpleclient_caffeine")
-
-    // Force transitive dependency versions to match Maven dependencyManagement
-    @Suppress("UnstableApiUsage")
-    resolutionStrategy.eachDependency {
-        when ("${requested.group}:${requested.name}") {
-            "com.google.errorprone:error_prone_annotations" -> useVersion(errorproneVersion)
-            "com.google.j2objc:j2objc-annotations" -> useVersion(j2objcAnnotationsVersion)
-            "io.netty:netty-tcnative-boringssl-static",
-            "io.netty:netty-tcnative-classes" -> useVersion(nettyTcnativeVersion)
-            "org.yaml:snakeyaml" -> useVersion(snakeyamlVersion)
-            "org.javassist:javassist" -> useVersion(javassistVersion)
-            "org.bouncycastle:bcprov-jdk18on" -> useVersion(bouncycastleBcprovVersion)
-            "org.jline:jline" -> useVersion(jline3Version)
-        }
-    }
 }
 
 dependencies {
