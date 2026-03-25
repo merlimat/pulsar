@@ -25,6 +25,8 @@ pluginManagement {
 }
 
 plugins {
+    // Version must be hardcoded here — settings.gradle.kts is evaluated before
+    // the version catalog. Keep in sync with libs.plugins.develocity.
     id("com.gradle.develocity") version "4.0.2"
 }
 
@@ -44,7 +46,12 @@ dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
     repositories {
         mavenCentral()
-        maven { url = uri("https://packages.confluent.io/maven/") }
+        maven {
+            url = uri("https://packages.confluent.io/maven/")
+            content {
+                includeGroupByRegex("io\\.confluent\\..*")
+            }
+        }
     }
 }
 

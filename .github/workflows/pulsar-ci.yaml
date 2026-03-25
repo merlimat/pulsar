@@ -327,7 +327,7 @@ jobs:
         if: cancelled()
         run: $GITHUB_WORKSPACE/pulsar-build/pulsar_ci_tool.sh print_thread_dumps
 
-      - name: Aggregates all test reports to ./test-reports and ./surefire-reports directories
+      - name: Aggregate test reports to ./test-reports directory
         if: ${{ always() }}
         uses: ./.github/actions/copy-test-reports
 
@@ -356,7 +356,6 @@ jobs:
         with:
           name: Unit-${{ matrix.group }}-test-reports
           path: |
-            surefire-reports
             **/build/reports/tests/
           retention-days: 7
           if-no-files-found: ignore
@@ -603,7 +602,7 @@ jobs:
         if: cancelled()
         run: $GITHUB_WORKSPACE/pulsar-build/pulsar_ci_tool.sh print_thread_dumps
 
-      - name: Aggregates all test reports to ./test-reports and ./surefire-reports directories
+      - name: Aggregate test reports to ./test-reports directory
         if: ${{ always() }}
         uses: ./.github/actions/copy-test-reports
 
@@ -620,7 +619,6 @@ jobs:
         with:
           name: Integration-${{ matrix.upload_name || matrix.group }}-test-reports
           path: |
-            surefire-reports
             **/build/reports/tests/
           retention-days: 7
           if-no-files-found: ignore
@@ -836,7 +834,7 @@ jobs:
         if: cancelled()
         run: $GITHUB_WORKSPACE/pulsar-build/pulsar_ci_tool.sh print_thread_dumps
 
-      - name: Aggregates all test reports to ./test-reports and ./surefire-reports directories
+      - name: Aggregate test reports to ./test-reports directory
         if: ${{ always() }}
         uses: ./.github/actions/copy-test-reports
 
@@ -853,7 +851,6 @@ jobs:
         with:
           name: System-${{ matrix.group }}-test-reports
           path: |
-            surefire-reports
             **/build/reports/tests/
           retention-days: 7
           if-no-files-found: ignore

@@ -18,7 +18,7 @@
  */
 
 plugins {
-    id("com.google.protobuf") version "0.9.6"
+    alias(libs.plugins.protobuf)
 }
 
 dependencies {
