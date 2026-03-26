@@ -34,7 +34,6 @@ val distLib by configurations.creating {
     exclude(group = "net.java.dev.jna", module = "jna")
     exclude(group = "net.java.dev.jna", module = "jna-platform")
     exclude(group = "io.netty", module = "netty-transport-native-kqueue")
-    exclude(group = "com.github.ben-manes.caffeine", module = "caffeine")
     exclude(group = "io.prometheus", module = "simpleclient_caffeine")
 }
 dependencies {
