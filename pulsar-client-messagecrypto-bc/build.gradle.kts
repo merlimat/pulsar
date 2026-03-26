@@ -25,5 +25,6 @@ dependencies {
     implementation(libs.bcpkix.jdk18on)
     implementation(libs.bcprov.ext.jdk18on)
     implementation(libs.guava)
+    implementation(libs.caffeine)
     compileOnly(libs.netty.buffer)
 }
