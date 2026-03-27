@@ -286,7 +286,8 @@ public class KubernetesRuntimeFactoryTest {
                 "Per instance RAM requested, 512, for function is less than the minimum required, 1024");
 
         testMinMaxResource(null, null, true,
-                "Per instance CPU requested, 0.0, for function is less than the minimum required, 0.1");
+                "Per instance CPU requested is not specified. Must specify CPU requested for function"
+                        + " to be at least 0.1");
         testMinMaxResource(0.2, null, true,
                 "Per instance RAM requested, 0, for function is less than the minimum required, 1024");
     }

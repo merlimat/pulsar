@@ -1059,14 +1059,19 @@ public class KubernetesRuntimeTest {
         assertEquals(goInstanceConfig.get("expectedHealthCheckInterval"), 0);
         assertEquals(goInstanceConfig.get("deadLetterTopic"), "");
         assertEquals(goInstanceConfig.get("metricsPort"), 4331);
-        assertEquals(goInstanceConfig.get("functionDetails"), "{\"tenant\":\"tenant\",\"namespace\":\"namespace\","
+        // LightProto serializes JSON fields in declaration order (not field number order),
+        // so field ordering may differ from protobuf's JsonFormat.
+        // Compare as parsed JSON objects to be order-independent.
+        assertEquals(
+                new com.google.gson.JsonParser().parse((String) goInstanceConfig.get("functionDetails")),
+                new com.google.gson.JsonParser().parse("{\"tenant\":\"tenant\",\"namespace\":\"namespace\","
                 + "\"name\":\"container\",\"className\":\"org.apache.pulsar.functions.utils.functioncache"
                 + ".AddFunction\",\"logTopic\":\"container-log\",\"runtime\":\"GO\",\"source\":{\"className\":\"org"
                 + ".pulsar.pulsar.TestSource\",\"subscriptionType\":\"FAILOVER\",\"typeClassName\":\"java.lang"
                 + ".String\",\"inputSpecs\":{\"test_src\":{}}},\"sink\":{\"className\":\"org.pulsar.pulsar"
                 + ".TestSink\",\"topic\":\"container-output\",\"serDeClassName\":\"org.apache.pulsar.functions"
                 + ".runtime.serde.Utf8Serializer\",\"typeClassName\":\"java.lang.String\"},\"resources\":{\"cpu\":1"
-                + ".0,\"ram\":\"1000\",\"disk\":\"10000\"}}");
+                + ".0,\"ram\":\"1000\",\"disk\":\"10000\"}}"));
 
         // check padding and xmx
         V1Container containerSpec = container.getFunctionContainer(Collections.emptyList(), RESOURCES);
