@@ -160,14 +160,9 @@ class ContextImpl implements Context, SinkContext, SourceContext, AutoCloseable 
 
         this.producerCache = producerCache;
 
-        ProducerConfig producerConfig = null;
-        if (config.getFunctionDetails().getSink().hasProducerSpec()) {
-            ProducerSpec producerSpec = config.getFunctionDetails().getSink().getProducerSpec();
-            producerConfig = FunctionConfigUtils.convertProducerSpecToProducerConfig(producerSpec);
-            useThreadLocalProducers = producerSpec.isUseThreadLocalProducers();
-        } else {
-            useThreadLocalProducers = false;
-        }
+        ProducerSpec producerSpec = config.getFunctionDetails().getSink().getProducerSpec();
+        ProducerConfig producerConfig = FunctionConfigUtils.convertProducerSpecToProducerConfig(producerSpec);
+        useThreadLocalProducers = producerSpec.isUseThreadLocalProducers();
 
         producerBuilderFactory = new ProducerBuilderFactory(client, producerConfig,
                 Thread.currentThread().getContextClassLoader(),

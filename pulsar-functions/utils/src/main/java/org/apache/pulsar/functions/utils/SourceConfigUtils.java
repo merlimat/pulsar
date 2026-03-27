@@ -236,9 +236,7 @@ public class SourceConfigUtils {
         if (!StringUtils.isEmpty(sinkSpec.getSerDeClassName())) {
             sourceConfig.setSerdeClassName(sinkSpec.getSerDeClassName());
         }
-        if (sinkSpec.hasProducerSpec()) {
-            sourceConfig.setProducerConfig(convertProducerSpecToProducerConfig(sinkSpec.getProducerSpec()));
-        }
+        sourceConfig.setProducerConfig(convertProducerSpecToProducerConfig(sinkSpec.getProducerSpec()));
         if (!isEmpty(functionDetails.getLogTopic())) {
             sourceConfig.setLogTopic(functionDetails.getLogTopic());
         }

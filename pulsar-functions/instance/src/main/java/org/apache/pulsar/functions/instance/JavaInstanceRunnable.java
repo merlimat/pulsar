@@ -1064,20 +1064,20 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
                 sinkSpec.forEachSchemaProperties(schemaProperties::put);
                 pulsarSinkConfig.setSchemaProperties(schemaProperties);
 
-                if (this.instanceConfig.getFunctionDetails().getSink().hasProducerSpec()) {
-                    ProducerSpec conf =
-                            this.instanceConfig.getFunctionDetails().getSink().getProducerSpec();
-                    ProducerConfig.ProducerConfigBuilder builder = ProducerConfig.builder()
-                            .maxPendingMessages(conf.getMaxPendingMessages())
-                            .maxPendingMessagesAcrossPartitions(conf.getMaxPendingMessagesAcrossPartitions())
-                            .batchBuilder(conf.getBatchBuilder())
-                            .useThreadLocalProducers(conf.isUseThreadLocalProducers())
-                            .cryptoConfig(CryptoUtils.convertFromSpec(conf.getCryptoSpec()))
-                            .batchingConfig(BatchingUtils.convertFromSpec(conf.getBatchingSpec()))
-                            .compressionType(FunctionCommon.convertFromFunctionDetailsCompressionType(
-                                    conf.getCompressionType()));
-                    pulsarSinkConfig.setProducerConfig(builder.build());
-                }
+                ProducerSpec conf =
+                        this.instanceConfig.getFunctionDetails().getSink().getProducerSpec();
+                ProducerConfig.ProducerConfigBuilder builder = ProducerConfig.builder()
+                        .maxPendingMessages(conf.getMaxPendingMessages())
+                        .maxPendingMessagesAcrossPartitions(conf.getMaxPendingMessagesAcrossPartitions())
+                        .batchBuilder(conf.getBatchBuilder())
+                        .useThreadLocalProducers(conf.isUseThreadLocalProducers())
+                        .cryptoConfig(conf.hasCryptoSpec()
+                                ? CryptoUtils.convertFromSpec(conf.getCryptoSpec()) : null)
+                        .batchingConfig(BatchingUtils.convertFromSpec(
+                                conf.hasBatchingSpec() ? conf.getBatchingSpec() : null))
+                        .compressionType(FunctionCommon.convertFromFunctionDetailsCompressionType(
+                                conf.getCompressionType()));
+                pulsarSinkConfig.setProducerConfig(builder.build());
 
                 object = new PulsarSink(this.client, pulsarSinkConfig, this.properties, this.stats,
                         this.functionClassLoader, this.producerCache);

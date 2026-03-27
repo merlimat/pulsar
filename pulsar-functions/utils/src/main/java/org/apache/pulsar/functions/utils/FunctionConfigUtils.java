@@ -457,10 +457,8 @@ public class FunctionConfigUtils {
         if (!isEmpty(functionDetails.getSink().getSchemaType())) {
             functionConfig.setOutputSchemaType(functionDetails.getSink().getSchemaType());
         }
-        if (functionDetails.getSink().hasProducerSpec()) {
-            functionConfig.setProducerConfig(
-                    convertProducerSpecToProducerConfig(functionDetails.getSink().getProducerSpec()));
-        }
+        functionConfig.setProducerConfig(
+                convertProducerSpecToProducerConfig(functionDetails.getSink().getProducerSpec()));
         if (!isEmpty(functionDetails.getLogTopic())) {
             functionConfig.setLogTopic(functionDetails.getLogTopic());
         }
