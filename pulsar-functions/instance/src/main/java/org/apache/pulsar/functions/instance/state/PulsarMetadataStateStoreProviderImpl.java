@@ -56,6 +56,7 @@ public class PulsarMetadataStateStoreProviderImpl implements StateStoreProvider 
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public DefaultStateStore getStateStore(String tenant, String namespace, String name) throws Exception {
         return new PulsarMetadataStateStoreImpl(store, prefix, tenant, namespace, name);
