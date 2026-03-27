@@ -95,9 +95,8 @@ public class ContextImplTest {
     public void setup() throws PulsarClientException {
         config = new InstanceConfig();
         config.setExposePulsarAdminClientEnabled(true);
-        FunctionDetails functionDetails = FunctionDetails.newBuilder()
-            .setUserConfig("")
-            .build();
+        FunctionDetails functionDetails = new FunctionDetails()
+            .setUserConfig("");
         config.setFunctionDetails(functionDetails);
         logger = mock(Logger.class);
         pulsarAdmin = mock(PulsarAdmin.class);

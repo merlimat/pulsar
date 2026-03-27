@@ -18,7 +18,7 @@
  */
 package org.apache.pulsar.functions.worker.rest.api.v3;
 
-import static org.apache.pulsar.functions.proto.Function.ProcessingGuarantees.ATLEAST_ONCE;
+import static org.apache.pulsar.functions.proto.ProcessingGuarantees.ATLEAST_ONCE;
 import static org.apache.pulsar.functions.source.TopicSchema.DEFAULT_SERDE;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
@@ -55,9 +55,14 @@ import org.apache.pulsar.common.util.RestException;
 import org.apache.pulsar.functions.api.examples.RecordFunction;
 import org.apache.pulsar.functions.api.utils.IdentityFunction;
 import org.apache.pulsar.functions.instance.InstanceUtils;
-import org.apache.pulsar.functions.proto.Function;
 import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.apache.pulsar.functions.proto.FunctionMetaData;
+import org.apache.pulsar.functions.proto.ConsumerSpec;
+import org.apache.pulsar.functions.proto.PackageLocationMetaData;
+import org.apache.pulsar.functions.proto.ProcessingGuarantees;
+import org.apache.pulsar.functions.proto.SinkSpec;
+import org.apache.pulsar.functions.proto.SourceSpec;
+import org.apache.pulsar.functions.proto.SubscriptionType;
 import org.apache.pulsar.functions.utils.SinkConfigUtils;
 import org.apache.pulsar.functions.worker.WorkerConfig;
 import org.apache.pulsar.functions.worker.WorkerUtils;
@@ -89,8 +94,8 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         }
     }
     @Override
-    protected Function.FunctionDetails.ComponentType getComponentType() {
-        return Function.FunctionDetails.ComponentType.SINK;
+    protected FunctionDetails.ComponentType getComponentType() {
+        return FunctionDetails.ComponentType.SINK;
     }
 
     @Override
@@ -815,7 +820,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         SinkConfig sinkConfig = createDefaultSinkConfig();
 
         this.mockedFunctionMetaData =
-                FunctionMetaData.newBuilder().setFunctionDetails(createDefaultFunctionDetails()).build();
+                createFunctionMetaDataFromDetails();
         when(mockedManager.getFunctionMetaData(any(), any(), any())).thenReturn(mockedFunctionMetaData);
 
         try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
@@ -882,7 +887,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(true);
 
         this.mockedFunctionMetaData =
-                FunctionMetaData.newBuilder().setFunctionDetails(createDefaultFunctionDetails()).build();
+                createFunctionMetaDataFromDetails();
         when(mockedManager.getFunctionMetaData(any(), any(), any())).thenReturn(mockedFunctionMetaData);
 
         resource.updateSink(
@@ -962,7 +967,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(true);
 
         this.mockedFunctionMetaData =
-                FunctionMetaData.newBuilder().setFunctionDetails(createDefaultFunctionDetails()).build();
+                createFunctionMetaDataFromDetails();
         when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(mockedFunctionMetaData);
         when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(true);
 
@@ -1069,7 +1074,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
             when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(true);
 
             when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink)))
-                    .thenReturn(FunctionMetaData.newBuilder().build());
+                    .thenReturn(new FunctionMetaData());
 
             doThrow(new IllegalArgumentException("sink failed to deregister"))
                     .when(mockedManager).updateFunctionOnLeader(any(FunctionMetaData.class), Mockito.anyBoolean());
@@ -1089,7 +1094,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
             when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(true);
 
             when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink)))
-                    .thenReturn(FunctionMetaData.newBuilder().build());
+                    .thenReturn(new FunctionMetaData());
 
             doThrow(new IllegalStateException("Function deregistration interrupted"))
                     .when(mockedManager).updateFunctionOnLeader(any(FunctionMetaData.class), Mockito.anyBoolean());
@@ -1112,11 +1117,9 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     "public/default/test/591541f0-c7c5-40c0-983b-610c722f90b0-pulsar-io-batch-data-generator-2.7.0.nar";
             String transformFunctionPackagePath =
                     "public/default/test/591541f0-c7c5-40c0-983b-610c722f90b0-test-function.nar";
-            FunctionMetaData functionMetaData = FunctionMetaData.newBuilder()
-                    .setPackageLocation(Function.PackageLocationMetaData.newBuilder().setPackagePath(packagePath))
-                    .setTransformFunctionPackageLocation(Function.PackageLocationMetaData.newBuilder()
-                            .setPackagePath(transformFunctionPackagePath))
-                    .build();
+            FunctionMetaData functionMetaData = new FunctionMetaData();
+            functionMetaData.setPackageLocation().setPackagePath(packagePath);
+            functionMetaData.setTransformFunctionPackageLocation().setPackagePath(transformFunctionPackagePath);
             when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink)))
                     .thenReturn(functionMetaData);
 
@@ -1136,11 +1139,9 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
 
             String packagePath = String.format("%s://data-generator", Utils.BUILTIN);
             String transformFunctionPackagePath = String.format("%s://exclamation", Utils.BUILTIN);
-            FunctionMetaData functionMetaData = FunctionMetaData.newBuilder()
-                    .setPackageLocation(Function.PackageLocationMetaData.newBuilder().setPackagePath(packagePath))
-                    .setTransformFunctionPackageLocation(Function.PackageLocationMetaData.newBuilder()
-                            .setPackagePath(transformFunctionPackagePath))
-                    .build();
+            FunctionMetaData functionMetaData = new FunctionMetaData();
+            functionMetaData.setPackageLocation().setPackagePath(packagePath);
+            functionMetaData.setTransformFunctionPackageLocation().setPackagePath(transformFunctionPackagePath);
             when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink)))
                     .thenReturn(functionMetaData);
 
@@ -1161,11 +1162,9 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
 
             String packagePath = "http://foo.com/connector.jar";
             String transformFunctionPackagePath = "http://foo.com/function.jar";
-            FunctionMetaData functionMetaData = FunctionMetaData.newBuilder()
-                    .setPackageLocation(Function.PackageLocationMetaData.newBuilder().setPackagePath(packagePath))
-                    .setTransformFunctionPackageLocation(Function.PackageLocationMetaData.newBuilder()
-                            .setPackagePath(transformFunctionPackagePath))
-                    .build();
+            FunctionMetaData functionMetaData = new FunctionMetaData();
+            functionMetaData.setPackageLocation().setPackagePath(packagePath);
+            functionMetaData.setTransformFunctionPackageLocation().setPackagePath(transformFunctionPackagePath);
 
             when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink)))
                     .thenReturn(functionMetaData);
@@ -1187,11 +1186,9 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
 
             String packagePath = "file://foo/connector.jar";
             String transformFunctionPackagePath = "file://foo/function.jar";
-            FunctionMetaData functionMetaData = FunctionMetaData.newBuilder()
-                    .setPackageLocation(Function.PackageLocationMetaData.newBuilder().setPackagePath(packagePath))
-                    .setTransformFunctionPackageLocation(Function.PackageLocationMetaData.newBuilder()
-                            .setPackagePath(transformFunctionPackagePath))
-                    .build();
+            FunctionMetaData functionMetaData = new FunctionMetaData();
+            functionMetaData.setPackageLocation().setPackagePath(packagePath);
+            functionMetaData.setTransformFunctionPackageLocation().setPackagePath(transformFunctionPackagePath);
 
             when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink)))
                     .thenReturn(functionMetaData);
@@ -1288,32 +1285,26 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     public void testGetSinkSuccess() {
         when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(true);
 
-        Function.SourceSpec sourceSpec = Function.SourceSpec.newBuilder()
-                .setSubscriptionType(Function.SubscriptionType.SHARED)
-                .setSubscriptionName(SUBSCRIPTION_NAME)
-                .putInputSpecs("input", Function.ConsumerSpec.newBuilder()
-                        .setSerdeClassName(DEFAULT_SERDE)
-                        .setIsRegexPattern(false)
-                        .build()).build();
-        Function.SinkSpec sinkSpec = Function.SinkSpec.newBuilder()
-                .setBuiltin("jdbc")
-                .build();
-        FunctionDetails functionDetails = FunctionDetails.newBuilder()
-                .setClassName(IdentityFunction.class.getName())
-                .setSink(sinkSpec)
-                .setName(sink)
-                .setNamespace(NAMESPACE)
-                .setProcessingGuarantees(ATLEAST_ONCE)
-                .setTenant(TENANT)
-                .setParallelism(PARALLELISM)
-                .setRuntime(FunctionDetails.Runtime.JAVA)
-                .setSource(sourceSpec).build();
-        FunctionMetaData metaData = FunctionMetaData.newBuilder()
-                .setCreateTime(System.currentTimeMillis())
-                .setFunctionDetails(functionDetails)
-                .setPackageLocation(Function.PackageLocationMetaData.newBuilder().setPackagePath("/path/to/package"))
-                .setVersion(1234)
-                .build();
+        FunctionDetails functionDetails = new FunctionDetails();
+        functionDetails.setClassName(IdentityFunction.class.getName());
+        functionDetails.setSink().setBuiltin("jdbc");
+        functionDetails.setName(sink);
+        functionDetails.setNamespace(NAMESPACE);
+        functionDetails.setProcessingGuarantees(ATLEAST_ONCE);
+        functionDetails.setTenant(TENANT);
+        functionDetails.setParallelism(PARALLELISM);
+        functionDetails.setRuntime(FunctionDetails.Runtime.JAVA);
+        SourceSpec sourceSpec = functionDetails.setSource();
+        sourceSpec.setSubscriptionType(SubscriptionType.SHARED);
+        sourceSpec.setSubscriptionName(SUBSCRIPTION_NAME);
+        sourceSpec.putInputSpecs("input")
+                .setSerdeClassName(DEFAULT_SERDE)
+                .setIsRegexPattern(false);
+        FunctionMetaData metaData = new FunctionMetaData();
+        metaData.setCreateTime(System.currentTimeMillis());
+        metaData.setFunctionDetails().copyFrom(functionDetails);
+        metaData.setPackageLocation().setPackagePath("/path/to/package");
+        metaData.setVersion(1234);
         when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(metaData);
 
         getDefaultSinkInfo();
@@ -1381,12 +1372,12 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         mockInstanceUtils();
         final List<String> functions = Lists.newArrayList("test-1", "test-2");
         final List<FunctionMetaData> functionMetaDataList = new LinkedList<>();
-        functionMetaDataList.add(FunctionMetaData.newBuilder().setFunctionDetails(
-                FunctionDetails.newBuilder().setName("test-1").build()
-        ).build());
-        functionMetaDataList.add(FunctionMetaData.newBuilder().setFunctionDetails(
-                FunctionDetails.newBuilder().setName("test-2").build()
-        ).build());
+        FunctionMetaData fmd1 = new FunctionMetaData();
+        fmd1.setFunctionDetails().setName("test-1");
+        functionMetaDataList.add(fmd1);
+        FunctionMetaData fmd2 = new FunctionMetaData();
+        fmd2.setFunctionDetails().setName("test-2");
+        functionMetaDataList.add(fmd2);
         when(mockedManager.listFunctions(eq(TENANT), eq(NAMESPACE))).thenReturn(functionMetaDataList);
 
         List<String> sinkList = listDefaultSinks();
@@ -1397,14 +1388,14 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     public void testOnlyGetSinks() {
         final List<String> functions = Lists.newArrayList("test-3");
         final List<FunctionMetaData> functionMetaDataList = new LinkedList<>();
-        FunctionMetaData f1 = FunctionMetaData.newBuilder().setFunctionDetails(
-                FunctionDetails.newBuilder().setName("test-1").build()).build();
+        FunctionMetaData f1 = new FunctionMetaData();
+        f1.setFunctionDetails().setName("test-1");
         functionMetaDataList.add(f1);
-        FunctionMetaData f2 = FunctionMetaData.newBuilder().setFunctionDetails(
-                FunctionDetails.newBuilder().setName("test-2").build()).build();
+        FunctionMetaData f2 = new FunctionMetaData();
+        f2.setFunctionDetails().setName("test-2");
         functionMetaDataList.add(f2);
-        FunctionMetaData f3 = FunctionMetaData.newBuilder().setFunctionDetails(
-                FunctionDetails.newBuilder().setName("test-3").build()).build();
+        FunctionMetaData f3 = new FunctionMetaData();
+        f3.setFunctionDetails().setName("test-3");
         functionMetaDataList.add(f3);
         when(mockedManager.listFunctions(eq(TENANT), eq(NAMESPACE))).thenReturn(functionMetaDataList);
 
@@ -1457,7 +1448,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
 
     private void mockFunctionCommon(String tenant, String namespace, String sink) throws IOException {
         this.mockedFunctionMetaData =
-                Function.FunctionMetaData.newBuilder().setFunctionDetails(createDefaultFunctionDetails()).build();
+                createFunctionMetaDataFromDetails();
         when(mockedManager.getFunctionMetaData(eq(tenant), eq(namespace), eq(sink))).thenReturn(mockedFunctionMetaData);
 
         when(mockedManager.containsFunction(eq(tenant), eq(namespace), eq(sink))).thenReturn(true);
@@ -1466,6 +1457,12 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     private FunctionDetails createDefaultFunctionDetails() throws IOException {
         return SinkConfigUtils.convert(createDefaultSinkConfig(),
                 new SinkConfigUtils.ExtractedSinkDetails(null, null, null));
+    }
+
+    private FunctionMetaData createFunctionMetaDataFromDetails() throws IOException {
+        FunctionMetaData fmd = new FunctionMetaData();
+        fmd.setFunctionDetails().copyFrom(createDefaultFunctionDetails());
+        return fmd;
     }
 
     /*

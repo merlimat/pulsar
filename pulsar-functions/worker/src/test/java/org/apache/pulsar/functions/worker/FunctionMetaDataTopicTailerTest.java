@@ -73,7 +73,7 @@ public class FunctionMetaDataTopicTailerTest {
     @Test
     public void testUpdate() throws Exception {
 
-        FunctionMetaData request = FunctionMetaData.newBuilder().build();
+        FunctionMetaData request = new FunctionMetaData();
 
         Message msg = mock(Message.class);
         when(msg.getData()).thenReturn(request.toByteArray());

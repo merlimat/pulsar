@@ -54,9 +54,11 @@ import org.apache.pulsar.functions.api.SerDe;
 import org.apache.pulsar.functions.instance.stats.ComponentStatsManager;
 import org.apache.pulsar.functions.instance.stats.FunctionStatsManager;
 import org.apache.pulsar.functions.proto.FunctionDetails;
+import org.apache.pulsar.functions.proto.FunctionStatus;
+import org.apache.pulsar.functions.proto.MetricsData;
+import org.apache.pulsar.functions.proto.ProcessingGuarantees;
 import org.apache.pulsar.functions.proto.SinkSpec;
 import org.apache.pulsar.functions.proto.SourceSpec;
-import org.apache.pulsar.functions.proto.InstanceCommunication;
 import org.apache.pulsar.functions.secretsprovider.EnvironmentBasedSecretsProvider;
 import org.apache.pulsar.io.core.Sink;
 import org.apache.pulsar.io.core.SinkContext;
@@ -95,11 +97,11 @@ public class JavaInstanceRunnableTest {
     }
 
     private JavaInstanceRunnable createRunnable(String outputSerde) throws Exception {
-        FunctionDetails.Builder functionDetailsBuilder = FunctionDetails.newBuilder();
+        FunctionDetails functionDetails = new FunctionDetails();
         if (outputSerde != null) {
-            functionDetailsBuilder.setSink(SinkSpec.newBuilder().setSerDeClassName(outputSerde).build());
+            functionDetails.setSink().setSerDeClassName(outputSerde);
         }
-        return createRunnable(functionDetailsBuilder.build());
+        return createRunnable(functionDetails);
     }
 
     private JavaInstanceRunnable createRunnable(FunctionDetails functionDetails) throws Exception {
@@ -116,11 +118,10 @@ public class JavaInstanceRunnableTest {
             throws PulsarClientException {
         ClientBuilder clientBuilder = mock(ClientBuilder.class);
         when(clientBuilder.build()).thenReturn(null);
-        FunctionDetails functionDetails = FunctionDetails.newBuilder()
-                .setSource(sourceSpec)
-                .setClassName(functionClassName)
-                .setSink(sinkSpec)
-                .build();
+        FunctionDetails functionDetails = new FunctionDetails()
+                .setClassName(functionClassName);
+        functionDetails.setSource().copyFrom(sourceSpec);
+        functionDetails.setSink().copyFrom(sinkSpec);
         InstanceConfig config = createInstanceConfig(functionDetails);
         config.setClusterName("test-cluster");
         PulsarClient pulsarClient = PulsarClient.builder().serviceUrl("pulsar://test-cluster:6650").build();
@@ -179,10 +180,9 @@ public class JavaInstanceRunnableTest {
 
     @Test
     public void testFunctionAsyncTime() throws Exception {
-        FunctionDetails functionDetails = FunctionDetails.newBuilder()
+        FunctionDetails functionDetails = new FunctionDetails()
                 .setAutoAck(true)
-                .setProcessingGuarantees(org.apache.pulsar.functions.proto.Function.ProcessingGuarantees.MANUAL)
-                .build();
+                .setProcessingGuarantees(ProcessingGuarantees.MANUAL);
         JavaInstanceRunnable javaInstanceRunnable = createRunnable(functionDetails);
         FunctionStatsManager manager = mock(FunctionStatsManager.class);
         javaInstanceRunnable.setStats(manager);
@@ -201,33 +201,33 @@ public class JavaInstanceRunnableTest {
 
         // ProcessingGuarantees == MANUAL, not need ack.
         Record record = mock(Record.class);
-        getJavaInstanceRunnable(true, org.apache.pulsar.functions.proto.Function.ProcessingGuarantees.MANUAL)
+        getJavaInstanceRunnable(true, ProcessingGuarantees.MANUAL)
                 .handleResult(record, javaExecutionResult);
         verify(record, times(0)).ack();
 
         // ProcessingGuarantees == ATMOST_ONCE and autoAck == true, not need ack
         clearInvocations(record);
-        getJavaInstanceRunnable(true, org.apache.pulsar.functions.proto.Function.ProcessingGuarantees.ATMOST_ONCE)
+        getJavaInstanceRunnable(true, ProcessingGuarantees.ATMOST_ONCE)
                 .handleResult(record, javaExecutionResult);
         verify(record, times(0)).ack();
 
         // other case, need ack
         clearInvocations(record);
-        getJavaInstanceRunnable(true, org.apache.pulsar.functions.proto.Function.ProcessingGuarantees.ATLEAST_ONCE)
+        getJavaInstanceRunnable(true, ProcessingGuarantees.ATLEAST_ONCE)
                 .handleResult(record, javaExecutionResult);
         verify(record, times(1)).ack();
         clearInvocations(record);
-        getJavaInstanceRunnable(true, org.apache.pulsar.functions.proto.Function.ProcessingGuarantees.EFFECTIVELY_ONCE)
+        getJavaInstanceRunnable(true, ProcessingGuarantees.EFFECTIVELY_ONCE)
                 .handleResult(record, javaExecutionResult);
         verify(record, times(1)).ack();
     }
 
     @NonNull
     private JavaInstanceRunnable getJavaInstanceRunnable(boolean autoAck,
-               org.apache.pulsar.functions.proto.Function.ProcessingGuarantees processingGuarantees) throws Exception {
-        FunctionDetails functionDetails = FunctionDetails.newBuilder()
+               ProcessingGuarantees processingGuarantees) throws Exception {
+        FunctionDetails functionDetails = new FunctionDetails()
                 .setAutoAck(autoAck)
-                .setProcessingGuarantees(processingGuarantees).build();
+                .setProcessingGuarantees(processingGuarantees);
         JavaInstanceRunnable javaInstanceRunnable = createRunnable(functionDetails);
 
         Field stats = JavaInstanceRunnable.class.getDeclaredField("stats");
@@ -241,10 +241,10 @@ public class JavaInstanceRunnableTest {
     public void testStatsManagerNull() throws Exception {
         JavaInstanceRunnable javaInstanceRunnable = createRunnable((String) null);
 
-        Assert.assertEquals(javaInstanceRunnable.getFunctionStatus().build(),
-                InstanceCommunication.FunctionStatus.newBuilder().build());
+        Assert.assertEquals(javaInstanceRunnable.getFunctionStatus(),
+                new FunctionStatus());
 
-        Assert.assertEquals(javaInstanceRunnable.getMetrics(), InstanceCommunication.MetricsData.newBuilder().build());
+        Assert.assertEquals(javaInstanceRunnable.getMetrics(), new MetricsData());
     }
 
     @Test
@@ -488,11 +488,14 @@ public class JavaInstanceRunnableTest {
 
     @Test(dataProvider = "failComponentType")
     public void testFatalTheInstance(FailComponentType failComponentType) throws Exception {
+        SourceSpec sourceSpec = new SourceSpec()
+                .setClassName(TestSourceConnector.class.getName());
+        SinkSpec sinkSpec = new SinkSpec()
+                .setClassName(TestSinkConnector.class.getName());
         JavaInstanceRunnable javaInstanceRunnable = createRunnable(
-                SourceSpec.newBuilder()
-                        .setClassName(TestSourceConnector.class.getName()).build(),
+                sourceSpec,
                 TestFunction.class.getName(),
-                SinkSpec.newBuilder().setClassName(TestSinkConnector.class.getName()).build()
+                sinkSpec
         );
 
         Thread fnThread = new Thread(javaInstanceRunnable);

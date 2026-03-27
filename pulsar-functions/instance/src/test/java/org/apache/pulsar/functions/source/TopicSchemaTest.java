@@ -33,7 +33,7 @@ import org.apache.pulsar.client.impl.schema.JSONSchema;
 import org.apache.pulsar.client.impl.schema.ProtobufNativeSchema;
 import org.apache.pulsar.client.impl.schema.ProtobufSchema;
 import org.apache.pulsar.common.schema.SchemaType;
-import org.apache.pulsar.functions.proto.Request;
+import org.apache.pulsar.functions.proto.ServiceRequest;
 import org.testng.annotations.Test;
 
 @Slf4j
@@ -51,11 +51,11 @@ public class TopicSchemaTest {
         assertEquals(schema.getClass(), AvroSchema.class);
 
         // use an arbitrary protobuf class for testing purpose
-        schema = topicSchema.getSchema(topic + "3", Request.ServiceRequest.class, Optional.of(SchemaType.PROTOBUF));
+        schema = topicSchema.getSchema(topic + "3", ServiceRequest.class, Optional.of(SchemaType.PROTOBUF));
         assertEquals(schema.getClass(), ProtobufSchema.class);
 
         schema = topicSchema
-                .getSchema(topic + "4", Request.ServiceRequest.class, Optional.of(SchemaType.PROTOBUF_NATIVE));
+                .getSchema(topic + "4", ServiceRequest.class, Optional.of(SchemaType.PROTOBUF_NATIVE));
         assertEquals(schema.getClass(), ProtobufNativeSchema.class);
     }
 

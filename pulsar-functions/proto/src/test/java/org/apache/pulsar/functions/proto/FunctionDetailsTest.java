@@ -34,7 +34,7 @@ public class FunctionDetailsTest {
      */
     @Test
     public void testDefaultProcessingGuarantee() {
-        FunctionDetails fc = FunctionDetails.newBuilder().build();
+        FunctionDetails fc = new FunctionDetails();
         assertEquals(ProcessingGuarantees.ATLEAST_ONCE, fc.getProcessingGuarantees());
     }
 

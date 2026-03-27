@@ -37,6 +37,7 @@ import org.apache.pulsar.functions.api.Record;
 import org.apache.pulsar.functions.instance.JavaInstance.AsyncFuncRequest;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.apache.pulsar.functions.proto.FunctionDetails;
 
 @Slf4j
 public class JavaInstanceTest {
@@ -253,11 +254,9 @@ public class JavaInstanceTest {
     public void testAsyncFunctionMaxPendingVoidResult() throws Exception {
         CountDownLatch count = new CountDownLatch(1);
         InstanceConfig instanceConfig = new InstanceConfig();
-        instanceConfig.setFunctionDetails(org.apache.pulsar.functions.proto.Function.FunctionDetails.newBuilder()
-                .setSink(org.apache.pulsar.functions.proto.Function.SinkSpec.newBuilder()
-                        .setTypeClassName(Void.class.getName())
-                        .build())
-                .build());
+        FunctionDetails fd = new FunctionDetails();
+        fd.setSink().setTypeClassName(Void.class.getName());
+        instanceConfig.setFunctionDetails(fd);
         int pendingQueueSize = 3;
         instanceConfig.setMaxPendingAsyncRequests(pendingQueueSize);
         @Cleanup("shutdownNow")
