@@ -76,7 +76,7 @@ subprojects {
     // Only the FIPS-specific modules and modules with explicit FIPS tests should have it.
     val modulesUsingBcFips = setOf(
         "bcfips", "bcfips-include-test",
-        "pulsar-common", "pulsar-broker-common", "kafka-connect-adaptor",
+        "pulsar-common", "pulsar-broker-common",
     )
     if (project.name !in modulesUsingBcFips) {
         configurations.all {
@@ -284,8 +284,8 @@ subprojects {
 
     // Set archive names to match Maven artifactId for nested modules.
     // Skip if the project name is already qualified (starts with parent name),
-    // which happens for JDBC and Debezium sub-modules that use qualified names
-    // in settings.gradle.kts to avoid Gradle name clashes.
+    // which happens for sub-modules that use qualified names in settings.gradle.kts
+    // to avoid Gradle name clashes.
     val parentProject = project.parent
     if (parentProject != null && parentProject != rootProject && parentProject.parent != rootProject
             && !project.name.startsWith(parentProject.name)) {
@@ -320,12 +320,6 @@ tasks.register("docker") {
     description = "Build the Pulsar Docker image"
     group = "docker"
     dependsOn(":docker:pulsar-docker-image:dockerBuild")
-}
-
-tasks.register("docker-all") {
-    description = "Build the Pulsar All-in-One Docker image (includes connectors and offloaders)"
-    group = "docker"
-    dependsOn(":docker:pulsar-all-docker-image:dockerBuild")
 }
 
 // Access version catalog from subprojects

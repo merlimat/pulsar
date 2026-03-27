@@ -30,6 +30,7 @@ val dockerPlatforms = providers.gradleProperty("docker.platforms").getOrElse("")
 val useWolfi = providers.gradleProperty("docker.wolfi").isPresent
 
 val serverDistTask = project(":distribution:pulsar-server-distribution").tasks.named("serverDistTar")
+val offloaderDistTask = project(":distribution:pulsar-offloader-distribution").tasks.named("offloaderDistTar")
 
 // Copy the server tarball into target/ (Docker build context)
 val copyTarball by tasks.registering(Copy::class) {
@@ -38,15 +39,23 @@ val copyTarball by tasks.registering(Copy::class) {
     into(layout.buildDirectory.dir("target"))
 }
 
+// Copy offloader tarball into build context
+val copyOffloaderTarball by tasks.registering(Copy::class) {
+    dependsOn(offloaderDistTask)
+    from(offloaderDistTask.map { (it as Tar).archiveFile })
+    into(layout.buildDirectory.dir("target"))
+}
+
 val dockerBuild by tasks.registering(Exec::class) {
     group = "docker"
     description = "Build the Pulsar Docker image"
 
-    dependsOn(copyTarball)
+    dependsOn(copyTarball, copyOffloaderTarball)
 
     val dockerfile = if (useWolfi) "Dockerfile.wolfi" else "Dockerfile"
     val imageName = "${dockerOrganization}/${dockerImage}:${dockerTag}"
     val tarballName = "apache-pulsar-${pulsarVersion}-bin.tar.gz"
+    val offloaderTarballName = "apache-pulsar-offloaders-${pulsarVersion}-bin.tar.gz"
     // Resolve version catalog values at configuration time (not in doFirst)
     val pythonClientVersion = libs.versions.pulsar.client.python.get()
     val snappyVersion = libs.versions.snappy.get()
@@ -63,6 +72,7 @@ val dockerBuild by tasks.registering(Exec::class) {
         "--build-arg", "PULSAR_CLIENT_PYTHON_VERSION=${pythonClientVersion}",
         "--build-arg", "SNAPPY_VERSION=${snappyVersion}",
         "--build-arg", "IMAGE_JDK_MAJOR_VERSION=${jdkMajorVersion}",
+        "--build-arg", "PULSAR_OFFLOADER_TARBALL=build/target/${offloaderTarballName}",
     )
 
     if (dockerPlatforms.isNotEmpty()) {

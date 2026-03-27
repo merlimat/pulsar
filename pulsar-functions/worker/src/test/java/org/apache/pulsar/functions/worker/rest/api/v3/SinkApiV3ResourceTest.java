@@ -95,7 +95,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
 
     @Override
     protected File getDefaultNarFile() {
-        return getPulsarIOCassandraNar();
+        return getPulsarIODataGenNar();
     }
 
     @Test(expectedExceptions = RestException.class, expectedExceptionsMessageRegExp = "Tenant is not provided")
@@ -108,7 +108,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     mockedInputStream,
                     mockedFormData,
                     TOPICS_TO_SER_DE_CLASS_NAME,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM,
                     null
             );
@@ -128,7 +128,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     mockedInputStream,
                     mockedFormData,
                     TOPICS_TO_SER_DE_CLASS_NAME,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM,
                     null
             );
@@ -148,7 +148,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     mockedInputStream,
                     mockedFormData,
                     TOPICS_TO_SER_DE_CLASS_NAME,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM,
                     null);
         } catch (RestException re) {
@@ -226,7 +226,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     public void testRegisterSinkInvalidJarNoSink() throws IOException {
         mockInstanceUtils();
         try {
-            try (FileInputStream inputStream = new FileInputStream(getPulsarIONettyNar())) {
+            try (FileInputStream inputStream = new FileInputStream(getPulsarApiExamplesNar())) {
                 testRegisterSinkMissingArguments(
                         TENANT,
                         NAMESPACE,
@@ -250,7 +250,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     public void testRegisterSinkNoInput() throws IOException {
         mockInstanceUtils();
         try {
-            try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+            try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
                 testRegisterSinkMissingArguments(
                         TENANT,
                         NAMESPACE,
@@ -258,7 +258,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                         inputStream,
                         mockedFormData,
                         null,
-                        CASSANDRA_STRING_SINK,
+                        DATA_GENERATOR_PRINT_SINK,
                         PARALLELISM,
                         null
                 );
@@ -274,7 +274,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     public void testRegisterSinkNegativeParallelism() throws IOException {
         mockInstanceUtils();
         try {
-            try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+            try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
                 testRegisterSinkMissingArguments(
                         TENANT,
                         NAMESPACE,
@@ -282,7 +282,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                         inputStream,
                         mockedFormData,
                         TOPICS_TO_SER_DE_CLASS_NAME,
-                        CASSANDRA_STRING_SINK,
+                        DATA_GENERATOR_PRINT_SINK,
                         -2,
                         null
                 );
@@ -298,7 +298,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     public void testRegisterSinkZeroParallelism() throws IOException {
         mockInstanceUtils();
         try {
-            try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+            try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
                 testRegisterSinkMissingArguments(
                         TENANT,
                         NAMESPACE,
@@ -306,7 +306,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                         inputStream,
                         mockedFormData,
                         TOPICS_TO_SER_DE_CLASS_NAME,
-                        CASSANDRA_STRING_SINK,
+                        DATA_GENERATOR_PRINT_SINK,
                         0,
                         null
                 );
@@ -328,7 +328,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     null,
                     null,
                     TOPICS_TO_SER_DE_CLASS_NAME,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM,
                     "http://localhost:1234/test"
             );
@@ -413,7 +413,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
 
     private void registerDefaultSinkWithPackageUrl(String packageUrl) throws IOException {
         SinkConfig sinkConfig = createDefaultSinkConfig();
-        try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+        try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
             resource.registerSink(
                     TENANT,
                     NAMESPACE,
@@ -485,7 +485,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         when(mockedManager.containsFunction(eq(actualTenant), eq(actualNamespace), eq(actualName))).thenReturn(false);
 
         SinkConfig sinkConfig = createDefaultSinkConfig();
-        try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+        try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
             resource.registerSink(
                     actualTenant,
                     actualNamespace,
@@ -568,7 +568,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         sinkConfig.setTransformFunction("builtin://transform");
         sinkConfig.setTransformFunctionConfig("{\"dummy\": \"dummy\"}");
 
-        try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+        try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
             resource.registerSink(
                     TENANT,
                     NAMESPACE,
@@ -596,7 +596,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         sinkConfig.setTransformFunctionConfig("{\"dummy\": \"dummy\"}");
 
         try {
-            try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+            try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
                 resource.registerSink(
                         TENANT,
                         NAMESPACE,
@@ -628,7 +628,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     mockedInputStream,
                     mockedFormData,
                     TOPICS_TO_SER_DE_CLASS_NAME,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM,
                     "Tenant is not provided");
         } catch (RestException re) {
@@ -647,7 +647,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     mockedInputStream,
                     mockedFormData,
                     TOPICS_TO_SER_DE_CLASS_NAME,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM,
                     "Namespace is not provided");
         } catch (RestException re) {
@@ -666,7 +666,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     mockedInputStream,
                     mockedFormData,
                     TOPICS_TO_SER_DE_CLASS_NAME,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM,
                     "Sink name is not provided");
         } catch (RestException re) {
@@ -731,7 +731,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     null,
                     mockedFormData,
                     inputTopics,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM,
                     "Input Topics cannot be altered");
         } catch (RestException re) {
@@ -744,7 +744,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     public void testUpdateSinkDifferentParallelism() throws Exception {
         mockWorkerUtils();
 
-        try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+        try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
             testUpdateSinkMissingArguments(
                     TENANT,
                     NAMESPACE,
@@ -752,7 +752,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                     inputStream,
                     mockedFormData,
                     TOPICS_TO_SER_DE_CLASS_NAME,
-                    CASSANDRA_STRING_SINK,
+                    DATA_GENERATOR_PRINT_SINK,
                     PARALLELISM + 1,
                     null);
         }
@@ -818,7 +818,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
                 FunctionMetaData.newBuilder().setFunctionDetails(createDefaultFunctionDetails()).build();
         when(mockedManager.getFunctionMetaData(any(), any(), any())).thenReturn(mockedFunctionMetaData);
 
-        try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+        try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
             resource.updateSink(
                     TENANT,
                     NAMESPACE,
@@ -875,7 +875,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
     public void testUpdateSinkWithUrl() throws Exception {
         Configurator.setRootLevel(Level.DEBUG);
 
-        String filePackageUrl = getPulsarIOCassandraNar().toURI().toString();
+        String filePackageUrl = getPulsarIODataGenNar().toURI().toString();
 
         SinkConfig sinkConfig = createDefaultSinkConfig();
 
@@ -966,7 +966,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(mockedFunctionMetaData);
         when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(true);
 
-        try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+        try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
             resource.updateSink(
                     TENANT,
                     NAMESPACE,
@@ -1449,7 +1449,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         sinkConfig.setTenant(TENANT);
         sinkConfig.setNamespace(NAMESPACE);
         sinkConfig.setName(sink);
-        sinkConfig.setClassName(CASSANDRA_STRING_SINK);
+        sinkConfig.setClassName(DATA_GENERATOR_PRINT_SINK);
         sinkConfig.setParallelism(PARALLELISM);
         sinkConfig.setTopicToSerdeClassName(TOPICS_TO_SER_DE_CLASS_NAME);
         return sinkConfig;
@@ -1486,13 +1486,13 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
 
         });
 
-        registerBuiltinConnector("cassandra", getPulsarIOCassandraNar());
+        registerBuiltinConnector("data-generator", getPulsarIODataGenNar());
 
         when(mockedRuntimeFactory.externallyManaged()).thenReturn(true);
         when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(false);
 
         SinkConfig sinkConfig = createDefaultSinkConfig();
-        sinkConfig.setArchive("builtin://cassandra");
+        sinkConfig.setArchive("builtin://data-generator");
 
         resource.registerSink(
                 TENANT,
@@ -1524,13 +1524,13 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
 
         });
 
-        registerBuiltinConnector("cassandra", getPulsarIOCassandraNar());
+        registerBuiltinConnector("data-generator", getPulsarIODataGenNar());
 
         when(mockedRuntimeFactory.externallyManaged()).thenReturn(true);
         when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(sink))).thenReturn(false);
 
         SinkConfig sinkConfig = createDefaultSinkConfig();
-        sinkConfig.setArchive("builtin://cassandra");
+        sinkConfig.setArchive("builtin://data-generator");
 
         try {
             resource.registerSink(
@@ -1599,7 +1599,7 @@ public class SinkApiV3ResourceTest extends AbstractFunctionsResourceTest {
         // no changes but set the auth-update flag to true, should not fail
         UpdateOptionsImpl updateOptions = new UpdateOptionsImpl();
         updateOptions.setUpdateAuthData(true);
-        try (FileInputStream inputStream = new FileInputStream(getPulsarIOCassandraNar())) {
+        try (FileInputStream inputStream = new FileInputStream(getPulsarIODataGenNar())) {
             resource.updateSink(
                     sinkConfig.getTenant(),
                     sinkConfig.getNamespace(),

@@ -137,14 +137,8 @@ project(":pulsar-io:pulsar-io-batch-discovery-triggerers").projectDir = file("pu
 include("pulsar-io:pulsar-io-batch-data-generator")
 project(":pulsar-io:pulsar-io-batch-data-generator").projectDir = file("pulsar-io/batch-data-generator")
 
-include("pulsar-io:pulsar-io-cassandra")
-project(":pulsar-io:pulsar-io-cassandra").projectDir = file("pulsar-io/cassandra")
-
 include("pulsar-io:pulsar-io-data-generator")
 project(":pulsar-io:pulsar-io-data-generator").projectDir = file("pulsar-io/data-generator")
-
-include("pulsar-io:pulsar-io-netty")
-project(":pulsar-io:pulsar-io-netty").projectDir = file("pulsar-io/netty")
 
 // Tier 6
 include("pulsar-docs-tools")
@@ -204,91 +198,6 @@ if (!settings.extra.has("coreModules")) {
     include("pulsar-functions:pulsar-functions-local-runner-shaded")
     project(":pulsar-functions:pulsar-functions-local-runner-shaded").projectDir = file("pulsar-functions/localrun-shaded")
 
-    // IO connectors (not in Maven core-modules)
-    include("pulsar-io:pulsar-io-aws")
-    project(":pulsar-io:pulsar-io-aws").projectDir = file("pulsar-io/aws")
-    include("pulsar-io:pulsar-io-http")
-    project(":pulsar-io:pulsar-io-http").projectDir = file("pulsar-io/http")
-    include("pulsar-io:pulsar-io-file")
-    project(":pulsar-io:pulsar-io-file").projectDir = file("pulsar-io/file")
-    include("pulsar-io:pulsar-io-aerospike")
-    project(":pulsar-io:pulsar-io-aerospike").projectDir = file("pulsar-io/aerospike")
-    include("pulsar-io:pulsar-io-alluxio")
-    project(":pulsar-io:pulsar-io-alluxio").projectDir = file("pulsar-io/alluxio")
-    include("pulsar-io:pulsar-io-azure-data-explorer")
-    project(":pulsar-io:pulsar-io-azure-data-explorer").projectDir = file("pulsar-io/azure-data-explorer")
-    include("pulsar-io:pulsar-io-canal")
-    project(":pulsar-io:pulsar-io-canal").projectDir = file("pulsar-io/canal")
-    include("pulsar-io:pulsar-io-elastic-search")
-    project(":pulsar-io:pulsar-io-elastic-search").projectDir = file("pulsar-io/elastic-search")
-    include("pulsar-io:pulsar-io-kafka")
-    project(":pulsar-io:pulsar-io-kafka").projectDir = file("pulsar-io/kafka")
-    include("pulsar-io:pulsar-io-kafka-connect-adaptor")
-    project(":pulsar-io:pulsar-io-kafka-connect-adaptor").projectDir = file("pulsar-io/kafka-connect-adaptor")
-    include("pulsar-io:pulsar-io-kafka-connect-adaptor-nar")
-    project(":pulsar-io:pulsar-io-kafka-connect-adaptor-nar").projectDir = file("pulsar-io/kafka-connect-adaptor-nar")
-    include("pulsar-io:pulsar-io-dynamodb")
-    project(":pulsar-io:pulsar-io-dynamodb").projectDir = file("pulsar-io/dynamodb")
-    include("pulsar-io:pulsar-io-hbase")
-    project(":pulsar-io:pulsar-io-hbase").projectDir = file("pulsar-io/hbase")
-    include("pulsar-io:pulsar-io-hdfs3")
-    project(":pulsar-io:pulsar-io-hdfs3").projectDir = file("pulsar-io/hdfs3")
-    include("pulsar-io:pulsar-io-influxdb")
-    project(":pulsar-io:pulsar-io-influxdb").projectDir = file("pulsar-io/influxdb")
-    include("pulsar-io:pulsar-io-mongo")
-    project(":pulsar-io:pulsar-io-mongo").projectDir = file("pulsar-io/mongo")
-    include("pulsar-io:pulsar-io-nsq")
-    project(":pulsar-io:pulsar-io-nsq").projectDir = file("pulsar-io/nsq")
-    include("pulsar-io:pulsar-io-rabbitmq")
-    project(":pulsar-io:pulsar-io-rabbitmq").projectDir = file("pulsar-io/rabbitmq")
-    include("pulsar-io:pulsar-io-redis")
-    project(":pulsar-io:pulsar-io-redis").projectDir = file("pulsar-io/redis")
-    include("pulsar-io:pulsar-io-solr")
-    project(":pulsar-io:pulsar-io-solr").projectDir = file("pulsar-io/solr")
-    include("pulsar-io:pulsar-io-kinesis-kpl-shaded")
-    project(":pulsar-io:pulsar-io-kinesis-kpl-shaded").projectDir = file("pulsar-io/kinesis-kpl-shaded")
-    include("pulsar-io:pulsar-io-kinesis")
-    project(":pulsar-io:pulsar-io-kinesis").projectDir = file("pulsar-io/kinesis")
-
-    // IO JDBC
-    include("pulsar-io:pulsar-io-jdbc")
-    project(":pulsar-io:pulsar-io-jdbc").projectDir = file("pulsar-io/jdbc")
-    // Use qualified names for JDBC sub-modules to avoid name clashes with debezium sub-modules
-    // (both have "core" and "postgres" children).
-    include("pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-core")
-    project(":pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-core").projectDir = file("pulsar-io/jdbc/core")
-    include("pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-clickhouse")
-    project(":pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-clickhouse").projectDir = file("pulsar-io/jdbc/clickhouse")
-    include("pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-mariadb")
-    project(":pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-mariadb").projectDir = file("pulsar-io/jdbc/mariadb")
-    include("pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-openmldb")
-    project(":pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-openmldb").projectDir = file("pulsar-io/jdbc/openmldb")
-    include("pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-postgres")
-    project(":pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-postgres").projectDir = file("pulsar-io/jdbc/postgres")
-    include("pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-sqlite")
-    project(":pulsar-io:pulsar-io-jdbc:pulsar-io-jdbc-sqlite").projectDir = file("pulsar-io/jdbc/sqlite")
-
-    // IO Debezium
-    include("pulsar-io:pulsar-io-debezium")
-    project(":pulsar-io:pulsar-io-debezium").projectDir = file("pulsar-io/debezium")
-    // Use qualified names for debezium sub-modules to avoid name clashes with JDBC sub-modules
-    include("pulsar-io:pulsar-io-debezium:pulsar-io-debezium-core")
-    project(":pulsar-io:pulsar-io-debezium:pulsar-io-debezium-core").projectDir = file("pulsar-io/debezium/core")
-    include("pulsar-io:pulsar-io-debezium:pulsar-io-debezium-mongodb")
-    project(":pulsar-io:pulsar-io-debezium:pulsar-io-debezium-mongodb").projectDir = file("pulsar-io/debezium/mongodb")
-    include("pulsar-io:pulsar-io-debezium:pulsar-io-debezium-mssql")
-    project(":pulsar-io:pulsar-io-debezium:pulsar-io-debezium-mssql").projectDir = file("pulsar-io/debezium/mssql")
-    include("pulsar-io:pulsar-io-debezium:pulsar-io-debezium-mysql")
-    project(":pulsar-io:pulsar-io-debezium:pulsar-io-debezium-mysql").projectDir = file("pulsar-io/debezium/mysql")
-    include("pulsar-io:pulsar-io-debezium:pulsar-io-debezium-oracle")
-    project(":pulsar-io:pulsar-io-debezium:pulsar-io-debezium-oracle").projectDir = file("pulsar-io/debezium/oracle")
-    include("pulsar-io:pulsar-io-debezium:pulsar-io-debezium-postgres")
-    project(":pulsar-io:pulsar-io-debezium:pulsar-io-debezium-postgres").projectDir = file("pulsar-io/debezium/postgres")
-
-    // IO docs (depends on all IO connectors)
-    include("pulsar-io:pulsar-io-docs")
-    project(":pulsar-io:pulsar-io-docs").projectDir = file("pulsar-io/docs")
-
     // Tiered storage
     include("jclouds-shaded")
     include("tiered-storage:tiered-storage-jcloud")
@@ -300,11 +209,9 @@ if (!settings.extra.has("coreModules")) {
     include("pulsar-broker-auth-athenz")
     include("pulsar-client-auth-athenz")
 
-    // Distribution — extra (shell, IO, offloaders)
+    // Distribution — extra (shell, offloaders)
     include("distribution:pulsar-shell-distribution")
     project(":distribution:pulsar-shell-distribution").projectDir = file("distribution/shell")
-    include("distribution:pulsar-io-distribution")
-    project(":distribution:pulsar-io-distribution").projectDir = file("distribution/io")
     include("distribution:pulsar-offloader-distribution")
     project(":distribution:pulsar-offloader-distribution").projectDir = file("distribution/offloaders")
 
@@ -322,8 +229,6 @@ val dockerRequested = settings.extra.has("docker") ||
 if (dockerRequested) {
     include("docker:pulsar-docker-image")
     project(":docker:pulsar-docker-image").projectDir = file("docker/pulsar")
-    include("docker:pulsar-all-docker-image")
-    project(":docker:pulsar-all-docker-image").projectDir = file("docker/pulsar-all")
 
     // Test Docker images
     include("tests:java-test-functions")

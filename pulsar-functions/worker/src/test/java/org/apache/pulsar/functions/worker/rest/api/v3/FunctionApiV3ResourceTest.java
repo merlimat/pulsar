@@ -168,14 +168,15 @@ public class FunctionApiV3ResourceTest extends AbstractFunctionApiResourceTest {
         when(mockedManager.containsFunction(eq(TENANT), eq(NAMESPACE), eq(FUNCTION))).thenReturn(true);
 
         Function.FunctionMetaData metaData = Function.FunctionMetaData.newBuilder()
-                .setPackageLocation(Function.PackageLocationMetaData.newBuilder().setPackagePath("builtin://cassandra"))
+                .setPackageLocation(Function.PackageLocationMetaData.newBuilder()
+                        .setPackagePath("builtin://data-generator"))
                 .setTransformFunctionPackageLocation(
                         Function.PackageLocationMetaData.newBuilder().setPackagePath("http://invalid"))
                 .setFunctionDetails(Function.FunctionDetails.newBuilder()
                         .setComponentType(Function.FunctionDetails.ComponentType.SINK)).build();
         when(mockedManager.getFunctionMetaData(eq(TENANT), eq(NAMESPACE), eq(FUNCTION))).thenReturn(metaData);
 
-        registerBuiltinConnector("cassandra", file);
+        registerBuiltinConnector("data-generator", file);
 
         StreamingOutput streamOutput = downloadFunction(TENANT, NAMESPACE, FUNCTION,
                 AuthenticationParameters.builder().build(), false);

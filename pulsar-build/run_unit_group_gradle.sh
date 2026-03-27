@@ -137,32 +137,9 @@ function test_group_other() {
     --exclude-task :pulsar-metadata:test \
     -x :pulsar-io:pulsar-io-core:test \
     -x :pulsar-io:pulsar-io-common:test \
-    -x :pulsar-io:pulsar-io-cassandra:test \
     -x :pulsar-io:pulsar-io-data-generator:test \
-    -x :pulsar-io:pulsar-io-netty:test \
-    -x :pulsar-io:pulsar-io-file:test \
-    -x :pulsar-io:pulsar-io-http:test \
-    -x :pulsar-io:pulsar-io-aws:test \
-    -x :pulsar-io:pulsar-io-alluxio:test \
-    -x :pulsar-io:pulsar-io-azure-data-explorer:test \
-    -x :pulsar-io:pulsar-io-canal:test \
-    -x :pulsar-io:pulsar-io-dynamodb:test \
-    -x :pulsar-io:pulsar-io-hbase:test \
-    -x :pulsar-io:pulsar-io-hdfs3:test \
-    -x :pulsar-io:pulsar-io-influxdb:test \
-    -x :pulsar-io:pulsar-io-kafka:test \
-    -x :pulsar-io:pulsar-io-mongo:test \
-    -x :pulsar-io:pulsar-io-nsq:test \
-    -x :pulsar-io:pulsar-io-rabbitmq:test \
-    -x :pulsar-io:pulsar-io-redis:test \
-    -x :pulsar-io:pulsar-io-solr:test \
-    -x :pulsar-io:pulsar-io-kinesis:test \
-    -x :pulsar-io:pulsar-io-debezium:test \
-    -x :pulsar-io:pulsar-io-jdbc:test \
     -x :pulsar-io:pulsar-io-batch-data-generator:test \
     -x :pulsar-io:pulsar-io-batch-discovery-triggerers:test \
-    -x :pulsar-io:pulsar-io-elastic-search:test \
-    -x :pulsar-io:pulsar-io-kafka-connect-adaptor:test \
     test
 
   # Run DnsResolverTest separately since it relies on static field values
@@ -172,41 +149,12 @@ function test_group_other() {
 }
 
 function test_group_pulsar_io() {
-  # Run all pulsar-io module tests except elastic-search and kafka-connect-adaptor
-  # (those have their own dedicated CI groups)
+  # Run pulsar-io module tests (connectors moved to pulsar-connectors repo)
   gradle_test :pulsar-io:pulsar-io-core:test \
     :pulsar-io:pulsar-io-common:test \
-    :pulsar-io:pulsar-io-cassandra:test \
     :pulsar-io:pulsar-io-data-generator:test \
-    :pulsar-io:pulsar-io-netty:test \
-    :pulsar-io:pulsar-io-file:test \
-    :pulsar-io:pulsar-io-http:test \
-    :pulsar-io:pulsar-io-aws:test \
-    :pulsar-io:pulsar-io-azure-data-explorer:test \
-    :pulsar-io:pulsar-io-canal:test \
-    :pulsar-io:pulsar-io-dynamodb:test \
-    :pulsar-io:pulsar-io-hbase:test \
-    :pulsar-io:pulsar-io-hdfs3:test \
-    :pulsar-io:pulsar-io-influxdb:test \
-    :pulsar-io:pulsar-io-kafka:test \
-    :pulsar-io:pulsar-io-mongo:test \
-    :pulsar-io:pulsar-io-nsq:test \
-    :pulsar-io:pulsar-io-rabbitmq:test \
-    :pulsar-io:pulsar-io-redis:test \
-    :pulsar-io:pulsar-io-solr:test \
-    :pulsar-io:pulsar-io-kinesis:test \
-    :pulsar-io:pulsar-io-debezium:test \
-    :pulsar-io:pulsar-io-jdbc:test \
     :pulsar-io:pulsar-io-batch-data-generator:test \
     :pulsar-io:pulsar-io-batch-discovery-triggerers:test
-}
-
-function test_group_pulsar_io_elastic() {
-  gradle_test :pulsar-io:pulsar-io-elastic-search:test
-}
-
-function test_group_pulsar_io_kafka_connect() {
-  gradle_test :pulsar-io:pulsar-io-kafka-connect-adaptor:test
 }
 
 function test_group_protobufv4() {

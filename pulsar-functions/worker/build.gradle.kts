@@ -27,6 +27,10 @@ sourceSets {
     }
 }
 
+tasks.named<ProcessResources>("processTestResources") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
 dependencies {
     api(project(":pulsar-functions:pulsar-functions-runtime"))
     implementation(project(":pulsar-broker-common"))
@@ -100,8 +104,6 @@ val testExamplesJar by configurations.creating {
 dependencies {
     testNars(project(":pulsar-functions:pulsar-functions-api-examples-builtin"))
     testNars(project(":pulsar-io:pulsar-io-data-generator"))
-    testNars(project(":pulsar-io:pulsar-io-netty"))
-    testNars(project(":pulsar-io:pulsar-io-cassandra"))
     testExamplesJar(project(":pulsar-functions:pulsar-functions-api-examples"))
 }
 
@@ -120,10 +122,6 @@ tasks.withType<Test> {
             narMap[":pulsar-functions:pulsar-functions-api-examples-builtin"]!!)
         systemProperty("pulsar-io-data-generator.nar.path",
             narMap[":pulsar-io:pulsar-io-data-generator"]!!)
-        systemProperty("pulsar-io-netty.nar.path",
-            narMap[":pulsar-io:pulsar-io-netty"]!!)
-        systemProperty("pulsar-io-cassandra.nar.path",
-            narMap[":pulsar-io:pulsar-io-cassandra"]!!)
         // A valid jar that is not a valid nar — used for invalid-nar tests
         systemProperty("pulsar-io-invalid.nar.path", examplesJarPath)
     }

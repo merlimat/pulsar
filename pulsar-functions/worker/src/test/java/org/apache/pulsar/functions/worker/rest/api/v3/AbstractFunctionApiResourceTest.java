@@ -1281,9 +1281,9 @@ public abstract class AbstractFunctionApiResourceTest extends AbstractFunctionsR
                 .setUploadBuiltinSinksSources(false);
         when(mockedWorkerService.getWorkerConfig()).thenReturn(config);
 
-        registerBuiltinConnector("cassandra", file);
+        registerBuiltinConnector("data-generator", file);
 
-        File pkgFile = downloadFunction("builtin://cassandra", null);
+        File pkgFile = downloadFunction("builtin://data-generator", null);
         Assert.assertTrue(pkgFile.exists());
         Assert.assertEquals(file.length(), pkgFile.length());
         pkgFile.delete();

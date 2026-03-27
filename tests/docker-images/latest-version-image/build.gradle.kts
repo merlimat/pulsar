@@ -28,8 +28,8 @@ val dockerTag = providers.gradleProperty("docker.tag").getOrElse("latest")
 val dockerPlatforms = providers.gradleProperty("docker.platforms").getOrElse("")
 val golangImage = providers.gradleProperty("docker.golang.image").getOrElse("golang:1.24-alpine")
 
-// Dependencies: pulsar-all image, java-test-functions jar, java-test-plugins jar, buildtools jar
-val pulsarAllDockerBuild = project(":docker:pulsar-all-docker-image").tasks.named("dockerBuild")
+// Dependencies: pulsar image, java-test-functions jar, java-test-plugins jar, buildtools jar
+val pulsarDockerBuild = project(":docker:pulsar-docker-image").tasks.named("dockerBuild")
 val testFunctionsJar = project(":tests:java-test-functions").tasks.named("shadowJar")
 val testPluginsJar = project(":tests:java-test-plugins").tasks.named("jar")
 val buildtoolsJar = project(":buildtools").tasks.named("jar")
@@ -71,17 +71,17 @@ val dockerBuild by tasks.registering(Exec::class) {
     group = "docker"
     description = "Build the pulsar-test-latest-version Docker image"
 
-    dependsOn(pulsarAllDockerBuild, prepareBuildContext)
+    dependsOn(pulsarDockerBuild, prepareBuildContext)
 
     val imageName = "${dockerOrganization}/pulsar-test-latest-version:${dockerTag}"
-    val pulsarAllImage = "${dockerOrganization}/pulsar-all:${dockerTag}"
+    val pulsarImage = "${dockerOrganization}/pulsar:${dockerTag}"
 
     workingDir = projectDir
 
     val args = mutableListOf(
         "docker", "build",
         "-t", imageName,
-        "--build-arg", "PULSAR_ALL_IMAGE=${pulsarAllImage}",
+        "--build-arg", "PULSAR_IMAGE=${pulsarImage}",
         "--build-arg", "GOLANG_IMAGE=${golangImage}",
     )
 

@@ -83,11 +83,12 @@ public abstract class AbstractFunctionsResourceTest {
     protected static final String NAMESPACE = "test-namespace";
     protected static final Map<String, String> TOPICS_TO_SER_DE_CLASS_NAME = new HashMap<>();
     protected static final String SUBSCRIPTION_NAME = "test-subscription";
-    protected static final String CASSANDRA_STRING_SINK = "org.apache.pulsar.io.cassandra.CassandraStringSink";
+    protected static final String DATA_GENERATOR_PRINT_SINK =
+            "org.apache.pulsar.io.datagenerator.DataGeneratorPrintSink";
     protected static final int PARALLELISM = 1;
-    private static final String SYSTEM_PROPERTY_NAME_CASSANDRA_NAR_FILE_PATH = "pulsar-io-cassandra.nar.path";
     private static final String SYSTEM_PROPERTY_NAME_DATAGEN_NAR_FILE_PATH = "pulsar-io-data-generator.nar.path";
-    private static final String SYSTEM_PROPERTY_NAME_NETTY_NAR_FILE_PATH = "pulsar-io-netty.nar.path";
+    private static final String SYSTEM_PROPERTY_NAME_FUNCTIONS_API_EXAMPLES_JAR_FILE_PATH =
+            "pulsar-functions-api-examples.jar.path";
     private static final String SYSTEM_PROPERTY_NAME_INVALID_NAR_FILE_PATH = "pulsar-io-invalid.nar.path";
     private static final String SYSTEM_PROPERTY_NAME_FUNCTIONS_API_EXAMPLES_NAR_FILE_PATH =
             "pulsar-functions-api-examples.nar.path";
@@ -118,22 +119,17 @@ public abstract class AbstractFunctionsResourceTest {
     protected ConnectorsManager connectorsManager = new ConnectorsManager();
     protected FunctionsManager functionsManager = new FunctionsManager();
 
-    public static File getPulsarIOCassandraNar() {
-        return new File(Objects.requireNonNull(System.getProperty(SYSTEM_PROPERTY_NAME_CASSANDRA_NAR_FILE_PATH)
-                , "pulsar-io-cassandra.nar file location must be specified with "
-                        + SYSTEM_PROPERTY_NAME_CASSANDRA_NAR_FILE_PATH + " system property"));
-    }
-
     public static File getPulsarIODataGenNar() {
         return new File(Objects.requireNonNull(System.getProperty(SYSTEM_PROPERTY_NAME_DATAGEN_NAR_FILE_PATH)
                 , "pulsar-io-data-generator.nar file location must be specified with "
                         + SYSTEM_PROPERTY_NAME_DATAGEN_NAR_FILE_PATH + " system property"));
     }
 
-    public static File getPulsarIONettyNar() {
-        return new File(Objects.requireNonNull(System.getProperty(SYSTEM_PROPERTY_NAME_NETTY_NAR_FILE_PATH)
-                , "pulsar-io-netty.nar file location must be specified with "
-                        + SYSTEM_PROPERTY_NAME_NETTY_NAR_FILE_PATH + " system property"));
+    public static File getPulsarApiExamplesJar() {
+        return new File(Objects.requireNonNull(
+                System.getProperty(SYSTEM_PROPERTY_NAME_FUNCTIONS_API_EXAMPLES_JAR_FILE_PATH)
+                , "pulsar-functions-api-examples.jar file location must be specified with "
+                        + SYSTEM_PROPERTY_NAME_FUNCTIONS_API_EXAMPLES_JAR_FILE_PATH + " system property"));
     }
 
     public static File getPulsarIOInvalidNar() {

@@ -27,6 +27,10 @@ sourceSets {
     }
 }
 
+tasks.named<ProcessResources>("processTestResources") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
 dependencies {
     api(project(":pulsar-functions:pulsar-functions-instance"))
     implementation(project(":pulsar-functions:pulsar-functions-secrets"))

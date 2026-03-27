@@ -186,13 +186,7 @@ jobs:
         # --no-configuration-cache: Shadow plugin's filesMatching { filter { } } lambdas
         # capture Gradle script references that can't be serialized by the configuration cache.
         run: >-
-          ./gradlew assemble
-          -x :pulsar-client-shaded:shadowJar
-          -x :pulsar-client-admin-shaded:shadowJar
-          -x :pulsar-client-all:shadowJar
-          -x :pulsar-functions:pulsar-functions-local-runner-shaded:shadowJar
-          -x :microbench:shadowJar
-          rat licenseMain licenseTest checkstyleMain checkstyleTest
+          ./gradlew assemble rat licenseMain licenseTest checkstyleMain checkstyleTest
           --no-configuration-cache
 
       - name: Check binary licenses
@@ -266,11 +260,6 @@ jobs:
             group: PROXY
           - name: Pulsar IO
             group: PULSAR_IO
-            timeout: 75
-          - name: Pulsar IO - Elastic Search
-            group: PULSAR_IO_ELASTIC
-          - name: Pulsar IO - Kafka Connect Adaptor
-            group: PULSAR_IO_KAFKA_CONNECT
           - name: Pulsar Client
             group: CLIENT
           - name: Pulsar Metadata
@@ -782,14 +771,8 @@ jobs:
           - name: Pulsar Connectors - Process
             group: PULSAR_CONNECTORS_PROCESS
 
-          - name: Pulsar IO
-            group: PULSAR_IO
-
           - name: Plugin
             group: PLUGIN
-
-          - name: Pulsar IO - Oracle
-            group: PULSAR_IO_ORA
 
     steps:
       - name: checkout
