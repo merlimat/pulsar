@@ -621,7 +621,8 @@ public abstract class ComponentImpl implements Component<PulsarWorkerService> {
         }
 
         if (!FunctionMetaDataUtils.canChangeState(functionMetaData, Integer.parseInt(instanceId),
-                start ? org.apache.pulsar.functions.proto.FunctionState.RUNNING : org.apache.pulsar.functions.proto.FunctionState.STOPPED)) {
+                start ? org.apache.pulsar.functions.proto.FunctionState.RUNNING
+                        : org.apache.pulsar.functions.proto.FunctionState.STOPPED)) {
             log.error("Operation not permitted on {}/{}/{}", tenant, namespace, componentName);
             throw new RestException(Status.BAD_REQUEST, "Operation not permitted");
         }
@@ -753,7 +754,8 @@ public abstract class ComponentImpl implements Component<PulsarWorkerService> {
         }
 
         if (!FunctionMetaDataUtils.canChangeState(functionMetaData, -1,
-                start ? org.apache.pulsar.functions.proto.FunctionState.RUNNING : org.apache.pulsar.functions.proto.FunctionState.STOPPED)) {
+                start ? org.apache.pulsar.functions.proto.FunctionState.RUNNING
+                        : org.apache.pulsar.functions.proto.FunctionState.STOPPED)) {
             log.error("Operation not permitted on {}/{}/{}", tenant, namespace, componentName);
             throw new RestException(Status.BAD_REQUEST, "Operation not permitted");
         }

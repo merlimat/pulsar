@@ -50,7 +50,6 @@ import org.apache.pulsar.common.util.RestException;
 import org.apache.pulsar.functions.auth.FunctionAuthData;
 import org.apache.pulsar.functions.instance.InstanceUtils;
 import org.apache.pulsar.functions.proto.Assignment;
-import org.apache.pulsar.functions.proto.FunctionAuthenticationSpec;
 import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.apache.pulsar.functions.proto.FunctionMetaData;
 import org.apache.pulsar.functions.proto.PackageLocationMetaData;
@@ -600,8 +599,8 @@ public class SinksImpl extends ComponentImpl implements Sinks<PulsarWorkerServic
         }
     }
 
-    private ExceptionInformation getExceptionInformation(org.apache.pulsar.functions.proto.FunctionStatus.ExceptionInformation
-                                                                 exceptionEntry) {
+    private ExceptionInformation getExceptionInformation(
+            org.apache.pulsar.functions.proto.FunctionStatus.ExceptionInformation exceptionEntry) {
         ExceptionInformation exceptionInformation =
                 new ExceptionInformation();
         exceptionInformation.setTimestampMs(exceptionEntry.getMsSinceEpoch());
