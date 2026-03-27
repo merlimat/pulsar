@@ -21,8 +21,8 @@ package org.apache.pulsar.functions.utils;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import org.apache.pulsar.common.functions.BatchingConfig;
-import org.testng.annotations.Test;
 import org.apache.pulsar.functions.proto.BatchingSpec;
+import org.testng.annotations.Test;
 
 public class BatchingUtilsTest {
 

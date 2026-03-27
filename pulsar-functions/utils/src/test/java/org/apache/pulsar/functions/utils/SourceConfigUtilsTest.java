@@ -42,8 +42,8 @@ import org.apache.pulsar.io.core.SourceContext;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
-import org.testng.annotations.Test;
 import org.apache.pulsar.functions.proto.FunctionDetails;
+import org.testng.annotations.Test;
 
 /**
  * Unit test of {@link SourceConfigUtilsTest}.

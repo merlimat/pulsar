@@ -31,8 +31,8 @@ import org.apache.pulsar.client.api.MessagePayloadContext;
 import org.apache.pulsar.client.api.MessagePayloadProcessor;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.common.functions.MessagePayloadProcessorConfig;
-import org.testng.annotations.Test;
 import org.apache.pulsar.functions.proto.MessagePayloadProcessorSpec;
+import org.testng.annotations.Test;
 
 public class MessagePayloadProcessorUtilsTest {
 

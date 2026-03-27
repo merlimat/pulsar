@@ -18,11 +18,10 @@
  */
 package org.apache.pulsar.functions.utils;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.apache.pulsar.functions.proto.FunctionMetaData;
 import org.apache.pulsar.functions.proto.FunctionState;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * Unit test of {@link FunctionMetaDataUtils}.

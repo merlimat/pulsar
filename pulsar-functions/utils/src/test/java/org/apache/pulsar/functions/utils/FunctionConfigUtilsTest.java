@@ -49,7 +49,6 @@ import org.apache.pulsar.functions.api.Record;
 import org.apache.pulsar.functions.api.WindowContext;
 import org.apache.pulsar.functions.api.WindowFunction;
 import org.apache.pulsar.functions.api.utils.IdentityFunction;
-import org.apache.pulsar.functions.proto.ConsumerSpec;
 import org.apache.pulsar.functions.proto.CryptoSpec;
 import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.apache.pulsar.functions.proto.ProcessingGuarantees;
