@@ -16,25 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.pulsar.functions.source;
+package org.apache.pulsar.common.util.collections;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.util.Map;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.apache.pulsar.common.functions.ConsumerConfig;
-import org.apache.pulsar.common.util.ObjectMapperFactory;
-
-@Data
-@EqualsAndHashCode(callSuper = false)
-public class SingleConsumerPulsarSourceConfig extends PulsarSourceConfig {
-
-    private String topic;
-    private ConsumerConfig consumerConfig;
-
-    public static SingleConsumerPulsarSourceConfig load(Map<String, Object> map) throws IOException {
-        ObjectMapper mapper = ObjectMapperFactory.getMapper().getObjectMapper();
-        return mapper.readValue(mapper.writeValueAsString(map), SingleConsumerPulsarSourceConfig.class);
-    }
+/**
+ * A consumer that accepts a primitive long key and an object value.
+ */
+@FunctionalInterface
+public interface LongObjConsumer<V> {
+    void accept(long key, V value);
 }

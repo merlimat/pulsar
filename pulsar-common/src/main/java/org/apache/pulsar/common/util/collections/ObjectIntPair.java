@@ -16,27 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.pulsar.functions.instance.stats;
+package org.apache.pulsar.common.util.collections;
 
-import io.prometheus.client.Collector;
-import java.util.HashMap;
-import java.util.Map;
-
-public class FunctionCollectorRegistryImpl extends FunctionCollectorRegistry {
-
-    private final Map<String, Collector> namesToCollectors = new HashMap<String, Collector>();
-
-    @Override
-    public <T extends Collector> T registerIfNotExist(String metricName, T collector) {
-        synchronized (this) {
-            @SuppressWarnings("unchecked")
-            T existingCollector = (T) namesToCollectors.get(metricName);
-            if (existingCollector == null) {
-                namesToCollectors.put(metricName, collector);
-                super.register(collector);
-                return collector;
-            }
-            return existingCollector;
-        }
+/**
+ * An immutable pair of an object and an int value.
+ */
+public record ObjectIntPair<T>(T left, int rightInt) {
+    public static <T> ObjectIntPair<T> of(T left, int right) {
+        return new ObjectIntPair<>(left, right);
     }
 }
