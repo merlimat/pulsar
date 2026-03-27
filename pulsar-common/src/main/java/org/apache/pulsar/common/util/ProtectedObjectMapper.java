@@ -68,6 +68,7 @@ import java.util.TimeZone;
  */
 @SuppressWarnings("deprecation") // Overrides deprecated ObjectMapper methods to block mutation
 final class ProtectedObjectMapper extends ObjectMapper {
+    private static final long serialVersionUID = 1L;
 
     private final ObjectMapper src;
 
