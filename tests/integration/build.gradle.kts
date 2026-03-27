@@ -114,7 +114,7 @@ val integrationTest by tasks.registering(Test::class) {
     }
 
     systemProperty("currentVersion", project.version.toString())
-    systemProperty("maven.buildDirectory", layout.buildDirectory.get().asFile.absolutePath)
+    systemProperty("buildDirectory", layout.buildDirectory.get().asFile.absolutePath)
     systemProperty("kafka.version", kafkaVersion)
     systemProperty("debezium.version", debeziumVersion)
 

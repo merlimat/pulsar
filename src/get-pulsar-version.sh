@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,18 +18,7 @@
 # under the License.
 #
 
-import xml.etree.ElementTree as ET
-import re
-from os.path import dirname, realpath, join
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TOP_LEVEL_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Derive the POM path from the current script location
-TOP_LEVEL_PATH = dirname(dirname(realpath(__file__)))
-POM_PATH = join(TOP_LEVEL_PATH, 'pom.xml')
-
-root = ET.XML(open(POM_PATH).read())
-m = re.search(r'^(\d+)\.(\d+)\.(\d+)', root.find('{http://maven.apache.org/POM/4.0.0}version').text)
-
-version_macro = 0
-for i in range(3):
-    version_macro += int(m.group(3 - i)) * (1000 ** i)
-print(version_macro)
+grep "^pulsar " "$TOP_LEVEL_DIR/gradle/libs.versions.toml" | sed 's/.*= *"//' | sed 's/"//'

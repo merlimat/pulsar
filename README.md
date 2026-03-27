@@ -246,7 +246,7 @@ After the images are built, they can be tagged and pushed to your custom reposit
 
 ```bash
 image_repo_and_project=localhost:32000/apachepulsar
-pulsar_version=$(grep "^pulsar " gradle/libs.versions.toml | sed 's/.*= *"//' | sed 's/"//')
+pulsar_version=$(src/get-pulsar-version.sh)
 gitrev=$(git rev-parse HEAD | colrm 10)
 tag="${pulsar_version}-${gitrev}"
 echo "Using tag $tag"
