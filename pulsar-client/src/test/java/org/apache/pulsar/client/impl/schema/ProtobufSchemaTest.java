@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
+import org.apache.pulsar.client.schema.proto.Test;
 import org.apache.pulsar.common.schema.SchemaType;
-import org.apache.pulsar.functions.proto.Function;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -112,15 +112,15 @@ public class ProtobufSchemaTest {
 
     @Test
     public void testEncodeAndDecode() {
-        Function.FunctionDetails functionDetails = Function.FunctionDetails.newBuilder().setName(NAME).build();
+        Test.TestMessage testMessage = Test.TestMessage.newBuilder().setStringField(NAME).build();
 
-        ProtobufSchema<Function.FunctionDetails> protobufSchema = ProtobufSchema.of(Function.FunctionDetails.class);
+        ProtobufSchema<Test.TestMessage> protobufSchema = ProtobufSchema.of(Test.TestMessage.class);
 
-        byte[] bytes = protobufSchema.encode(functionDetails);
+        byte[] bytes = protobufSchema.encode(testMessage);
 
-        Function.FunctionDetails message = protobufSchema.decode(bytes);
+        Test.TestMessage message = protobufSchema.decode(bytes);
 
-        Assert.assertEquals(message.getName(), NAME);
+        Assert.assertEquals(message.getStringField(), NAME);
     }
 
     @Test
