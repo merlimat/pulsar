@@ -39,7 +39,6 @@ import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.functions.instance.InstanceConfig;
 import org.apache.pulsar.functions.proto.ConsumerSpec;
 import org.apache.pulsar.functions.proto.FunctionDetails;
-import org.apache.pulsar.functions.proto.SinkSpec;
 import org.apache.pulsar.functions.proto.SourceSpec;
 import org.apache.pulsar.functions.proto.SubscriptionType;
 import org.apache.pulsar.functions.runtime.thread.ThreadRuntime;

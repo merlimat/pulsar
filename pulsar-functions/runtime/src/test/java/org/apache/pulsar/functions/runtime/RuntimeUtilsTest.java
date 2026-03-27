@@ -29,16 +29,15 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.functions.instance.AuthenticationConfig;
 import org.apache.pulsar.functions.instance.InstanceConfig;
-import org.jose4j.json.internal.json_simple.JSONObject;
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-import org.apache.pulsar.functions.proto.ConsumerSpec;
 import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.apache.pulsar.functions.proto.ProcessingGuarantees;
 import org.apache.pulsar.functions.proto.Resources;
 import org.apache.pulsar.functions.proto.RetryDetails;
 import org.apache.pulsar.functions.proto.SourceSpec;
+import org.jose4j.json.internal.json_simple.JSONObject;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 @Slf4j
 public class RuntimeUtilsTest {

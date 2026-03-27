@@ -35,9 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.functions.api.Function;
 import org.apache.pulsar.functions.api.Record;
 import org.apache.pulsar.functions.instance.JavaInstance.AsyncFuncRequest;
+import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.pulsar.functions.proto.FunctionDetails;
 
 @Slf4j
 public class JavaInstanceTest {
