@@ -20,7 +20,7 @@ package org.apache.pulsar.functions.instance;
 
 import static org.testng.Assert.assertEquals;
 import org.apache.pulsar.functions.proto.Function;
-import org.apache.pulsar.functions.proto.Function.FunctionDetails;
+import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.testng.annotations.Test;
 
 public class InstanceUtilsTest {
