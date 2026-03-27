@@ -37,12 +37,12 @@ import org.apache.pulsar.common.functions.Resources;
 import org.apache.pulsar.common.io.BatchSourceConfig;
 import org.apache.pulsar.common.io.SourceConfig;
 import org.apache.pulsar.config.validation.ConfigValidationAnnotations;
+import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.apache.pulsar.io.core.BatchSourceTriggerer;
 import org.apache.pulsar.io.core.SourceContext;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
-import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.testng.annotations.Test;
 
 /**
