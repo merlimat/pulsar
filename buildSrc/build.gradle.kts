@@ -18,13 +18,16 @@
  */
 
 plugins {
-    id("pulsar.client-shade-conventions")
+    `kotlin-dsl`
+}
+
+repositories {
+    gradlePluginPortal()
+    mavenCentral()
 }
 
 dependencies {
-    implementation(project(":pulsar-client-admin-original")) {
-        exclude(group = "it.unimi.dsi", module = "fastutil")
-    }
-    implementation(project(":pulsar-client-dependencies-minimized"))
-    implementation(project(":pulsar-client-messagecrypto-bc"))
+    implementation(libs.plugins.shadow.get().let {
+        "${it.pluginId}:${it.pluginId}.gradle.plugin:${it.version}"
+    })
 }

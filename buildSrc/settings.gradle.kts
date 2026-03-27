@@ -17,14 +17,10 @@
  * under the License.
  */
 
-plugins {
-    id("pulsar.client-shade-conventions")
-}
-
-dependencies {
-    implementation(project(":pulsar-client-admin-original")) {
-        exclude(group = "it.unimi.dsi", module = "fastutil")
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
     }
-    implementation(project(":pulsar-client-dependencies-minimized"))
-    implementation(project(":pulsar-client-messagecrypto-bc"))
 }

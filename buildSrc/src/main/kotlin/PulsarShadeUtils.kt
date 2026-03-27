@@ -17,14 +17,16 @@
  * under the License.
  */
 
-plugins {
-    id("pulsar.client-shade-conventions")
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+/** Relocate a package under the shade prefix: `"x.y"` → `"$prefix.x.y"` */
+fun ShadowJar.relocateWithPrefix(prefix: String, pattern: String) {
+    relocate(pattern, "$prefix.$pattern")
 }
 
-dependencies {
-    implementation(project(":pulsar-client-admin-original")) {
-        exclude(group = "it.unimi.dsi", module = "fastutil")
+/** Fix ahc-default.properties to use the relocated asynchttpclient package name. */
+fun ShadowJar.relocateAsyncHttpClientProperties(prefix: String) {
+    filesMatching("org/asynchttpclient/config/ahc-default.properties") {
+        filter { line -> line.replace("org.asynchttpclient.", "$prefix.org.asynchttpclient.") }
     }
-    implementation(project(":pulsar-client-dependencies-minimized"))
-    implementation(project(":pulsar-client-messagecrypto-bc"))
 }

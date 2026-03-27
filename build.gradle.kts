@@ -156,6 +156,13 @@ subprojects {
             val excludedTestGroups = providers.gradleProperty("excludedTestGroups").getOrElse("quarantine,flaky")
             excludeGroups(*(excludedTestGroups.split(",").map { it.trim() }.toTypedArray()))
         }
+        testLogging {
+            events("FAILED")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.SHORT
+            showStackTraces = true
+            showExceptions = true
+            showCauses = true
+        }
         maxHeapSize = "1300m"
         maxParallelForks = 4
         systemProperty("testRetryCount", System.getProperty("testRetryCount", "1"))
@@ -213,20 +220,6 @@ subprojects {
         extendsFrom(configurations["testImplementation"], configurations["testRuntimeOnly"])
     }
     artifacts.add("testJar", testJar)
-
-    // Shadow JAR modules: expose the shadow JAR as a consumable configuration so other
-    // projects can depend on it via project(path = "...", configuration = "shadowElements")
-    pluginManager.withPlugin("com.gradleup.shadow") {
-        val shadowElements by configurations.creating {
-            isCanBeConsumed = true
-            isCanBeResolved = false
-            attributes {
-                attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
-                attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
-            }
-        }
-        artifacts.add("shadowElements", tasks.named("shadowJar"))
-    }
 
     // NAR modules should not bundle Pulsar platform dependencies — they are provided
     // at runtime by Pulsar's classloader hierarchy.
