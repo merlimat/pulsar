@@ -241,10 +241,11 @@ public class JavaInstanceRunnableTest {
     public void testStatsManagerNull() throws Exception {
         JavaInstanceRunnable javaInstanceRunnable = createRunnable((String) null);
 
-        Assert.assertEquals(javaInstanceRunnable.getFunctionStatus(),
-                new FunctionStatus());
+        Assert.assertEquals(javaInstanceRunnable.getFunctionStatus().toByteArray(),
+                new FunctionStatus().toByteArray());
 
-        Assert.assertEquals(javaInstanceRunnable.getMetrics(), new MetricsData());
+        Assert.assertEquals(javaInstanceRunnable.getMetrics().toByteArray(),
+                new MetricsData().toByteArray());
     }
 
     @Test
