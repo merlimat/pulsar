@@ -25,12 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.functions.proto.Assignment;
+import org.apache.pulsar.functions.proto.FunctionMetaData;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.pulsar.functions.proto.Assignment;
-import org.apache.pulsar.functions.proto.FunctionDetails;
-import org.apache.pulsar.functions.proto.FunctionMetaData;
-import org.apache.pulsar.functions.proto.Instance;
 
 @Slf4j
 public class RoundRobinSchedulerTest {

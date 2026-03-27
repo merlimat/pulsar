@@ -63,6 +63,11 @@ import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.apache.pulsar.common.functions.WorkerInfo;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.functions.instance.AuthenticationConfig;
+import org.apache.pulsar.functions.proto.Assignment;
+import org.apache.pulsar.functions.proto.FunctionDetails;
+import org.apache.pulsar.functions.proto.FunctionMetaData;
+import org.apache.pulsar.functions.proto.FunctionState;
+import org.apache.pulsar.functions.proto.Instance;
 import org.apache.pulsar.functions.runtime.RuntimeFactory;
 import org.apache.pulsar.functions.runtime.kubernetes.KubernetesRuntime;
 import org.apache.pulsar.functions.runtime.kubernetes.KubernetesRuntimeFactory;
@@ -79,12 +84,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.testng.annotations.Test;
-import org.apache.pulsar.functions.proto.Assignment;
-import org.apache.pulsar.functions.proto.FunctionDetails;
-import org.apache.pulsar.functions.proto.FunctionMetaData;
-import org.apache.pulsar.functions.proto.FunctionState;
-import org.apache.pulsar.functions.proto.Instance;
-import org.apache.pulsar.functions.proto.PackageLocationMetaData;
 
 @Slf4j
 public class FunctionRuntimeManagerTest {

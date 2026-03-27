@@ -36,17 +36,15 @@ import org.apache.pulsar.broker.authentication.AuthenticationParameters;
 import org.apache.pulsar.common.functions.FunctionConfig;
 import org.apache.pulsar.common.functions.UpdateOptionsImpl;
 import org.apache.pulsar.common.util.RestException;
+import org.apache.pulsar.functions.proto.FunctionDetails;
+import org.apache.pulsar.functions.proto.FunctionMetaData;
+import org.apache.pulsar.functions.proto.ProcessingGuarantees;
+import org.apache.pulsar.functions.proto.SourceSpec;
 import org.apache.pulsar.functions.utils.FunctionConfigUtils;
 import org.apache.pulsar.functions.worker.rest.api.FunctionsImplV2;
 import org.apache.pulsar.functions.worker.rest.api.v3.AbstractFunctionApiResourceTest;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.testng.annotations.Test;
-import org.apache.pulsar.functions.proto.FunctionDetails;
-import org.apache.pulsar.functions.proto.FunctionMetaData;
-import org.apache.pulsar.functions.proto.PackageLocationMetaData;
-import org.apache.pulsar.functions.proto.ProcessingGuarantees;
-import org.apache.pulsar.functions.proto.SinkSpec;
-import org.apache.pulsar.functions.proto.SourceSpec;
 
 public class FunctionApiV2ResourceTest extends AbstractFunctionApiResourceTest {
     private FunctionsImplV2 resource;

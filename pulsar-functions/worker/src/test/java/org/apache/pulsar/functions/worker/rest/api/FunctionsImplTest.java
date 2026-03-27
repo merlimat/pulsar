@@ -63,6 +63,12 @@ import org.apache.pulsar.common.util.RestException;
 import org.apache.pulsar.functions.api.Context;
 import org.apache.pulsar.functions.instance.InstanceConfig;
 import org.apache.pulsar.functions.instance.JavaInstanceRunnable;
+import org.apache.pulsar.functions.proto.Assignment;
+import org.apache.pulsar.functions.proto.FunctionDetails;
+import org.apache.pulsar.functions.proto.FunctionMetaData;
+import org.apache.pulsar.functions.proto.FunctionStatus;
+import org.apache.pulsar.functions.proto.MetricsData;
+import org.apache.pulsar.functions.proto.SubscriptionType;
 import org.apache.pulsar.functions.runtime.Runtime;
 import org.apache.pulsar.functions.runtime.RuntimeFactory;
 import org.apache.pulsar.functions.runtime.RuntimeSpawner;
@@ -78,12 +84,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.pulsar.functions.proto.Assignment;
-import org.apache.pulsar.functions.proto.FunctionDetails;
-import org.apache.pulsar.functions.proto.FunctionMetaData;
-import org.apache.pulsar.functions.proto.SubscriptionType;
-import org.apache.pulsar.functions.proto.FunctionStatus;
-import org.apache.pulsar.functions.proto.MetricsData;
 
 public class FunctionsImplTest {
 

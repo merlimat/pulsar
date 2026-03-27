@@ -38,8 +38,6 @@ import org.apache.pulsar.client.admin.Packages;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
 import org.apache.pulsar.functions.auth.FunctionAuthProvider;
-import org.apache.pulsar.functions.proto.PackageLocationMetaData;
-import org.apache.pulsar.functions.proto.FunctionDetails;
 import org.apache.pulsar.functions.proto.FunctionMetaData;
 import org.apache.pulsar.functions.proto.Instance;
 import org.apache.pulsar.functions.runtime.Runtime;

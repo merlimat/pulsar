@@ -50,6 +50,8 @@ import org.apache.pulsar.client.impl.MessageIdImpl;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.apache.pulsar.common.util.ObjectMapperFactory;
+import org.apache.pulsar.functions.proto.Assignment;
+import org.apache.pulsar.functions.proto.FunctionMetaData;
 import org.apache.pulsar.functions.runtime.thread.ThreadRuntimeFactory;
 import org.apache.pulsar.functions.runtime.thread.ThreadRuntimeFactoryConfig;
 import org.apache.pulsar.functions.utils.FunctionCommon;
@@ -57,10 +59,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.pulsar.functions.proto.Assignment;
-import org.apache.pulsar.functions.proto.FunctionDetails;
-import org.apache.pulsar.functions.proto.FunctionMetaData;
-import org.apache.pulsar.functions.proto.Instance;
 
 @Slf4j
 public class FunctionAssignmentTailerTest {
