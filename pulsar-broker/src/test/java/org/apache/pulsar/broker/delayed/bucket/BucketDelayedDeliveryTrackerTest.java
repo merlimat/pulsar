@@ -151,6 +151,10 @@ public class BucketDelayedDeliveryTrackerTest extends AbstractDeliveryTrackerTes
                     new BucketDelayedDeliveryTracker(dispatcher, timer, 100000, clock,
                             true, bucketSnapshotStorage, 20, TimeUnit.HOURS.toMillis(1), 5, 100)
             }};
+            case "testClear" -> new Object[][]{{
+                    new BucketDelayedDeliveryTracker(dispatcher, timer, 100000, clock,
+                            true, bucketSnapshotStorage, 1000, TimeUnit.MILLISECONDS.toMillis(100), -1, 50)
+            }};
             default -> new Object[][]{{
                     new BucketDelayedDeliveryTracker(dispatcher, timer, 1, clock,
                             true, bucketSnapshotStorage, 1000, TimeUnit.MILLISECONDS.toMillis(100), -1, 50)
