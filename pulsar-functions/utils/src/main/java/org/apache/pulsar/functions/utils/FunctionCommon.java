@@ -353,7 +353,7 @@ public class FunctionCommon {
         return Math.round(value * scale) / scale;
     }
 
-    public static String capFirstLetter(Enum en) {
+    public static String capFirstLetter(Enum<?> en) {
         return StringUtils.capitalize(en.toString().toLowerCase());
     }
 

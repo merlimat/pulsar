@@ -308,7 +308,7 @@ public class JavaInstanceRunnable implements AutoCloseable, Runnable {
     }
 
     public interface AsyncResultConsumer {
-        void accept(Record record, JavaExecutionResult javaExecutionResult) throws Exception;
+        void accept(Record<?> record, JavaExecutionResult javaExecutionResult) throws Exception;
     }
 
     /**

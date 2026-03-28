@@ -46,7 +46,7 @@ public class RuntimeSpawner implements AutoCloseable {
 
     @Getter
     private Runtime runtime;
-    private ScheduledFuture processLivenessCheckTimer;
+    private ScheduledFuture<?> processLivenessCheckTimer;
     private int numRestarts;
     private long instanceLivenessCheckFreqMs;
     private Throwable runtimeDeathException;

@@ -745,7 +745,7 @@ public class SinkConfigUtils {
         try {
             ConnectorDefinition defn = sinkFunction.getFunctionMetaData(ConnectorDefinition.class);
             if (defn != null && defn.getSinkConfigClass() != null) {
-                Class configClass = Class.forName(defn.getSinkConfigClass(), true, sinkFunction.getClassLoader());
+                Class<?> configClass = Class.forName(defn.getSinkConfigClass(), true, sinkFunction.getClassLoader());
                 validateSinkConfig(sinkConfig, configClass);
             }
         } catch (ClassNotFoundException e) {
@@ -753,7 +753,7 @@ public class SinkConfigUtils {
         }
     }
 
-    public static void validateSinkConfig(SinkConfig sinkConfig, Class configClass) {
+    public static void validateSinkConfig(SinkConfig sinkConfig, Class<?> configClass) {
         try {
             Object configObject =
                     ObjectMapperFactory.getMapper().getObjectMapper()

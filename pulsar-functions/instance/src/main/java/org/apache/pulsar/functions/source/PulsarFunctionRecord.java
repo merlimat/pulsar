@@ -52,7 +52,7 @@ public class PulsarFunctionRecord<T> implements Record<T> {
     }
 
     @Override
-    public Schema getSchema() {
+    public Schema<T> getSchema() {
         return record.getSchema();
     }
 
