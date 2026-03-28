@@ -204,6 +204,7 @@ public abstract class MockedPulsarServiceBaseTest extends TestRetrySupport {
         internalSetup();
     }
 
+    @SuppressWarnings("deprecation")
     protected PulsarClient newPulsarClient(String url, int intervalInSecs) throws PulsarClientException {
         ClientBuilder clientBuilder =
                 PulsarClient.builder()

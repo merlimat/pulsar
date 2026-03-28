@@ -538,6 +538,7 @@ public class InflightReadsLimiterTest {
                 .isEqualTo(maxReadsInFlightSize);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testPrometheusMetrics() throws Exception {
         long maxReadsInFlightSize = 100;

@@ -87,6 +87,7 @@ public class MultiTopicsConsumerImplTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testGetStats() throws Exception {
         String topicName = "test-stats";

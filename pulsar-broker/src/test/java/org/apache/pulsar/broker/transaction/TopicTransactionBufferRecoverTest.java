@@ -502,6 +502,7 @@ public class TopicTransactionBufferRecoverTest extends TransactionTestBase {
         assertTrue(exist);
     }
 
+    @SuppressWarnings("deprecation")
     @Test(dataProvider = "enableSnapshotSegment")
     public void clearTransactionBufferSnapshotTest(Boolean enableSnapshotSegment) throws Exception {
         getPulsarServiceList().get(0).getConfig().setTransactionBufferSegmentedSnapshotEnabled(enableSnapshotSegment);
@@ -842,6 +843,7 @@ public class TopicTransactionBufferRecoverTest extends TransactionTestBase {
     }
 
     //Verify the snapshotSegmentProcessor end to end
+    @SuppressWarnings("deprecation")
     @Test
     public void testSnapshotSegment() throws Exception {
         String topic = "persistent://" + NAMESPACE1 + "/testSnapshotSegment";

@@ -125,6 +125,7 @@ public class AdminApiMaxUnackedMessagesTest extends MockedPulsarServiceBaseTest 
                 -> assertNull(admin.namespaces().getMaxUnackedMessagesPerSubscription(namespace)));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMaxUnackedMessagesPerConsumerPriority() throws Exception {
         int brokerLevelPolicy = 3;

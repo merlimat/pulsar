@@ -3149,6 +3149,7 @@ public class TopicPoliciesTest extends MockedPulsarServiceBaseTest {
         assertNull(admin.topicPolicies().getMessageTTL(topic));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSubscriptionTypesWithPartitionedTopic() throws Exception {
         final String topic = "persistent://" + myNamespace + "/test-" + UUID.randomUUID();
@@ -4074,6 +4075,7 @@ public class TopicPoliciesTest extends MockedPulsarServiceBaseTest {
         admin.topics().delete(topic, true);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testUpdateRetentionWithPartialFailure() throws Exception {
         String tpName = BrokerTestUtil.newUniqueName("persistent://" + myNamespace + "/tp");
@@ -4460,6 +4462,7 @@ public class TopicPoliciesTest extends MockedPulsarServiceBaseTest {
         });
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testGetAppliedOffloadPoliciesWithLegacyNamespacePolicies() throws Exception {
         String topicName = testTopic + UUID.randomUUID().toString();

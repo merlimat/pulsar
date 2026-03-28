@@ -1557,6 +1557,7 @@ public class PulsarAdminToolTest {
         verify(mockGlobalTopicsPolicies).removeAutoSubscriptionCreation("persistent://prop/ns1/ds1");
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void topicsSetOffloadPolicies() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
@@ -1588,6 +1589,7 @@ public class PulsarAdminToolTest {
     }
 
 
+    @SuppressWarnings("deprecation")
     @Test
     public void topics() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);
@@ -2289,6 +2291,7 @@ public class PulsarAdminToolTest {
                 longThat(new TimestampMatcher()));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void nonPersistentTopics() throws Exception {
         PulsarAdmin admin = Mockito.mock(PulsarAdmin.class);

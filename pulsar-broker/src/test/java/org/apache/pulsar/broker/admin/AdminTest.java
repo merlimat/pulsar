@@ -194,6 +194,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
         conf.setClusterName(configClusterName);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void internalConfiguration() throws Exception {
         ServiceConfiguration conf = pulsar.getConfiguration();
@@ -229,6 +230,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
      * (before https://github.com/apache/pulsar/pull/14384) while the Worker already uses the new one.
      * @throws Exception
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void internalConfigurationRetroCompatibility() throws Exception {
         OldInternalConfigurationData oldDataModel = new OldInternalConfigurationData(
@@ -734,6 +736,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
                 pulsar.getLeaderElectionService().getCurrentLeader().map(LeaderBroker::getBrokerId).get());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void resourceQuotas() throws Exception {
         // get Default Resource Quota
@@ -816,6 +819,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void persistentTopics() throws Exception {
 
@@ -939,6 +943,7 @@ public class AdminTest extends MockedPulsarServiceBaseTest {
                 false, 10);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void test500Error() throws Exception {
         final String tenant = "prop-xyz";

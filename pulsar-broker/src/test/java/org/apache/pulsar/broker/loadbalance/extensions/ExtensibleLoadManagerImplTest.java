@@ -692,6 +692,7 @@ public class ExtensibleLoadManagerImplTest extends ExtensibleLoadManagerImplBase
                 admin, lookupUrl.toString(), pulsar1);
     }
 
+    @SuppressWarnings("deprecation")
     @Test(enabled = false)
     public static void testUnloadClientReconnectionWithLookup(List<PulsarClient> clients,
                                                               TopicDomain topicDomain,
@@ -786,6 +787,7 @@ public class ExtensibleLoadManagerImplTest extends ExtensibleLoadManagerImplBase
                 pulsar2);
     }
 
+    @SuppressWarnings("deprecation")
     @Test(enabled = false)
     public static void testOptimizeUnloadDisable(List<PulsarClient> clients,
                                                  TopicDomain topicDomain,
@@ -1823,6 +1825,7 @@ public class ExtensibleLoadManagerImplTest extends ExtensibleLoadManagerImplBase
                 .get(3, TimeUnit.SECONDS);
     }
 
+    @SuppressWarnings("deprecation")
     @Test(priority = Integer.MIN_VALUE)
     public void testGetMetrics() throws Exception {
         {

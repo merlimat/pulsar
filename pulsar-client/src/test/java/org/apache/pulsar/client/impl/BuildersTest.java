@@ -54,6 +54,7 @@ public class BuildersTest {
         assertEquals(b2.conf.getServiceUrl(), "pulsar://other-broker:6650");
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void enableTlsTest() {
         ClientBuilderImpl builder = (ClientBuilderImpl) PulsarClient.builder().serviceUrl("pulsar://service:6650");

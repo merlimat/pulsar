@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 
 public class PulsarFunctionRecordTest {
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testAck() {
         Record record = mock(Record.class);

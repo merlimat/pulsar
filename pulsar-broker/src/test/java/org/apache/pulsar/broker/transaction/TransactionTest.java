@@ -539,6 +539,7 @@ public class TransactionTest extends TransactionTestBase {
         Assert.assertEquals(txnID1.getMostSigBits(), 0);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSubscriptionRecreateTopic()
             throws PulsarAdminException, NoSuchFieldException, IllegalAccessException, PulsarClientException {
@@ -575,6 +576,7 @@ public class TransactionTest extends TransactionTestBase {
                 Assert.fail();
             }
             PersistentTopic originPersistentTopic = (PersistentTopic) option.get();
+            @SuppressWarnings("deprecation")
             String pendingAckTopicName = MLPendingAckStore
                     .getTransactionPendingAckStoreSuffix(originPersistentTopic.getName(), subName);
 
@@ -1779,6 +1781,7 @@ public class TransactionTest extends TransactionTestBase {
         txn.commit();
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testDeleteNamespace() throws Exception {
         String namespace = TENANT + "/ns-" + RandomStringUtils.randomAlphabetic(5);
@@ -1811,6 +1814,7 @@ public class TransactionTest extends TransactionTestBase {
     }
 
 
+    @SuppressWarnings("deprecation")
     @Test(timeOut = 10_000)
     public void testTBSnapshotWriter() throws Exception {
         String namespace = TENANT + "/ns-" + RandomStringUtils.randomAlphabetic(5);

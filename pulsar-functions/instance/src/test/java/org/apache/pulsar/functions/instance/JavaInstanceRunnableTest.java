@@ -177,6 +177,7 @@ public class JavaInstanceRunnableTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testFunctionAsyncTime() throws Exception {
         FunctionDetails functionDetails = FunctionDetails.newBuilder()
@@ -222,6 +223,7 @@ public class JavaInstanceRunnableTest {
         verify(record, times(1)).ack();
     }
 
+    @SuppressWarnings("deprecation")
     @NonNull
     private JavaInstanceRunnable getJavaInstanceRunnable(boolean autoAck,
                org.apache.pulsar.functions.proto.Function.ProcessingGuarantees processingGuarantees) throws Exception {

@@ -145,6 +145,7 @@ public class WindowFunctionExecutorTest {
         verify(record, times(1)).ack();
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testWindowFunctionWithAtleastOnce() throws Exception {
 

@@ -114,6 +114,7 @@ public class ModularLoadManagerStrategyTest {
     }
 
     // Test that least resource usage with weight works correctly.
+    @SuppressWarnings("deprecation")
     public void testLeastResourceUsageWithWeight() {
         BundleData bundleData = new BundleData();
         BrokerData brokerData1 = initBrokerData(10, 100);
@@ -192,6 +193,7 @@ public class ModularLoadManagerStrategyTest {
         assertEquals(strategy.selectBroker(candidates, bundleData, loadData, conf), Optional.of("3"));
     }
 
+    @SuppressWarnings("deprecation")
     public void testLeastResourceUsageWithWeightWithArithmeticException()
             throws NoSuchFieldException, IllegalAccessException {
         BundleData bundleData = new BundleData();

@@ -480,6 +480,7 @@ public class AdminApi2Test extends MockedPulsarServiceBaseTest {
         setTopicPoliciesAndValidate(admin2, admin3, topic2);
     }
 
+    @SuppressWarnings("deprecation")
     private void setTopicPoliciesAndValidate(PulsarAdmin admin2
             , PulsarAdmin admin3, String topic) throws Exception {
         admin.topics().setMaxUnackedMessagesOnConsumer(topic, 100);
@@ -505,6 +506,7 @@ public class AdminApi2Test extends MockedPulsarServiceBaseTest {
      *
      * @throws Exception
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void nonPersistentTopics() throws Exception {
         final String topicName = "nonPersistentTopic";
@@ -1238,6 +1240,7 @@ public class AdminApi2Test extends MockedPulsarServiceBaseTest {
         assertEquals(namespaces2.size(), 0);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testPersistentTopicList() throws Exception {
         final String namespace = newUniqueName(defaultTenant + "/ns2");
@@ -3378,6 +3381,7 @@ public class AdminApi2Test extends MockedPulsarServiceBaseTest {
         Awaitility.await().untilAsserted(() -> assertNull(admin.namespaces().getCompactionThreshold(namespace)));
     }
 
+    @SuppressWarnings("deprecation")
     @Test(timeOut = 200000)
     public void testCompactionPriority() throws Exception {
         restartClusterAfterTest();

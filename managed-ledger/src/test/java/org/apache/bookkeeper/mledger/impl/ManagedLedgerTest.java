@@ -3479,6 +3479,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
      * @param checkOwnershipFlag
      * @throws Exception
      */
+    @SuppressWarnings("deprecation")
     @Test(dataProvider = "checkOwnershipFlag")
     public void recoverMLWithBadVersion(boolean checkOwnershipFlag) throws Exception {
 
@@ -3519,6 +3520,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         log.info("Test completed");
     }
 
+    @SuppressWarnings("deprecation")
     private boolean updateCusorMetadataByCreatingMetadataLedger(MutableObject<ManagedCursorImpl> cursor2)
             throws InterruptedException {
         MutableObject<Boolean> failed = new MutableObject<>();

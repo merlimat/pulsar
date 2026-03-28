@@ -247,6 +247,7 @@ public class PersistentTopicTest extends MockedBookKeeperTestCase {
 
         setupMLAsyncCallbackMocks();
     }
+    @SuppressWarnings("deprecation")
 
     @AfterMethod(alwaysRun = true)
     public void teardown() throws Exception {

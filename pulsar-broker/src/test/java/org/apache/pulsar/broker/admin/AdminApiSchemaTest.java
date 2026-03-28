@@ -187,6 +187,7 @@ public class AdminApiSchemaTest extends MockedPulsarServiceBaseTest {
 
     }
 
+    @SuppressWarnings("deprecation")
     @Test(dataProvider = "version")
     public void testPostSchemaCompatibilityStrategy(ApiVersion version) throws PulsarAdminException {
         String namespace = format("%s%s%s", "schematest", "/",
@@ -401,11 +402,13 @@ public class AdminApiSchemaTest extends MockedPulsarServiceBaseTest {
                 SchemaCompatibilityStrategy.UNDEFINED);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testGetSchemaAutoUpdateCompatibilityStrategy() throws PulsarAdminException {
         assertNull(admin.namespaces().getSchemaAutoUpdateCompatibilityStrategy(schemaCompatibilityNamespace));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testGetSchemaCompatibilityStrategyWhenSetSchemaAutoUpdateCompatibilityStrategy()
             throws PulsarAdminException {
@@ -427,6 +430,7 @@ public class AdminApiSchemaTest extends MockedPulsarServiceBaseTest {
                 admin.namespaces().getSchemaCompatibilityStrategy(schemaCompatibilityNamespace)));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testGetSchemaCompatibilityStrategyWhenSetBrokerLevelAndSchemaAutoUpdateCompatibilityStrategy()
             throws PulsarAdminException {

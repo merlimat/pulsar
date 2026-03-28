@@ -112,6 +112,7 @@ public class PartitionedSystemTopicTest extends BrokerTestBase {
         reader.close();
     }
 
+    @SuppressWarnings("deprecation")
     @Test(timeOut = 1000 * 60)
     public void testConsumerCreationWhenEnablingTopicPolicy() throws Exception {
         String tenant = "tenant-" + RandomStringUtils.randomAlphabetic(4).toLowerCase();
@@ -182,6 +183,7 @@ public class PartitionedSystemTopicTest extends BrokerTestBase {
         Assert.assertEquals(config.getLedgerOffloader(), ledgerOffloader);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSystemNamespaceNotCreateChangeEventsTopic() throws Exception {
         admin.brokers().healthcheck();

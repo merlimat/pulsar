@@ -300,6 +300,7 @@ public class BrokerEntryCacheTest extends ProducerConsumerBase {
     }
 
     // change enabled to true to run the test
+    @SuppressWarnings("deprecation")
     @Test(enabled = false)
     public void testCatchUpReadsWithFailureProxyDisconnectingAllConnections() throws Exception {
         final String topicName = "persistent://my-property/my-ns/cache-catchup-test-topic";

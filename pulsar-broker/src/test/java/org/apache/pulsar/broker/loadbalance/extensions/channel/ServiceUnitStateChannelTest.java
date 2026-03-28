@@ -2101,6 +2101,7 @@ public class ServiceUnitStateChannelTest extends MockedPulsarServiceBaseTest {
     }
 
 
+    @SuppressWarnings("deprecation")
     private static void waitUntilNewChannelOwner(ServiceUnitStateChannel channel, String oldOwner) {
         Awaitility.await()
                 .pollInterval(200, TimeUnit.MILLISECONDS)
@@ -2115,6 +2116,7 @@ public class ServiceUnitStateChannelTest extends MockedPulsarServiceBaseTest {
                 });
     }
 
+    @SuppressWarnings("deprecation")
     private static void waitUntilOwnerChanges(ServiceUnitStateChannel channel, String serviceUnit, String oldOwner) {
         Awaitility.await()
                 .pollInterval(200, TimeUnit.MILLISECONDS)
@@ -2128,6 +2130,7 @@ public class ServiceUnitStateChannelTest extends MockedPulsarServiceBaseTest {
                 });
     }
 
+    @SuppressWarnings("deprecation")
     private static void waitUntilNewOwner(ServiceUnitStateChannel channel, String serviceUnit, String newOwner) {
         Awaitility.await()
                 .pollInterval(200, TimeUnit.MILLISECONDS)
