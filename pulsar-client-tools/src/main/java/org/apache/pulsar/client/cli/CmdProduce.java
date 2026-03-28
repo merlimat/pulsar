@@ -195,7 +195,10 @@ public class CmdProduce extends AbstractCmd {
         for (String m : stringMessages) {
             if (schema.getSchemaInfo().getType() == SchemaType.AVRO) {
                 // JSON TO AVRO
-                org.apache.avro.Schema avroSchema = ((Optional<org.apache.avro.Schema>) schema.getNativeSchema()).get();
+                @SuppressWarnings("unchecked")
+                Optional<org.apache.avro.Schema> nativeSchema =
+                        (Optional<org.apache.avro.Schema>) (Optional<?>) schema.getNativeSchema();
+                org.apache.avro.Schema avroSchema = nativeSchema.get();
                 byte[] encoded = jsonToAvro(m, avroSchema);
                 messageBodies.add(encoded);
             } else {
@@ -344,7 +347,8 @@ public class CmdProduce extends AbstractCmd {
                             limiter.acquire();
                         }
 
-                        TypedMessageBuilder message = producer.newMessage();
+                        @SuppressWarnings("unchecked")
+                        TypedMessageBuilder<Object> message = (TypedMessageBuilder<Object>) producer.newMessage();
 
                         if (!kvMap.isEmpty()) {
                             message.properties(kvMap);
@@ -359,7 +363,7 @@ public class CmdProduce extends AbstractCmd {
                                 break;
                             case KEY_VALUE_ENCODING_TYPE_SEPARATED:
                             case KEY_VALUE_ENCODING_TYPE_INLINE:
-                                KeyValue kv = new KeyValue<>(
+                                KeyValue<byte[], byte[]> kv = new KeyValue<>(
                                         keyValueKeyBytes,
                                         content);
                                 message.value(kv);

@@ -98,6 +98,7 @@ public class FunctionConfigUtils {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static FunctionDetails convert(FunctionConfig functionConfig, ExtractedFunctionDetails extractedDetails)
              throws IllegalArgumentException {
 
@@ -381,6 +382,7 @@ public class FunctionConfigUtils {
         return validateFunctionDetails(functionDetails);
     }
 
+    @SuppressWarnings("deprecation")
     public static FunctionDetails validateFunctionDetails(FunctionDetails functionDetails)
             throws IllegalArgumentException {
         if (!functionDetails.isAutoAck() && functionDetails.getProcessingGuarantees()
@@ -396,6 +398,7 @@ public class FunctionConfigUtils {
         return functionDetails;
     }
 
+    @SuppressWarnings("deprecation")
     public static FunctionConfig convertFromDetails(FunctionDetails functionDetails) {
         functionDetails = validateFunctionDetails(functionDetails);
         FunctionConfig functionConfig = new FunctionConfig();
@@ -572,6 +575,7 @@ public class FunctionConfigUtils {
         return producerConfig;
     }
 
+    @SuppressWarnings("deprecation")
     public static void inferMissingArguments(FunctionConfig functionConfig,
                                              boolean forwardSourceMessagePropertyEnabled) {
         if (StringUtils.isEmpty(functionConfig.getName())) {
@@ -841,7 +845,9 @@ public class FunctionConfigUtils {
         if (windowConfig != null) {
             // set auto ack to false since windowing framework is responsible
             // for acking and not the function framework
-            if (functionConfig.getAutoAck() != null && functionConfig.getAutoAck()) {
+            @SuppressWarnings("deprecation")
+            Boolean windowAutoAck = functionConfig.getAutoAck();
+            if (windowAutoAck != null && windowAutoAck) {
                 throw new IllegalArgumentException("Cannot enable auto ack when using windowing functionality");
             }
             WindowConfigUtils.validate(windowConfig);
@@ -1081,7 +1087,10 @@ public class FunctionConfigUtils {
         if (newConfig.getRuntime() != null && !newConfig.getRuntime().equals(existingConfig.getRuntime())) {
             throw new IllegalArgumentException("Runtime cannot be altered");
         }
-        if (newConfig.getAutoAck() != null && !newConfig.getAutoAck().equals(existingConfig.getAutoAck())) {
+        @SuppressWarnings("deprecation")
+        boolean autoAckChanged = newConfig.getAutoAck() != null
+                && !newConfig.getAutoAck().equals(existingConfig.getAutoAck());
+        if (autoAckChanged) {
             throw new IllegalArgumentException("AutoAck cannot be altered");
         }
         if (newConfig.getMaxMessageRetries() != null) {

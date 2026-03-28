@@ -459,12 +459,13 @@ class ContextImpl implements Context, SinkContext, SourceContext, AutoCloseable 
         return defaultStateStore.get(key);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public <T> CompletableFuture<Void> publish(String topicName, T object) {
         return publish(topicName, object, "");
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     @Override
     public <T> CompletableFuture<Void> publish(String topicName, T object, String schemaOrSerdeClassName) {
         return publish(topicName, object,
@@ -581,6 +582,8 @@ class ContextImpl implements Context, SinkContext, SourceContext, AutoCloseable 
     }
 
     class MessageBuilderImpl<T> implements TypedMessageBuilder<T> {
+        private static final long serialVersionUID = 1L;
+
         private TypedMessageBuilder<T> underlyingBuilder;
 
         @Override

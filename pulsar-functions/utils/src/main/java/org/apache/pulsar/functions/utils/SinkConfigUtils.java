@@ -77,6 +77,7 @@ public class SinkConfigUtils {
         private String functionClassName;
     }
 
+    @SuppressWarnings("deprecation")
     public static FunctionDetails convert(SinkConfig sinkConfig, ExtractedSinkDetails sinkDetails) throws IOException {
         FunctionDetails functionDetails = new FunctionDetails();
 
@@ -275,6 +276,7 @@ public class SinkConfigUtils {
         return FunctionConfigUtils.validateFunctionDetails(functionDetails);
     }
 
+    @SuppressWarnings("deprecation")
     public static SinkConfig convertFromDetails(FunctionDetails functionDetails) {
         SinkConfig sinkConfig = new SinkConfig();
         sinkConfig.setTenant(functionDetails.getTenant());
@@ -699,7 +701,10 @@ public class SinkConfigUtils {
                 .equals(existingConfig.getRetainKeyOrdering())) {
             throw new IllegalArgumentException("Retain Key Ordering cannot be altered");
         }
-        if (newConfig.getAutoAck() != null && !newConfig.getAutoAck().equals(existingConfig.getAutoAck())) {
+        @SuppressWarnings("deprecation")
+        boolean autoAckChanged = newConfig.getAutoAck() != null
+                && !newConfig.getAutoAck().equals(existingConfig.getAutoAck());
+        if (autoAckChanged) {
             throw new IllegalArgumentException("AutoAck cannot be altered");
         }
         if (newConfig.getResources() != null) {

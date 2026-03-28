@@ -143,6 +143,7 @@ public class FunctionRuntimeManager implements AutoCloseable {
 
     private final ErrorNotifier errorNotifier;
 
+    @SuppressWarnings("deprecation")
     public FunctionRuntimeManager(WorkerConfig workerConfig, PulsarWorkerService workerService, Namespace dlogNamespace,
                                   MembershipManager membershipManager, ConnectorsManager connectorsManager,
                                   FunctionsManager functionsManager,

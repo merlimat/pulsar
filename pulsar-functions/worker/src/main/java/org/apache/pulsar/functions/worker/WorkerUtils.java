@@ -175,6 +175,7 @@ public final class WorkerUtils {
         return URI.create(String.format("distributedlog://%s/pulsar/functions", zookeeperServers));
     }
 
+    @SuppressWarnings("deprecation")
     public static URI initializeDlogNamespace(InternalConfigurationData internalConf) throws IOException {
         final String ledgersRootPath;
         final String ledgersStoreServers;
@@ -273,6 +274,7 @@ public final class WorkerUtils {
                 allowTlsInsecureConnection, enableTlsHostnameVerificationEnable, null);
     }
 
+    @SuppressWarnings("deprecation")
     public static PulsarClient getPulsarClient(String pulsarServiceUrl, String authPlugin, String authParams,
                                                Boolean useTls, String tlsTrustCertsFilePath,
                                                Boolean allowTlsInsecureConnection,
@@ -430,7 +432,7 @@ public final class WorkerUtils {
     }
 
     public static class NotLeaderAnymore extends Exception {
-
+        private static final long serialVersionUID = 1L;
     }
 
     public static Supplier<Boolean> getIsStillLeaderSupplier(final MembershipManager membershipManager,

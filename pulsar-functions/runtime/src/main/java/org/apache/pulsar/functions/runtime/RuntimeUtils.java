@@ -166,8 +166,10 @@ public class RuntimeUtils {
             goInstanceConfig.setFuncVersion(instanceConfig.getFunctionVersion());
         }
 
-        if (instanceConfig.getFunctionDetails().isAutoAck()) {
-            goInstanceConfig.setAutoAck(instanceConfig.getFunctionDetails().isAutoAck());
+        @SuppressWarnings("deprecation")
+        boolean autoAck = instanceConfig.getFunctionDetails().isAutoAck();
+        if (autoAck) {
+            goInstanceConfig.setAutoAck(autoAck);
         }
 
         if (instanceConfig.getFunctionDetails().getTenant() != null) {
