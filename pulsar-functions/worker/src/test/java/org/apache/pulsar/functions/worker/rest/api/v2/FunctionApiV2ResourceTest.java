@@ -198,7 +198,7 @@ public class FunctionApiV2ResourceTest extends AbstractFunctionApiResourceTest {
 
         FunctionDetails actual = getDefaultFunctionInfo();
         assertEquals(
-                functionDetails,
-                actual);
+                functionDetails.toByteArray(),
+                actual.toByteArray());
     }
 }

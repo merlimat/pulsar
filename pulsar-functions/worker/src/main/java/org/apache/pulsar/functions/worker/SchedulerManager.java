@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -398,7 +399,7 @@ public class SchedulerManager implements AutoCloseable {
                 Assignment assignment = entry.getValue();
                 Instance instance = allInstances.get(fullyQualifiedInstanceId);
 
-                if (!assignment.getInstance().equals(instance)) {
+                if (!Arrays.equals(assignment.getInstance().toByteArray(), instance.toByteArray())) {
                     Assignment updatedAssignment = new Assignment();
                     updatedAssignment.copyFrom(assignment);
                     updatedAssignment.setInstance().copyFrom(instance);

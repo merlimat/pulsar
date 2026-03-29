@@ -52,6 +52,7 @@ import org.apache.pulsar.functions.proto.FunctionMetaData;
 import org.apache.pulsar.functions.proto.Instance;
 import org.apache.pulsar.functions.runtime.thread.ThreadRuntimeFactory;
 import org.apache.pulsar.functions.runtime.thread.ThreadRuntimeFactoryConfig;
+import org.apache.pulsar.functions.utils.FunctionCommon;
 import org.mockito.Mockito;
 import org.testng.annotations.Test;
 
@@ -237,10 +238,11 @@ public class MembershipManagerTest {
         verify(functionRuntimeManager, times(0)).removeAssignments(any());
         assertEquals(membershipManager.unsignedFunctionDurations.size(), 1);
         Instance instance = createInstance(function2, 0);
-        assertNotNull(membershipManager.unsignedFunctionDurations.get(instance));
+        String instanceId = FunctionCommon.getFullyQualifiedInstanceId(instance);
+        assertNotNull(membershipManager.unsignedFunctionDurations.get(instanceId));
 
-        membershipManager.unsignedFunctionDurations.put(instance,
-                membershipManager.unsignedFunctionDurations.get(instance) - 30001);
+        membershipManager.unsignedFunctionDurations.put(instanceId,
+                membershipManager.unsignedFunctionDurations.get(instanceId) - 30001);
 
         membershipManager.checkFailures(functionMetaDataManager, functionRuntimeManager, schedulerManager);
 
@@ -315,10 +317,11 @@ public class MembershipManagerTest {
         verify(functionRuntimeManager, times(0)).removeAssignments(any());
         assertEquals(membershipManager.unsignedFunctionDurations.size(), 1);
         Instance instance = createInstance(function2, 0);
-        assertNotNull(membershipManager.unsignedFunctionDurations.get(instance));
+        String instanceId = FunctionCommon.getFullyQualifiedInstanceId(instance);
+        assertNotNull(membershipManager.unsignedFunctionDurations.get(instanceId));
 
-        membershipManager.unsignedFunctionDurations.put(instance,
-                membershipManager.unsignedFunctionDurations.get(instance) - 30001);
+        membershipManager.unsignedFunctionDurations.put(instanceId,
+                membershipManager.unsignedFunctionDurations.get(instanceId) - 30001);
 
         membershipManager.checkFailures(functionMetaDataManager, functionRuntimeManager, schedulerManager);
 

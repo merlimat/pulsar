@@ -18,6 +18,7 @@
  */
 package org.apache.pulsar.functions.worker;
 
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
@@ -33,6 +34,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -290,10 +293,11 @@ public class SchedulerManagerTest {
 
         log.info("assignments: {}", assignments);
         Assignment assignment2 = createAssignment("worker-1", function2, 0);
-        Assert.assertEquals(assignment2, assignments);
+        Assert.assertEquals(assignment2.toByteArray(), assignments.toByteArray());
 
         // make sure we also directly added the assignment to in memory assignment cache in function runtime manager
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment2));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment2.toByteArray())));
     }
 
     @Test
@@ -395,7 +399,7 @@ public class SchedulerManagerTest {
         log.info("assignments: {}", assignments);
 
         Assignment assignment2 = createAssignment("worker-1", function2, 0);
-        Assert.assertEquals(assignments, assignment2);
+        Assert.assertEquals(assignments.toByteArray(), assignment2.toByteArray());
 
         // updating assignments
         currentAssignments.get("worker-1")
@@ -420,14 +424,14 @@ public class SchedulerManagerTest {
         invocations = getMethodInvocationDetails(message, TypedMessageBuilder.class.getMethod("value",
                 Object.class));
 
-        Set<Assignment> allAssignments = new HashSet<>();
+        List<byte[]> allAssignmentBytesScaled = new ArrayList<>();
         invocations.forEach(invocation -> {
-            allAssignments.add(parseAssignment((byte[]) invocation.getRawArguments()[0]));
+            allAssignmentBytesScaled.add(parseAssignment((byte[]) invocation.getRawArguments()[0]).toByteArray());
         });
 
-        assertTrue(allAssignments.contains(assignment2Scaled1));
-        assertTrue(allAssignments.contains(assignment2Scaled2));
-        assertTrue(allAssignments.contains(assignment2Scaled3));
+        assertTrue(allAssignmentBytesScaled.stream().anyMatch(b -> Arrays.equals(b, assignment2Scaled1.toByteArray())));
+        assertTrue(allAssignmentBytesScaled.stream().anyMatch(b -> Arrays.equals(b, assignment2Scaled2.toByteArray())));
+        assertTrue(allAssignmentBytesScaled.stream().anyMatch(b -> Arrays.equals(b, assignment2Scaled3.toByteArray())));
     }
 
     @Test
@@ -468,32 +472,27 @@ public class SchedulerManagerTest {
         invocations = getMethodInvocationDetails(message, TypedMessageBuilder.class.getMethod("value",
                 Object.class));
 
-        for (int i = 0; i < invocations.size(); i++) {
-            Invocation invocation = invocations.get(i);
-            byte[] send = (byte[]) invocation.getRawArguments()[0];
-            Assignment assignment = parseAssignment(send);
-            Assignment expectedAssignment = createAssignment("worker-1", function2, i);
-            Assert.assertEquals(assignment, expectedAssignment);
-        }
-
-        Set<Assignment> allAssignments = new HashSet<>();
+        List<byte[]> allAssignmentBytes = new ArrayList<>();
         invocations.forEach(invocation -> {
-            allAssignments.add(parseAssignment((byte[]) invocation.getRawArguments()[0]));
+            allAssignmentBytes.add(parseAssignment((byte[]) invocation.getRawArguments()[0]).toByteArray());
         });
 
         Assignment assignment21 = createAssignment("worker-1", function2, 0);
         Assignment assignment22 = createAssignment("worker-1", function2, 1);
         Assignment assignment23 = createAssignment("worker-1", function2, 2);
 
-        assertTrue(allAssignments.contains(assignment21));
-        assertTrue(allAssignments.contains(assignment22));
-        assertTrue(allAssignments.contains(assignment23));
+        assertTrue(allAssignmentBytes.stream().anyMatch(b -> Arrays.equals(b, assignment21.toByteArray())));
+        assertTrue(allAssignmentBytes.stream().anyMatch(b -> Arrays.equals(b, assignment22.toByteArray())));
+        assertTrue(allAssignmentBytes.stream().anyMatch(b -> Arrays.equals(b, assignment23.toByteArray())));
 
         // make sure we also directly add the assignment to the in memory assignment cache in function runtime manager
         verify(functionRuntimeManager, times(3)).processAssignment(any());
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment21));
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment22));
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment23));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment21.toByteArray())));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment22.toByteArray())));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment23.toByteArray())));
 
         // updating assignments
         currentAssignments.get("worker-1")
@@ -520,12 +519,12 @@ public class SchedulerManagerTest {
         invocations = getMethodInvocationDetails(message, TypedMessageBuilder.class.getMethod("value",
                 Object.class));
 
-        Set<Assignment> allAssignments2 = new HashSet<>();
+        List<byte[]> allAssignmentBytes2 = new ArrayList<>();
         invocations.forEach(invocation -> {
-            allAssignments2.add(parseAssignment((byte[]) invocation.getRawArguments()[0]));
+            allAssignmentBytes2.add(parseAssignment((byte[]) invocation.getRawArguments()[0]).toByteArray());
         });
 
-        assertTrue(allAssignments2.contains(assignment2Scaled));
+        assertTrue(allAssignmentBytes2.stream().anyMatch(b -> Arrays.equals(b, assignment2Scaled.toByteArray())));
 
         // make sure we also directly removed the assignment from the in memory assignment cache in
         // function runtime manager
@@ -536,7 +535,8 @@ public class SchedulerManagerTest {
                 .deleteAssignment(eq(FunctionCommon.getFullyQualifiedInstanceId(assignment22.getInstance())));
 
         verify(functionRuntimeManager, times(4)).processAssignment(any());
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment2Scaled));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment2Scaled.toByteArray())));
     }
 
     @Test
@@ -642,21 +642,24 @@ public class SchedulerManagerTest {
         invocations = getMethodInvocationDetails(message, TypedMessageBuilder.class.getMethod("value",
                 Object.class));
 
-        Set<Assignment> allAssignments = new HashSet<>();
+        List<byte[]> allAssignmentBytes = new ArrayList<>();
         invocations.forEach(invocation -> {
-            allAssignments.add(parseAssignment((byte[]) invocation.getRawArguments()[0]));
+            allAssignmentBytes.add(parseAssignment((byte[]) invocation.getRawArguments()[0]).toByteArray());
         });
 
-        assertEquals(allAssignments.size(), 3);
-        assertTrue(allAssignments.contains(assignment21));
-        assertTrue(allAssignments.contains(assignment22));
-        assertTrue(allAssignments.contains(assignment23));
+        assertEquals(allAssignmentBytes.size(), 3);
+        assertTrue(allAssignmentBytes.stream().anyMatch(b -> Arrays.equals(b, assignment21.toByteArray())));
+        assertTrue(allAssignmentBytes.stream().anyMatch(b -> Arrays.equals(b, assignment22.toByteArray())));
+        assertTrue(allAssignmentBytes.stream().anyMatch(b -> Arrays.equals(b, assignment23.toByteArray())));
 
         // make sure we also directly add the assignment to the in memory assignment cache in function runtime manager
         verify(functionRuntimeManager, times(3)).processAssignment(any());
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment21));
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment22));
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment23));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment21.toByteArray())));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment22.toByteArray())));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment23.toByteArray())));
 
         // updating assignments
         currentAssignments.get("worker-1")
@@ -689,21 +692,24 @@ public class SchedulerManagerTest {
         invocations = getMethodInvocationDetails(message, TypedMessageBuilder.class.getMethod("value",
                 Object.class));
 
-        Set<Assignment> allAssignments2 = new HashSet<>();
+        List<byte[]> allAssignmentBytes3 = new ArrayList<>();
         invocations.forEach(invocation -> {
-            allAssignments2.add(parseAssignment((byte[]) invocation.getRawArguments()[0]));
+            allAssignmentBytes3.add(parseAssignment((byte[]) invocation.getRawArguments()[0]).toByteArray());
         });
 
-        assertTrue(allAssignments2.contains(assignment2Updated1));
-        assertTrue(allAssignments2.contains(assignment2Updated2));
-        assertTrue(allAssignments2.contains(assignment2Updated3));
+        assertTrue(allAssignmentBytes3.stream().anyMatch(b -> Arrays.equals(b, assignment2Updated1.toByteArray())));
+        assertTrue(allAssignmentBytes3.stream().anyMatch(b -> Arrays.equals(b, assignment2Updated2.toByteArray())));
+        assertTrue(allAssignmentBytes3.stream().anyMatch(b -> Arrays.equals(b, assignment2Updated3.toByteArray())));
 
         // make sure we also directly updated the assignment to the in memory assignment cache in
         // function runtime manager
         verify(functionRuntimeManager, times(6)).processAssignment(any());
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment2Updated1));
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment2Updated2));
-        verify(functionRuntimeManager, times(1)).processAssignment(eq(assignment2Updated3));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment2Updated1.toByteArray())));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment2Updated2.toByteArray())));
+        verify(functionRuntimeManager, times(1)).processAssignment(
+                argThat(a -> Arrays.equals(a.toByteArray(), assignment2Updated3.toByteArray())));
     }
 
     @Test

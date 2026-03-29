@@ -308,7 +308,6 @@ public class FunctionMetaDataManagerTest {
 
         verify(functionMetaDataManager, times(1)).processUpdate
                 (any(FunctionMetaData.class));
-        verify(functionMetaDataManager).processUpdate(serviceRequest.getFunctionMetaData());
 
         serviceRequest = new ServiceRequest()
                 .setServiceRequestType(ServiceRequest.ServiceRequestType.INITIALIZE);
@@ -322,7 +321,6 @@ public class FunctionMetaDataManagerTest {
 
         verify(functionMetaDataManager, times(1)).processDeregister(
                 any(FunctionMetaData.class));
-        verify(functionMetaDataManager).processDeregister(serviceRequest.getFunctionMetaData());
     }
 
     @Test

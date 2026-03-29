@@ -39,6 +39,7 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import io.netty.buffer.Unpooled;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -178,13 +179,16 @@ public class FunctionRuntimeManagerTest {
                     .get("test-tenant/test-namespace/func-2:0"), assignment2);
             verify(functionActioner, times(1)).startFunction(any(FunctionRuntimeInfo.class));
             verify(functionActioner).startFunction(argThat(
-                    functionRuntimeInfo -> functionRuntimeInfo.getFunctionInstance().getFunctionMetaData()
-                            .equals(function1)));
+                    functionRuntimeInfo -> Arrays.equals(
+                            functionRuntimeInfo.getFunctionInstance().getFunctionMetaData().toByteArray(),
+                            function1.toByteArray())));
             verify(functionActioner, times(0)).stopFunction(any(FunctionRuntimeInfo.class));
 
             assertEquals(functionRuntimeManager.functionRuntimeInfos.size(), 1);
-            assertEquals(functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0"),
-                    new FunctionRuntimeInfo().setFunctionInstance(createInstance(function1, 0)));
+            assertEquals(
+                    functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0")
+                            .getFunctionInstance().toByteArray(),
+                    createInstance(function1, 0).toByteArray());
         }
     }
 
@@ -265,8 +269,9 @@ public class FunctionRuntimeManagerTest {
             verify(functionActioner, times(0)).startFunction(any(FunctionRuntimeInfo.class));
             verify(functionActioner, times(1)).terminateFunction(any(FunctionRuntimeInfo.class));
             verify(functionActioner).terminateFunction(argThat(
-                    functionRuntimeInfo -> functionRuntimeInfo.getFunctionInstance().getFunctionMetaData()
-                            .equals(function1)));
+                    functionRuntimeInfo -> Arrays.equals(
+                            functionRuntimeInfo.getFunctionInstance().getFunctionMetaData().toByteArray(),
+                            function1.toByteArray())));
 
             assertEquals(functionRuntimeManager.functionRuntimeInfos.size(), 0);
         }
@@ -349,13 +354,15 @@ public class FunctionRuntimeManagerTest {
             verify(functionActioner, times(0)).terminateFunction(any(FunctionRuntimeInfo.class));
 
             verify(functionActioner).stopFunction(argThat(
-                    functionRuntimeInfo -> functionRuntimeInfo.getFunctionInstance().getFunctionMetaData()
-                            .equals(function2)));
+                    functionRuntimeInfo -> Arrays.equals(
+                            functionRuntimeInfo.getFunctionInstance().getFunctionMetaData().toByteArray(),
+                            function2.toByteArray())));
 
             verify(functionActioner, times(1)).startFunction(any(FunctionRuntimeInfo.class));
             verify(functionActioner).startFunction(argThat(
-                    functionRuntimeInfo -> functionRuntimeInfo.getFunctionInstance().getFunctionMetaData()
-                            .equals(function2)));
+                    functionRuntimeInfo -> Arrays.equals(
+                            functionRuntimeInfo.getFunctionInstance().getFunctionMetaData().toByteArray(),
+                            function2.toByteArray())));
 
             assertEquals(functionRuntimeManager.functionRuntimeInfos.size(), 2);
             assertEquals(functionRuntimeManager.workerIdToAssignments.size(), 1);
@@ -379,7 +386,8 @@ public class FunctionRuntimeManagerTest {
             verify(functionActioner, times(0)).terminateFunction(any(FunctionRuntimeInfo.class));
 
             verify(functionActioner).stopFunction(argThat(functionRuntimeInfo ->
-                    functionRuntimeInfo.getFunctionInstance().getFunctionMetaData().equals(function2)));
+                    Arrays.equals(functionRuntimeInfo.getFunctionInstance().getFunctionMetaData().toByteArray(),
+                            function2.toByteArray())));
 
             verify(functionActioner, times(0)).startFunction(any(FunctionRuntimeInfo.class));
 
@@ -486,8 +494,10 @@ public class FunctionRuntimeManagerTest {
                     .get("worker-2"));
 
             assertEquals(functionRuntimeManager.functionRuntimeInfos.size(), 1);
-            assertEquals(functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0"),
-                    functionRuntimeInfo);
+            assertEquals(
+                    functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0")
+                            .getFunctionInstance().toByteArray(),
+                    functionRuntimeInfo.getFunctionInstance().toByteArray());
         }
     }
 
@@ -609,12 +619,15 @@ public class FunctionRuntimeManagerTest {
             verify(functionActioner, times(0)).terminateFunction(any(FunctionRuntimeInfo.class));
 
             verify(functionActioner).startFunction(
-                    argThat(functionRuntimeInfo -> functionRuntimeInfo.getFunctionInstance()
-                            .equals(assignment1.getInstance())));
+                    argThat(functionRuntimeInfo -> Arrays.equals(
+                            functionRuntimeInfo.getFunctionInstance().toByteArray(),
+                            assignment1.getInstance().toByteArray())));
 
             assertEquals(functionRuntimeManager.functionRuntimeInfos.size(), 1);
-            assertEquals(functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0"),
-                    new FunctionRuntimeInfo().setFunctionInstance(createInstance(function1, 0)));
+            assertEquals(
+                    functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0")
+                            .getFunctionInstance().toByteArray(),
+                    createInstance(function1, 0).toByteArray());
 
             // verify no errors occurred
             verify(errorNotifier, times(0)).triggerError(any());
@@ -741,16 +754,16 @@ public class FunctionRuntimeManagerTest {
 
             assertEquals(
                     functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0")
-                            .getFunctionInstance(),
-                    functionRuntimeInfo.getFunctionInstance());
+                            .getFunctionInstance().toByteArray(),
+                    functionRuntimeInfo.getFunctionInstance().toByteArray());
             assertNotNull(
                     functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0")
                             .getRuntimeSpawner());
 
             assertEquals(
                     functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0")
-                            .getRuntimeSpawner().getInstanceConfig().getFunctionDetails(),
-                    function1.getFunctionDetails());
+                            .getRuntimeSpawner().getInstanceConfig().getFunctionDetails().toByteArray(),
+                    function1.getFunctionDetails().toByteArray());
             assertEquals(
                     functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0")
                             .getRuntimeSpawner().getInstanceConfig().getInstanceId(),

@@ -20,6 +20,7 @@ package org.apache.pulsar.functions.worker;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -721,7 +722,7 @@ public class FunctionRuntimeManager implements AutoCloseable {
         Assignment existingAssignment = this.findAssignment(assignment);
         // potential updates need to happen
 
-        if (!existingAssignment.equals(assignment)) {
+        if (!Arrays.equals(existingAssignment.toByteArray(), assignment.toByteArray())) {
             FunctionRuntimeInfo functionRuntimeInfo = get_FunctionRuntimeInfo(fullyQualifiedInstanceId);
 
             // for externally managed functions we don't really care about which worker
@@ -734,7 +735,7 @@ public class FunctionRuntimeManager implements AutoCloseable {
 
             if (runtimeFactory.externallyManaged()) {
                 // change in metadata thus need to potentially restart
-                if (!assignment.getInstance().equals(existingAssignment.getInstance())) {
+                if (!Arrays.equals(assignment.getInstance().toByteArray(), existingAssignment.getInstance().toByteArray())) {
                     //stop function
                     if (functionRuntimeInfo != null) {
                         this.conditionallyStopFunction(functionRuntimeInfo);
