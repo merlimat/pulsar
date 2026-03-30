@@ -735,7 +735,8 @@ public class FunctionRuntimeManager implements AutoCloseable {
 
             if (runtimeFactory.externallyManaged()) {
                 // change in metadata thus need to potentially restart
-                if (!Arrays.equals(assignment.getInstance().toByteArray(), existingAssignment.getInstance().toByteArray())) {
+                if (!Arrays.equals(assignment.getInstance().toByteArray(),
+                        existingAssignment.getInstance().toByteArray())) {
                     //stop function
                     if (functionRuntimeInfo != null) {
                         this.conditionallyStopFunction(functionRuntimeInfo);
