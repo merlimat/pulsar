@@ -29,13 +29,14 @@ import org.testng.annotations.Test;
 
 public class PulsarFunctionRecordTest {
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testAck() {
-        Record record = mock(Record.class);
+        Record<?> record = mock(Record.class);
         FunctionDetails functionDetails = new FunctionDetails()
                 .setAutoAck(true)
                 .setProcessingGuarantees(ProcessingGuarantees.ATMOST_ONCE);
-        PulsarFunctionRecord pulsarFunctionRecord = new PulsarFunctionRecord<>(record, functionDetails);
+        PulsarFunctionRecord<?> pulsarFunctionRecord = new PulsarFunctionRecord<>(record, functionDetails);
         pulsarFunctionRecord.ack();
         verify(record, times(0)).ack();
 

@@ -896,6 +896,7 @@ public class FunctionRuntimeManagerTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testFunctionRuntimeFactoryConfigsBackwardsCompatibility() throws Exception {
 
@@ -1081,6 +1082,7 @@ public class FunctionRuntimeManagerTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testKubernetesFunctionInstancesRestart() throws Exception {
 
