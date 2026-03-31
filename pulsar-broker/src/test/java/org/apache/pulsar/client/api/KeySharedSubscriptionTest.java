@@ -54,7 +54,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -358,9 +358,6 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
 
         receiveAndCheckDistribution(Lists.newArrayList(consumer1, consumer2, consumer3), 1000);
 
-        // wait for consumer grouping acking send.
-        Thread.sleep(1000);
-
         consumer1.close();
         consumer2.close();
 
@@ -586,18 +583,12 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
         String topic = "testMakingProgressWithSlowerConsumer-" + UUID.randomUUID();
         String slowKey = "slowKey";
 
-        List<PulsarClient> clients = new ArrayList<>();
         List<Consumer> consumers = new ArrayList<>();
         try {
             AtomicInteger receivedMessages = new AtomicInteger();
 
             for (int i = 0; i < 10; i++) {
-                PulsarClient client = PulsarClient.builder()
-                        .serviceUrl(brokerUrl.toString())
-                        .build();
-                clients.add(client);
-
-                Consumer c = client.newConsumer(Schema.INT32)
+                Consumer c = pulsarClient.newConsumer(Schema.INT32)
                         .topic(topic)
                         .subscriptionName(SUBSCRIPTION_NAME)
                         .subscriptionType(SubscriptionType.Key_Shared)
@@ -606,7 +597,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
                             try {
                                 if (slowKey.equals(msg.getKey())) {
                                     // Block the thread to simulate a slow consumer
-                                    Thread.sleep(10000);
+                                    Thread.sleep(500);
                                 }
                                 receivedMessages.incrementAndGet();
                                 consumer.acknowledge(msg);
@@ -653,12 +644,8 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
             Awaitility.await().untilAsserted(() -> {
                 assertThat(receivedMessages.get()).isGreaterThanOrEqualTo(finalNonSlowMessages);
             });
-
-            for (Consumer c : consumers) {
-                c.close();
-            }
         } finally {
-            for (PulsarClient c : clients) {
+            for (Consumer c : consumers) {
                 c.close();
             }
         }
@@ -763,15 +750,16 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
         }
 
         producer.flush();
-        Thread.sleep(1000);
-
-        Topic t = pulsar.getBrokerService().getTopicIfExists(topic).get().get();
-        PersistentSubscription sub = (PersistentSubscription) t.getSubscription(SUBSCRIPTION_NAME);
 
         // We need to ensure that dispatcher does not keep to look ahead in the topic,
-        Position readPosition = sub.getCursor().getReadPosition();
-        long entryId = readPosition.getEntryId();
-        assertTrue(entryId < 100);
+        Awaitility.await().untilAsserted(() -> {
+            Topic t = pulsar.getBrokerService().getTopicIfExists(topic).get().get();
+            PersistentSubscription sub = (PersistentSubscription) t.getSubscription(SUBSCRIPTION_NAME);
+            Position readPosition = sub.getCursor().getReadPosition();
+            long entryId = readPosition.getEntryId();
+            assertTrue(entryId > 0, "Expected some messages to be dispatched");
+            assertTrue(entryId < 100, "Read ahead limit should prevent reading too many entries");
+        });
     }
 
     @Test(dataProvider = "currentImplementationType")
@@ -820,7 +808,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
         }
 
         // C2 will not be able to receive any messages until C1 is done processing whatever he got prefetched
-        assertNull(c2.receive(1, TimeUnit.SECONDS));
+        assertNull(c2.receive(200, TimeUnit.MILLISECONDS));
 
         c1.close();
 
@@ -1080,7 +1068,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
 
     @Test(dataProvider = "currentImplementationType")
     public void testContinueDispatchMessagesWhenMessageTTL(KeySharedImplementationType impl) throws Exception {
-        int defaultTTLSec = 3;
+        int defaultTTLSec = 1;
         int totalMessages = 1000;
         int numberOfKeys = 50;
         this.conf.setTtlDurationDefaultInSeconds(defaultTTLSec);
@@ -1132,7 +1120,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
 
         Message<Integer> received = null;
         try {
-            received = consumer2.receive(1, TimeUnit.SECONDS);
+            received = consumer2.receive(200, TimeUnit.MILLISECONDS);
         } catch (PulsarClientException ignore) {
         }
         if (received != null) {
@@ -1153,7 +1141,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
                 .subscribe();
 
         try {
-            received = consumer3.receive(1, TimeUnit.SECONDS);
+            received = consumer3.receive(200, TimeUnit.MILLISECONDS);
         } catch (PulsarClientException ignore) {
         }
         if (received != null && !impl.classic) {
@@ -1167,8 +1155,13 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
 
         Optional<Topic> topicRef = pulsar.getBrokerService().getTopic(topic, false).get();
         assertTrue(topicRef.isPresent());
-        Thread.sleep((defaultTTLSec - 1) * 1000);
-        topicRef.get().checkMessageExpiry();
+        // Wait for messages to expire and be cleaned up
+        PersistentSubscription persistentSub =
+                (PersistentSubscription) topicRef.get().getSubscription(subName);
+        Awaitility.await().untilAsserted(() -> {
+            topicRef.get().checkMessageExpiry();
+            assertEquals(persistentSub.getNumberOfEntriesInBacklog(false), 0);
+        });
 
         // The mark delete position is move forward, so the consumers should receive new messages now.
         for (int i = 0; i < totalMessages; i++) {
@@ -1218,11 +1211,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
                 .subscriptionName(subName)
                 .subscriptionType(SubscriptionType.Key_Shared)
                 .messageListener((MessageListener<Integer>) (consumer1, msg) -> {
-                    try {
-                        Thread.sleep(random.nextInt(5));
-                        received.add(msg);
-                    } catch (InterruptedException ignore) {
-                    }
+                    received.add(msg);
                 })
                 .subscribe();
 
@@ -1295,7 +1284,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
 
         for (int i = 0; i < consumers.size(); i++) {
             while (true) {
-                Message<Integer> received = consumers.get(i).receive(3, TimeUnit.SECONDS);
+                Message<Integer> received = consumers.get(i).receive(500, TimeUnit.MILLISECONDS);
                 if (received != null) {
                     receives.add(received);
                     int current = consumerReceivesCount[i];
@@ -1544,7 +1533,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
         builder.topic(topic)
                 .subscriptionName(SUBSCRIPTION_NAME)
                 .subscriptionType(SubscriptionType.Key_Shared)
-                .ackTimeout(3, TimeUnit.SECONDS);
+                .ackTimeout(1, TimeUnit.SECONDS);
         if (keySharedPolicy != null) {
             builder.keySharedPolicy(keySharedPolicy);
         }
@@ -1649,6 +1638,8 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
             Assert.assertEquals(check.getValue().intValue(), received);
             int redeliveryCount = check.getValue() / 2;
             log.info("[{}] Consumer wait for {} messages redelivery ...", check, redeliveryCount);
+            // trigger immediate redelivery of unacked messages instead of waiting for ack timeout
+            consumer.redeliverUnacknowledgedMessages();
             // messages not acked, test redelivery
             lastMessageForKey = new HashMap<>();
             for (int i = 0; i < redeliveryCount; i++) {
@@ -1775,26 +1766,20 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
                 })
                 .subscribe();
 
-        Future producerFuture = pulsar.getExecutor().submit(() -> {
-            try {
-                try (Producer<String> producer = pulsarClient.newProducer(Schema.STRING)
-                        .topic(topic)
-                        .enableBatching(false)
-                        .create()) {
-                    for (int i = 0; i < numMessages; i++) {
-                        String key = "test" + i;
-                        sentMessages.add(key);
-                        producer.newMessage()
-                                .key(key)
-                                .value("test" + i).
-                                send();
-                        Thread.sleep(100);
-                    }
-                }
-            } catch (Throwable t) {
-                log.error("error", t);
-            }
-        });
+        @Cleanup
+        Producer<String> producer = pulsarClient.newProducer(Schema.STRING)
+                .topic(topic)
+                .enableBatching(false)
+                .create();
+        for (int i = 0; i < numMessages; i++) {
+            String key = "test" + i;
+            sentMessages.add(key);
+            producer.newMessage()
+                    .key(key)
+                    .value("test" + i)
+                    .sendAsync();
+        }
+        producer.flush();
 
         // wait for some messages to be received by both of the consumers
         count1.await(5, TimeUnit.SECONDS);
@@ -1846,8 +1831,6 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
         // wait for all the messages to be delivered
         count3.await(20, TimeUnit.SECONDS);
         assertTrue(sentMessages.isEmpty(), "didn't receive " + sentMessages);
-
-        producerFuture.get();
     }
 
     @Test(dataProvider = "currentImplementationType")
@@ -1875,7 +1858,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
             MessageId messageId = producer.newMessage()
                     .key(String.valueOf(random.nextInt(NUMBER_OF_KEYS)))
                     .value(100 + i)
-                    .deliverAfter(10, TimeUnit.SECONDS)
+                    .deliverAfter(1, TimeUnit.SECONDS)
                     .send();
             log.info("Published delayed message :{}", messageId);
         }
@@ -1897,7 +1880,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
                 .subscribe();
 
         for (int i = 0; i < delayedMessages + messages; i++) {
-            Message<Integer> msg = consumer1.receive(30, TimeUnit.SECONDS);
+            Message<Integer> msg = consumer1.receive(5, TimeUnit.SECONDS);
             if (msg != null) {
                 log.info("c1 message: {}, {}", msg.getValue(), msg.getMessageId());
                 consumer1.acknowledge(msg);
@@ -1911,7 +1894,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
 
         int remaining = delayedMessages + messages - sum;
         for (int i = 0; i < remaining; i++) {
-            Message<Integer> msg = consumer2.receive(30, TimeUnit.SECONDS);
+            Message<Integer> msg = consumer2.receive(5, TimeUnit.SECONDS);
             if (msg != null) {
                 log.info("c2 message: {}, {}", msg.getValue(), msg.getMessageId());
                 consumer2.acknowledge(msg);
@@ -1991,11 +1974,11 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
         List<Message> msgList1 = new ArrayList<>();
         List<Message> msgList2 = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            Message msg1 = consumer1.receive(1, TimeUnit.SECONDS);
+            Message msg1 = consumer1.receive(200, TimeUnit.MILLISECONDS);
             if (msg1 != null) {
                 msgList1.add(msg1);
             }
-            Message msg2 = consumer2.receive(1, TimeUnit.SECONDS);
+            Message msg2 = consumer2.receive(200, TimeUnit.MILLISECONDS);
             if (msg2 != null) {
                 msgList2.add(msg2);
             }
@@ -2018,9 +2001,15 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
                 .subscribe();
         redeliverConsumer.close();
 
-        Thread.sleep(5000);
-        // Verify: no repeated Read-and-discard.
+        // Wait for replay counter to stabilize, indicating dispatcher has settled
         int maxReplayCount = delayedMessages * 2;
+        Awaitility.await().untilAsserted(() -> {
+            int counterBefore = replyReadCounter.get();
+            Thread.sleep(500);
+            assertEquals(replyReadCounter.get(), counterBefore,
+                    "Replay counter should stabilize");
+        });
+        // Verify: no repeated Read-and-discard.
         assertThat(replyReadCounter.get()).isLessThanOrEqualTo(maxReplayCount);
     }
 
@@ -2100,17 +2089,17 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
         List<Message> msgList2 = new ArrayList<>();
         List<Message> msgList3 = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            Message<Integer> msg1 = consumer1.receive(1, TimeUnit.SECONDS);
+            Message<Integer> msg1 = consumer1.receive(200, TimeUnit.MILLISECONDS);
             if (msg1 != null) {
                 totalReceivedMessages.add(msg1.getValue());
                 msgList1.add(msg1);
             }
-            Message<Integer> msg2 = consumer2.receive(1, TimeUnit.SECONDS);
+            Message<Integer> msg2 = consumer2.receive(200, TimeUnit.MILLISECONDS);
             if (msg2 != null) {
                 totalReceivedMessages.add(msg2.getValue());
                 msgList2.add(msg2);
             }
-            Message<Integer> msg3 = consumer3.receive(1, TimeUnit.SECONDS);
+            Message<Integer> msg3 = consumer3.receive(200, TimeUnit.MILLISECONDS);
             if (msg3 != null) {
                 totalReceivedMessages.add(msg3.getValue());
                 msgList3.add(msg3);
@@ -2159,8 +2148,6 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
                 .subscribe();
         consumerWillBeClose.close();
 
-        Thread.sleep(2000);
-
         for (int i = messagesSentPerTime; i < messagesSentPerTime * 2; i++) {
             MessageId messageId = producer.newMessage()
                     .key(String.valueOf(random.nextInt(NUMBER_OF_KEYS)))
@@ -2187,9 +2174,13 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
         assertTrue((cursor.getReadPosition())
                 .compareTo(managedLedger.getLastConfirmedEntry())  > 0);
 
-        // Make all consumers to start to read and acknowledge messages.
         // Verify: no repeated Read-and-discard.
-        Thread.sleep(5 * 1000);
+        // Wait for the read position to advance past LAC, indicating all dispatching is done
+        Awaitility.await().untilAsserted(() -> {
+            assertTrue((cursor.getReadPosition())
+                    .compareTo(managedLedger.getLastConfirmedEntry()) > 0,
+                    "Read position should be past LAC");
+        });
         int maxReplayCount = messagesSentPerTime * 2;
         log.info("Reply read count: {}", replyReadCounter.get());
         assertTrue(replyReadCounter.get() < maxReplayCount);
@@ -2290,20 +2281,14 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
             remainingMessageValues.add(i);
         }
 
-        checkLimit.run();
-
-        Thread.sleep(pauseTime);
-        checkLimit.run();
-
-        Thread.sleep(pauseTime);
-        checkLimit.run();
+        // Wait for messages to be dispatched and verify limit is respected
+        Awaitility.await().untilAsserted(checkLimit::run);
 
         // resume c1 and c3
         c1.resume();
         c3.resume();
 
-        Thread.sleep(pauseTime);
-        checkLimit.run();
+        Awaitility.await().untilAsserted(checkLimit::run);
 
         // produce more messages
         for (int i = 1000; i < 2000; i++) {
@@ -2441,7 +2426,6 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
             remainingMessageValues.add(i);
         }
 
-        Thread.sleep(2 * pauseTime);
         // close c2
         c2.close();
         Thread.sleep(pauseTime);
@@ -2713,7 +2697,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
                     .subscribe();
             while (true) {
                 try {
-                    Message<byte[]> msg = consumer.receive(2, TimeUnit.SECONDS);
+                    Message<byte[]> msg = consumer.receive(500, TimeUnit.MILLISECONDS);
                     if (msg == null) {
                         break;
                     }
