@@ -20,10 +20,8 @@ package org.apache.pulsar.common.naming;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
-
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.testng.Assert;
@@ -34,16 +32,20 @@ public class TopicBundleAssignmentStrategyTest {
     @Test
     public void testStrategyFactory() {
         ServiceConfiguration conf = new ServiceConfiguration();
-        conf.setTopicBundleAssignmentStrategy(
-                "org.apache.pulsar.common.naming.TopicBundleAssignmentStrategyTest$TestStrategy");
+        conf.setTopicBundleAssignmentStrategy(TestStrategy.class.getName());
         PulsarService pulsarService = mock(PulsarService.class);
         doReturn(conf).when(pulsarService).getConfiguration();
-        TopicBundleAssignmentStrategy strategy = TopicBundleAssignmentFactory.create(pulsarService);
-        NamespaceBundle bundle = strategy.findBundle(null, null);
-        Range<Long> keyRange = Range.range(0L, BoundType.CLOSED, 0xffffffffL, BoundType.CLOSED);
-        String range = String.format("0x%08x_0x%08x", keyRange.lowerEndpoint(), keyRange.upperEndpoint());
-        Assert.assertEquals(bundle.getBundleRange(), range);
-        Assert.assertEquals(bundle.getNamespaceObject(), NamespaceName.get("my/test"));
+        TopicBundleAssignmentFactory.reset();
+        try {
+            TopicBundleAssignmentStrategy strategy = TopicBundleAssignmentFactory.create(pulsarService);
+            NamespaceBundle bundle = strategy.findBundle(null, null);
+            Range<Long> keyRange = Range.range(0L, BoundType.CLOSED, 0xffffffffL, BoundType.CLOSED);
+            String range = String.format("0x%08x_0x%08x", keyRange.lowerEndpoint(), keyRange.upperEndpoint());
+            Assert.assertEquals(bundle.getBundleRange(), range);
+            Assert.assertEquals(bundle.getNamespaceObject(), NamespaceName.get("my/test"));
+        } finally {
+            TopicBundleAssignmentFactory.reset();
+        }
     }
 
     public static class TestStrategy implements TopicBundleAssignmentStrategy {
@@ -56,7 +58,7 @@ public class TopicBundleAssignmentStrategyTest {
 
         @Override
         public void init(PulsarService pulsarService) {
-            
+
         }
     }
 }
