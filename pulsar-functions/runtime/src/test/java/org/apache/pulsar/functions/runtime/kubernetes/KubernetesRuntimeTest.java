@@ -1011,6 +1011,7 @@ public class KubernetesRuntimeTest {
         verifyGolangInstance(config);
     }
 
+    @SuppressWarnings("deprecation")
     private void verifyGolangInstance(InstanceConfig config) throws Exception {
         KubernetesRuntime container = factory.createContainer(config, userJarFile, userJarFile,
                 null, null, 30L);

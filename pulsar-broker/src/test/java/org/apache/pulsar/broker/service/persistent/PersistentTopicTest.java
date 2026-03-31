@@ -304,6 +304,7 @@ public class PersistentTopicTest extends BrokerTestBase {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testPersistentPartitionedTopicUnload() throws Exception {
         final String topicName = "persistent://prop/ns/failedUnload";
         final String ns = "prop/ns";

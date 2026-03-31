@@ -317,6 +317,7 @@ public class ProducerMemoryLeakTest extends SharedPulsarBaseTest {
     }
 
     @Test(dataProvider = "failedInterceptAt")
+    @SuppressWarnings("unchecked")
     public void testInterceptorError(String method) throws Exception {
         final String topicName = newTopicName();
         admin.topics().createNonPartitionedTopic(topicName);

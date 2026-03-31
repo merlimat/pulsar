@@ -976,6 +976,7 @@ public class BrokerServiceLookupTest extends ProducerConsumerBase implements ITe
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testMergeLookupRequests() throws Exception {
         // Assert the lookup service is a "BinaryProtoLookupService".
         final PulsarClientImpl pulsarClientImpl = (PulsarClientImpl) pulsarClient;

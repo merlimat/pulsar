@@ -71,9 +71,8 @@ public class PatternConsumerTopicWatcherBackPressureMultipleConsumersTest extend
     protected void cleanup() throws Exception {
         super.internalCleanup();
     }
-    @SuppressWarnings("deprecation")
-
     @Test(timeOut = 60 * 1000)
+    @SuppressWarnings({"deprecation", "unchecked"})
     public void testPatternConsumerWithLargeAmountOfConcurrentClientConnections()
             throws PulsarAdminException, InterruptedException, IOException, ExecutionException, TimeoutException {
         // create a new namespace for this test
@@ -84,7 +83,6 @@ public class PatternConsumerTopicWatcherBackPressureMultipleConsumersTest extend
         final int numberOfClients = 100;
 
         // create a long topic name to consume more memory per topic
-        @SuppressWarnings("unchecked")
         final String topicNamePrefix = "persistent://" + namespace + "/" + StringUtils.repeat('a', 512) + "-";
         // number of topics to create
         final int topicCount = 300;

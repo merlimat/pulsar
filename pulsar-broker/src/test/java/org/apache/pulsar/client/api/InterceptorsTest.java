@@ -47,6 +47,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 @Test(groups = "broker-api")
+@SuppressWarnings("unchecked")
 public class InterceptorsTest extends SharedPulsarBaseTest {
 
     private static final Logger log = LoggerFactory.getLogger(InterceptorsTest.class);

@@ -857,6 +857,7 @@ public class OneWayReplicatorDeduplicationTest extends OneWayReplicatorTestBase 
     }
 
     @Test(timeOut = 360 * 1000, dataProvider = "enabledDeduplication")
+    @SuppressWarnings("unchecked")
     public void testReplicationLoadSchemaTimeout(boolean enabledDeduplication) throws Exception {
         waitInternalClientCreated();
 

@@ -356,6 +356,7 @@ public class SimpleSchemaTest extends ProducerConsumerBase {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testProducerConnectStateWhenRegisteringSchema() throws Exception {
         final String topic = BrokerTestUtil.newUniqueName(NAMESPACE_ALWAYS_COMPATIBLE + "/tp");
         final String subscription = "s1";
@@ -393,6 +394,7 @@ public class SimpleSchemaTest extends ProducerConsumerBase {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testNoMemoryLeakIfSchemaIncompatible() throws Exception {
         final String topic = BrokerTestUtil.newUniqueName(NAMESPACE_NEVER_COMPATIBLE + "/tp");
         final String subscription = "s1";

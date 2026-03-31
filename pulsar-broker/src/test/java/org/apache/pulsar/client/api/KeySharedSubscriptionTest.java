@@ -2047,6 +2047,7 @@ public class KeySharedSubscriptionTest extends ProducerConsumerBase {
      *   - at last, all messages will be received.
      */
     @Test(timeOut = 180 * 1000, dataProvider = "allowKeySharedOutOfOrder") // the test will be finished in 60s.
+    @SuppressWarnings("unchecked")
     public void testRecentJoinedPosWillNotStuckOtherConsumer(KeySharedImplementationType impl,
                                                              boolean allowKeySharedOutOfOrder) throws Exception {
         final int messagesSentPerTime = 100;

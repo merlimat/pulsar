@@ -47,6 +47,7 @@ import java.util.function.BiFunction;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.client.api.ReadHandle;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
@@ -132,6 +133,7 @@ public class PendingReadsManagerTest  {
 
 
     @Data
+    @EqualsAndHashCode(callSuper = false)
     private static class CapturingReadEntriesCallback extends CompletableFuture<Void>
             implements AsyncCallbacks.ReadEntriesCallback  {
         List<Position> entries;

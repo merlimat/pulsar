@@ -197,6 +197,7 @@ public class JavaInstanceRunnableTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testFunctionResultNull() throws Exception {
         JavaExecutionResult javaExecutionResult = new JavaExecutionResult();
 

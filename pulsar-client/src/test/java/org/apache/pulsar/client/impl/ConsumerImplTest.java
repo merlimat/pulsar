@@ -70,7 +70,7 @@ public class ConsumerImplTest {
         createConsumer(consumerConf);
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void createConsumer(ConsumerConfigurationData consumerConf) {
         executorProvider = new ExecutorProvider(1, "ConsumerImplTest");
         internalExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -148,6 +148,7 @@ public class ConsumerImplTest {
     }
 
     @Test(invocationTimeOut = 1000)
+    @SuppressWarnings("unchecked")
     public void testNotifyPendingReceivedCallback_InterceptorsWorksWithPrefetchDisabled() {
         CompletableFuture<Message<byte[]>> receiveFuture = new CompletableFuture<>();
         @SuppressWarnings("rawtypes")

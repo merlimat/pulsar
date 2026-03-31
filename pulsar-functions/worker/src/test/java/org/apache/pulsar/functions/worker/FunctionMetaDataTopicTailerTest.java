@@ -51,6 +51,7 @@ public class FunctionMetaDataTopicTailerTest {
     private FunctionMetaDataTopicTailer fsc;
 
     @BeforeMethod(alwaysRun = true)
+    @SuppressWarnings("unchecked")
     public void before() throws Exception {
         this.reader = mock(Reader.class);
         this.readerBuilder = mock(ReaderBuilder.class);

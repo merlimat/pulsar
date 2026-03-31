@@ -148,6 +148,7 @@ public class DockerUtils {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static void dumpContainerLogDirToTarget(DockerClient docker, String containerId,
                                                    String path) {
         File targetDirectory = getTargetDirectory(containerId);

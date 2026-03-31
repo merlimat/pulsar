@@ -4968,9 +4968,8 @@ public class SimpleProducerConsumerTest extends ProducerConsumerBase {
                 {false}
         };
     }
-    @SuppressWarnings("deprecation")
-
     @Test(dataProvider = "enableBatchSend")
+    @SuppressWarnings({"deprecation", "unchecked"})
     public void testPublishWithCreateMessageManually(boolean enableBatchSend) throws Exception {
         final int messageCount = 10;
         final List<MessageImpl> messageArrayBeforeSend = Collections.synchronizedList(new ArrayList<>());
