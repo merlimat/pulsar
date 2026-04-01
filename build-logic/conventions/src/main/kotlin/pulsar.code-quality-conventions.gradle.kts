@@ -36,8 +36,10 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
             "**/generated-sources/**",
             "build/**",
         )
+        eclipse().configFile(rootProject.file("buildtools/src/main/resources/pulsar/pulsar-formatter.xml"))
         removeUnusedImports()
         trimTrailingWhitespace()
+        endWithNewline()
         licenseHeader(asfLicenseHeaderJava, "(\\n|package|import|public|class|module) ?")
     }
 
