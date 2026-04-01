@@ -1,0 +1,122 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.pulsar.client.api.v5;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import org.apache.pulsar.client.api.v5.config.EncryptionPolicy;
+import org.apache.pulsar.client.api.v5.config.SubscriptionInitialPosition;
+
+/**
+ * Builder for configuring and creating a {@link StreamConsumer}.
+ *
+ * @param <T> the type of message values the consumer will receive
+ */
+public interface StreamConsumerBuilder<T> {
+
+    /**
+     * Subscribe and create the stream consumer, blocking until ready.
+     */
+    StreamConsumer<T> subscribe() throws PulsarClientException;
+
+    /**
+     * Subscribe and create the stream consumer asynchronously.
+     */
+    CompletableFuture<StreamConsumer<T>> subscribeAsync();
+
+    // --- Required ---
+
+    /**
+     * The topic(s) to subscribe to.
+     */
+    StreamConsumerBuilder<T> topic(String... topicNames);
+
+    /**
+     * The subscription name.
+     */
+    StreamConsumerBuilder<T> subscriptionName(String subscriptionName);
+
+    // --- Seek (initial position override) ---
+
+    /**
+     * Reset the subscription to a specific message ID.
+     */
+    StreamConsumerBuilder<T> seek(MessageId messageId);
+
+    /**
+     * Reset the subscription to a specific timestamp. The subscription
+     * will be positioned at the first message published at or after this timestamp.
+     */
+    StreamConsumerBuilder<T> seek(Instant timestamp);
+
+    // --- Optional ---
+
+    /**
+     * Properties to attach to the subscription.
+     */
+    StreamConsumerBuilder<T> subscriptionProperties(Map<String, String> properties);
+
+    /**
+     * Initial position when the subscription is first created (no existing cursor).
+     */
+    StreamConsumerBuilder<T> subscriptionInitialPosition(SubscriptionInitialPosition position);
+
+    /**
+     * A custom name for this consumer instance.
+     */
+    StreamConsumerBuilder<T> consumerName(String consumerName);
+
+    /**
+     * How frequently cumulative acknowledgments are flushed to the broker.
+     */
+    StreamConsumerBuilder<T> acknowledgmentGroupTime(Duration delay);
+
+    /**
+     * Whether to read from the compacted topic (only latest value per key).
+     */
+    StreamConsumerBuilder<T> readCompacted(boolean readCompacted);
+
+    /**
+     * Enable replication of subscription state across geo-replicated clusters.
+     */
+    StreamConsumerBuilder<T> replicateSubscriptionState(boolean replicate);
+
+    // --- Encryption ---
+
+    /**
+     * Configure end-to-end message encryption for decryption.
+     *
+     * @see EncryptionPolicy#forConsumer
+     */
+    StreamConsumerBuilder<T> encryptionPolicy(EncryptionPolicy policy);
+
+    // --- Metadata ---
+
+    /**
+     * Add a single property to the consumer metadata.
+     */
+    StreamConsumerBuilder<T> property(String key, String value);
+
+    /**
+     * Add multiple properties to the consumer metadata.
+     */
+    StreamConsumerBuilder<T> properties(Map<String, String> properties);
+}

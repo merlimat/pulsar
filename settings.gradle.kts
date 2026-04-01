@@ -75,6 +75,7 @@ include("bouncy-castle:bcfips")
 include("pulsar-config-validation")
 include("structured-event-log")
 include("pulsar-client-api")
+include("pulsar-client-api-v5")
 
 // Tier 1
 include("pulsar-client-admin-api")
@@ -91,6 +92,7 @@ project(":pulsar-client-original").projectDir = file("pulsar-client")
 include("pulsar-metadata")
 include("pulsar-opentelemetry")
 include("pulsar-client-messagecrypto-bc")
+include("pulsar-client-v5")
 
 // Tier 4
 // Maven artifactId is "pulsar-client-admin-original" (directory is "pulsar-client-admin")
