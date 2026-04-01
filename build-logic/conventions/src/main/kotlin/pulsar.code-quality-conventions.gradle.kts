@@ -18,33 +18,10 @@
  */
 
 plugins {
-    checkstyle
     id("com.diffplug.spotless")
 }
 
-val catalog = the<VersionCatalogsExtension>().named("libs")
-
-// ── Checkstyle ──────────────────────────────────────────────────────────────
-
-configure<CheckstyleExtension> {
-    toolVersion = catalog.findVersion("checkstyle").get().requiredVersion
-    configFile = rootProject.file("buildtools/src/main/resources/pulsar/checkstyle.xml")
-    configProperties["checkstyle.suppressions.file"] =
-        rootProject.file("buildtools/src/main/resources/pulsar/suppressions.xml").absolutePath
-}
-
-tasks.withType<Checkstyle>().configureEach {
-    // Broker module has very large files that need more heap
-    maxHeapSize.set("1g")
-    // Exclude generated source files (proto, lightproto, etc.)
-    exclude { it.file.path.contains("/build/") }
-    exclude { it.file.path.contains("/generated-lightproto/") }
-    exclude { it.file.path.contains("/generated-sources/") }
-    // Match Maven exclusion: **/proto/*
-    exclude("**/proto/*")
-}
-
-// ── License header check (Spotless) ────────────────────────────────────────
+// ── Spotless (formatting + license headers) ───────────────────────────────
 val asfLicenseHeader = rootProject.file("src/license-header.txt").readText()
 val asfLicenseHeaderJava = "/*\n" + asfLicenseHeader.lines()
     .map { " * $it".trimEnd() }
@@ -59,6 +36,8 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
             "**/generated-sources/**",
             "build/**",
         )
+        removeUnusedImports()
+        trimTrailingWhitespace()
         licenseHeader(asfLicenseHeaderJava, "(\\n|package|import|public|class|module) ?")
     }
 

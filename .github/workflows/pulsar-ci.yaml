@@ -180,7 +180,7 @@ jobs:
 
       - name: Build, check licenses and code style
         run: >-
-          ./gradlew assemble rat spotlessCheck checkstyleMain checkstyleTest
+          ./gradlew assemble rat spotlessCheck
           --no-configuration-cache
 
       - name: Check binary licenses

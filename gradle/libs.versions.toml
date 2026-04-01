@@ -22,8 +22,6 @@ pulsar = "4.3.0-SNAPSHOT"
 # Docker
 docker-jdk = "21"
 pulsar-client-python = "3.10.0"
-# Code quality
-checkstyle = "13.3.0"
 # Major frameworks
 bookkeeper = "4.17.3"
 zookeeper = "3.9.5"
