@@ -86,6 +86,9 @@ import org.apache.pulsar.common.api.proto.CommandPartitionedTopicMetadataRespons
 import org.apache.pulsar.common.api.proto.CommandProducer;
 import org.apache.pulsar.common.api.proto.CommandProducerSuccess;
 import org.apache.pulsar.common.api.proto.CommandRedeliverUnacknowledgedMessages;
+import org.apache.pulsar.common.api.proto.CommandScalableTopicAssignmentUpdate;
+import org.apache.pulsar.common.api.proto.CommandScalableTopicSubscribeResponse;
+import org.apache.pulsar.common.api.proto.CommandScalableTopicUpdate;
 import org.apache.pulsar.common.api.proto.CommandSeek;
 import org.apache.pulsar.common.api.proto.CommandSend;
 import org.apache.pulsar.common.api.proto.CommandSubscribe;
@@ -102,6 +105,8 @@ import org.apache.pulsar.common.api.proto.KeyValue;
 import org.apache.pulsar.common.api.proto.MessageIdData;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
 import org.apache.pulsar.common.api.proto.ProtocolVersion;
+import org.apache.pulsar.common.api.proto.ScalableConsumerAssignment;
+import org.apache.pulsar.common.api.proto.ScalableTopicDAG;
 import org.apache.pulsar.common.api.proto.Schema;
 import org.apache.pulsar.common.api.proto.ServerError;
 import org.apache.pulsar.common.api.proto.SingleMessageMetadata;
@@ -1668,6 +1673,77 @@ public class Commands {
                 .setRequestId(requestId)
                 .setWatcherId(watcherId);
         return cmd;
+    }
+
+    // --- Scalable topic commands ---
+
+    public static ByteBuf newScalableTopicLookup(long sessionId, String topic) {
+        BaseCommand cmd = localCmd(Type.SCALABLE_TOPIC_LOOKUP);
+        cmd.setScalableTopicLookup()
+                .setSessionId(sessionId)
+                .setTopic(topic);
+        return serializeWithSize(cmd);
+    }
+
+    public static ByteBuf newScalableTopicClose(long sessionId) {
+        BaseCommand cmd = localCmd(Type.SCALABLE_TOPIC_CLOSE);
+        cmd.setScalableTopicClose()
+                .setSessionId(sessionId);
+        return serializeWithSize(cmd);
+    }
+
+    public static ByteBuf newScalableTopicUpdate(long sessionId, ScalableTopicDAG dag) {
+        BaseCommand cmd = new BaseCommand().setType(Type.SCALABLE_TOPIC_UPDATE);
+        CommandScalableTopicUpdate update = cmd.setScalableTopicUpdate()
+                .setSessionId(sessionId);
+        update.setDag().copyFrom(dag);
+        return serializeWithSize(cmd);
+    }
+
+    public static ByteBuf newScalableTopicError(long sessionId, ServerError error, String message) {
+        BaseCommand cmd = new BaseCommand().setType(Type.SCALABLE_TOPIC_UPDATE);
+        cmd.setScalableTopicUpdate()
+                .setSessionId(sessionId)
+                .setError(error)
+                .setMessage(message);
+        return serializeWithSize(cmd);
+    }
+
+    /**
+     * Broker -> Client: response to a scalable-topic subscribe request. On success the
+     * caller must populate the nested {@link ScalableConsumerAssignment} via
+     * {@code response.setAssignment()} before serializing; on failure the error and
+     * message should be set instead.
+     */
+    public static ByteBuf newScalableTopicSubscribeResponse(long requestId,
+                                                             ScalableConsumerAssignment assignment) {
+        BaseCommand cmd = new BaseCommand().setType(Type.SCALABLE_TOPIC_SUBSCRIBE_RESPONSE);
+        CommandScalableTopicSubscribeResponse response = cmd.setScalableTopicSubscribeResponse()
+                .setRequestId(requestId);
+        response.setAssignment().copyFrom(assignment);
+        return serializeWithSize(cmd);
+    }
+
+    public static ByteBuf newScalableTopicSubscribeError(long requestId, ServerError error, String message) {
+        BaseCommand cmd = new BaseCommand().setType(Type.SCALABLE_TOPIC_SUBSCRIBE_RESPONSE);
+        cmd.setScalableTopicSubscribeResponse()
+                .setRequestId(requestId)
+                .setError(error)
+                .setMessage(message);
+        return serializeWithSize(cmd);
+    }
+
+    /**
+     * Broker -> Client: push a new segment assignment to a previously-subscribed scalable
+     * consumer after a rebalance.
+     */
+    public static ByteBuf newScalableTopicAssignmentUpdate(long consumerId,
+                                                            ScalableConsumerAssignment assignment) {
+        BaseCommand cmd = new BaseCommand().setType(Type.SCALABLE_TOPIC_ASSIGNMENT_UPDATE);
+        CommandScalableTopicAssignmentUpdate update = cmd.setScalableTopicAssignmentUpdate()
+                .setConsumerId(consumerId);
+        update.setAssignment().copyFrom(assignment);
+        return serializeWithSize(cmd);
     }
 
     public static ByteBuf serializeWithSize(BaseCommand cmd) {

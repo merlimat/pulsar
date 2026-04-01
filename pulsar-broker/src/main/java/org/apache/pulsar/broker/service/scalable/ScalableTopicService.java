@@ -172,6 +172,29 @@ public class ScalableTopicService {
                 .thenCompose(__ -> resources.deleteScalableTopicAsync(topic));
     }
 
+    /**
+     * Register a scalable consumer with the controller leader for {@code topic}.
+     * Persists a durable session and returns the consumer's segment assignment.
+     */
+    public CompletableFuture<ConsumerAssignment> registerConsumer(TopicName topic, String subscription,
+                                                                   String consumerName, long consumerId,
+                                                                   org.apache.pulsar.broker.service.TransportCnx cnx) {
+        return getOrCreateController(topic)
+                .thenCompose(controller -> controller.registerConsumer(subscription, consumerName, consumerId, cnx));
+    }
+
+    /**
+     * Called when a scalable consumer's transport connection drops. Forwards to the
+     * controller which marks the session disconnected and starts its grace timer.
+     * No-op if the controller is not held locally.
+     */
+    public void onConsumerDisconnect(TopicName topic, String subscription, String consumerName) {
+        ScalableTopicController controller = controllers.get(topic.toString());
+        if (controller != null) {
+            controller.onConsumerDisconnect(subscription, consumerName);
+        }
+    }
+
     // --- Internal helpers ---
 
     private void onLeaderStateChange(TopicName topic, LeaderElectionState state) {

@@ -405,6 +405,23 @@ public class PulsarCommandSenderImpl implements PulsarCommandSender {
                 command, permitAcquireErrorHandler);
     }
 
+    @Override
+    public void sendScalableTopicSubscribeResponse(long requestId,
+            org.apache.pulsar.common.api.proto.ScalableConsumerAssignment assignment) {
+        writeAndFlush(Commands.newScalableTopicSubscribeResponse(requestId, assignment));
+    }
+
+    @Override
+    public void sendScalableTopicSubscribeError(long requestId, ServerError error, String message) {
+        writeAndFlush(Commands.newScalableTopicSubscribeError(requestId, error, message));
+    }
+
+    @Override
+    public void sendScalableTopicAssignmentUpdate(long consumerId,
+            org.apache.pulsar.common.api.proto.ScalableConsumerAssignment assignment) {
+        writeAndFlush(Commands.newScalableTopicAssignmentUpdate(consumerId, assignment));
+    }
+
     private void writeAndFlush(ByteBuf outBuf) {
         NettyChannelUtil.writeAndFlushWithVoidPromise(cnx.ctx(), outBuf);
     }

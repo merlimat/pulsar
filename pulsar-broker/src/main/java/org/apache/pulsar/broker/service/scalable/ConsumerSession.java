@@ -167,12 +167,42 @@ public class ConsumerSession {
     }
 
     /**
-     * Push an assignment update to this consumer, if currently connected. The actual
-     * wire push is wired up in the protocol-commands commit; at this stage the method
-     * exists so {@link SubscriptionCoordinator} can call it.
+     * Push an assignment update to this consumer, if currently connected. Builds a
+     * {@code ScalableConsumerAssignment} proto and writes a
+     * {@code CommandScalableTopicAssignmentUpdate} to the connection.
      */
     public void sendAssignmentUpdate(ConsumerAssignment assignment) {
-        // no-op until the protocol-commands commit wires in the wire protocol
+        TransportCnx localCnx = this.cnx;
+        if (localCnx == null || !connected) {
+            // Consumer is disconnected — no-op. The assignment will be delivered when it
+            // reconnects (the coordinator re-pushes on attach).
+            return;
+        }
+        var sender = localCnx.getCommandSender();
+        if (sender == null) {
+            // Connection is in the middle of being torn down; skip silently.
+            return;
+        }
+        sender.sendScalableTopicAssignmentUpdate(consumerId, toProto(assignment));
+    }
+
+    /**
+     * Convert the broker-side {@link ConsumerAssignment} record to its protocol wire form.
+     * Shared by {@link #sendAssignmentUpdate(ConsumerAssignment)} and the
+     * {@code handleCommandScalableTopicSubscribe} path in {@code ServerCnx}.
+     */
+    public static org.apache.pulsar.common.api.proto.ScalableConsumerAssignment toProto(
+            ConsumerAssignment assignment) {
+        var proto = new org.apache.pulsar.common.api.proto.ScalableConsumerAssignment()
+                .setLayoutEpoch(assignment.layoutEpoch());
+        for (ConsumerAssignment.AssignedSegment seg : assignment.assignedSegments()) {
+            proto.addSegment()
+                    .setSegmentId(seg.segmentId())
+                    .setHashStart(seg.hashRange().start())
+                    .setHashEnd(seg.hashRange().end())
+                    .setSegmentTopic(seg.underlyingTopicName());
+        }
+        return proto;
     }
 
     @Override

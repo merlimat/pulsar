@@ -160,6 +160,12 @@ public class ClientCnx extends PulsarHandler {
                     .expectedItems(16)
                     .concurrencyLevel(1)
                     .build();
+    @Getter(AccessLevel.PACKAGE)
+    private final ConcurrentLongHashMap<DagWatchSession> dagWatchSessions =
+            ConcurrentLongHashMap.<DagWatchSession>newBuilder()
+                    .expectedItems(4)
+                    .concurrencyLevel(1)
+                    .build();
 
     private final CompletableFuture<Void> connectionFuture = new CompletableFuture<Void>();
     private final ConcurrentLinkedQueue<RequestTime> requestTimeoutQueue = new ConcurrentLinkedQueue<>();
@@ -354,12 +360,14 @@ public class ClientCnx extends PulsarHandler {
         consumers.forEach((id, consumer) -> consumer.connectionClosed(this, Optional.empty(), Optional.empty()));
         transactionMetaStoreHandlers.forEach((id, handler) -> handler.connectionClosed(this));
         topicListWatchers.forEach((__, watcher) -> watcher.connectionClosed(this));
+        dagWatchSessions.forEach((__, session) -> session.connectionClosed());
 
         waitingLookupRequests.clear();
 
         producers.clear();
         consumers.clear();
         topicListWatchers.clear();
+        dagWatchSessions.clear();
 
         timeoutTask.cancel(true);
     }
@@ -1304,6 +1312,43 @@ public class ClientCnx extends PulsarHandler {
             log.warn().attr("watcherId", watcherId)
                     .log("Received topic list update for unknown watcher from server");
         }
+    }
+
+    @Override
+    protected void handleCommandScalableTopicUpdate(
+            org.apache.pulsar.common.api.proto.CommandScalableTopicUpdate cmd) {
+        checkArgument(state == State.Ready);
+
+        long sessionId = cmd.getSessionId();
+        log.debug().attr("sessionId", sessionId).log("Received scalableTopicUpdate");
+
+        if (cmd.hasError()) {
+            // Error response for the initial lookup
+            DagWatchSession session = dagWatchSessions.remove(sessionId);
+            if (session != null) {
+                session.onError(cmd.getError(), cmd.hasMessage() ? cmd.getMessage() : null);
+            } else {
+                log.warn().attr("sessionId", sessionId)
+                        .log("Received scalable topic error for unknown session");
+            }
+            return;
+        }
+
+        DagWatchSession session = dagWatchSessions.get(sessionId);
+        if (session != null) {
+            session.onUpdate(cmd.getDag());
+        } else {
+            log.warn().attr("sessionId", sessionId)
+                    .log("Received scalable topic update for unknown session");
+        }
+    }
+
+    public void registerDagWatchSession(long sessionId, DagWatchSession session) {
+        dagWatchSessions.put(sessionId, session);
+    }
+
+    public void removeDagWatchSession(long sessionId) {
+        dagWatchSessions.remove(sessionId);
     }
 
     /**
