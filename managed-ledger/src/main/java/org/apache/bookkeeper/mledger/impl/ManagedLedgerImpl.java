@@ -163,6 +163,11 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
     protected final BookKeeper bookKeeper;
     protected final String name;
     protected final Logger log;
+
+    public Logger getLogger() {
+        return log;
+    }
+
     private final Map<String, byte[]> ledgerMetadata;
     protected final BookKeeper.DigestType digestType;
     private final AtomicReference<Position> cacheEvictionPosition = new AtomicReference<>();

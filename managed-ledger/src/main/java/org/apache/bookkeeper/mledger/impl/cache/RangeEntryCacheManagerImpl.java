@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -122,7 +121,7 @@ public class RangeEntryCacheManagerImpl implements EntryCacheManager {
         long size = entryCache.getSize();
         entryCache.clear();
 
-        log.debug().attr("name", name).attr("sizeMb", size / MB)
+        log.debug().attr("managedLedger", name).attr("sizeMb", size / MB)
                 .attr("currentSizeMb", currentSize.get() / MB)
                 .log("Removed cache");
     }
@@ -174,15 +173,13 @@ public class RangeEntryCacheManagerImpl implements EntryCacheManager {
             long sizeToEvict = currentSize - (long) (maxSize * cacheEvictionWatermark);
             if (sizeToEvict > 0) {
                 try {
-                    long startTime = System.nanoTime();
                     log.debug().attr("totalSizeMb", currentSize / MB)
                             .attr("sizeToEvictMb", sizeToEvict / MB)
                             .log("Triggering cache eviction");
+
+                    var event = log.debug().timed();
                     evictionHandler.evictEntries(sizeToEvict);
-                    long endTime = System.nanoTime();
-                    double durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
-                    log.debug().attr("removedMb", (currentSize - this.currentSize.get()) / MB)
-                            .attr("durationMs", durationMs)
+                    event.attr("removedMb", (currentSize - this.currentSize.get()) / MB)
                             .log("Eviction completed");
                 } finally {
                     mlFactoryMBean.recordCacheEviction();

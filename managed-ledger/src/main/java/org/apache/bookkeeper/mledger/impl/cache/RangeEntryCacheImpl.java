@@ -49,13 +49,11 @@ import org.apache.bookkeeper.mledger.impl.EntryImpl;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
 import org.apache.bookkeeper.mledger.intercept.ManagedLedgerInterceptor;
 import org.apache.commons.lang3.tuple.Pair;
-import lombok.CustomLog;
 import org.apache.pulsar.common.util.FutureUtil;
 
 /**
  * Cache data payload for entries of all ledgers.
  */
-@CustomLog
 public class RangeEntryCacheImpl implements EntryCache {
     /**
      * The Netty allocator used when managedLedgerCacheCopyEntries=true.
@@ -79,6 +77,7 @@ public class RangeEntryCacheImpl implements EntryCache {
 
     private final RangeEntryCacheManagerImpl manager;
     final ManagedLedgerImpl ml;
+    private final io.github.merlimat.slog.Logger log;
     private ManagedLedgerInterceptor interceptor;
     private final RangeCache entries;
     private final boolean copyEntries;
@@ -100,13 +99,14 @@ public class RangeEntryCacheImpl implements EntryCache {
                         PendingReadsManager pendingReadsManager) {
         this.manager = manager;
         this.ml = ml;
+        this.log = ml.getLogger();
         this.pendingReadsManager = pendingReadsManager == null ? new PendingReadsManager(this) : pendingReadsManager;
         this.entryLengthFunction = entryLengthFunction;
         this.interceptor = ml.getManagedLedgerInterceptor();
         this.entries = new RangeCache(rangeCacheRemovalQueue);
         this.copyEntries = copyEntries;
 
-        log.debug().attr("managedLedger", ml.getName()).log("Initialized managed-ledger entry cache");
+        log.debug("Initialized managed-ledger entry cache");
     }
 
     @VisibleForTesting
@@ -133,7 +133,7 @@ public class RangeEntryCacheImpl implements EntryCache {
     public boolean insert(Entry entry) {
         int entryLength = entryLengthFunction.getEntryLength(ml, entry);
 
-        log.debug().attr("managedLedger", ml.getName()).attr("position", entry.getPosition())
+        log.debug().attr("position", entry.getPosition())
                 .attr("size", entryLength).log("Adding entry to cache");
 
         ByteBuf cachedData;
@@ -173,7 +173,7 @@ public class RangeEntryCacheImpl implements EntryCache {
         try {
             cachedData = ALLOCATOR.directBuffer(size, size);
         } catch (Throwable t) {
-            log.warn().attr("managedLedger", ml.getName()).exceptionMessage(t)
+            log.warn().exceptionMessage(t)
                     .log("Failed to allocate buffer for entry cache");
             return null;
         }
@@ -206,7 +206,7 @@ public class RangeEntryCacheImpl implements EntryCache {
         final Position firstPosition = PositionFactory.create(ledgerId, 0);
         final Position lastPosition = PositionFactory.create(ledgerId + 1, 0);
 
-        log.debug().attr("managedLedger", ml.getName()).attr("ledgerId", ledgerId)
+        log.debug().attr("ledgerId", ledgerId)
                 .log("Invalidating all entries on ledger");
         removeRangeAndNotify(firstPosition, lastPosition);
         pendingReadsManager.invalidateLedger(ledgerId);
@@ -293,7 +293,7 @@ public class RangeEntryCacheImpl implements EntryCache {
                 "Invalid ReadHandle. The ledger %s of the range positions should match the handle's ledger %s.",
                 firstPosition.getLedgerId(), lh.getId());
 
-        log.debug().attr("managedLedger", ml.getName()).attr("numberOfEntries", numberOfEntries)
+        log.debug().attr("numberOfEntries", numberOfEntries)
                 .attr("firstPosition", firstPosition).attr("lastPosition", lastPosition)
                 .log("Reading entries in range");
 
@@ -399,7 +399,7 @@ public class RangeEntryCacheImpl implements EntryCache {
             }
 
             manager.getMlFactoryMBean().recordCacheHits(cachedEntries.size(), totalCachedSize);
-            log.debug().attr("managedLedger", ml.getName()).attr("numberOfEntries", numberOfEntries)
+            log.debug().attr("numberOfEntries", numberOfEntries)
                     .attr("firstPosition", firstPosition).attr("lastPosition", lastPosition)
                     .log("Cache hit for entries");
 
@@ -556,7 +556,7 @@ public class RangeEntryCacheImpl implements EntryCache {
 
             Throwable cause = FutureUtil.unwrapCompletionException(exception);
             if (allowRetry && cause instanceof ManagedLedgerException.OffloadReadHandleClosedException) {
-                log.info().attr("managedLedger", ml.getName()).attr("ledgerId", lh.getId())
+                log.info().attr("ledgerId", lh.getId())
                         .log("Read handle closed for ledger, reopening");
                 pendingReadsManager.invalidateLedger(lh.getId());
                 return ml.reopenReadHandle(lh.getId())
