@@ -49,13 +49,13 @@ import org.apache.bookkeeper.mledger.impl.EntryImpl;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
 import org.apache.bookkeeper.mledger.intercept.ManagedLedgerInterceptor;
 import org.apache.commons.lang3.tuple.Pair;
+import lombok.CustomLog;
 import org.apache.pulsar.common.util.FutureUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Cache data payload for entries of all ledgers.
  */
+@CustomLog
 public class RangeEntryCacheImpl implements EntryCache {
     /**
      * The Netty allocator used when managedLedgerCacheCopyEntries=true.
@@ -106,9 +106,7 @@ public class RangeEntryCacheImpl implements EntryCache {
         this.entries = new RangeCache(rangeCacheRemovalQueue);
         this.copyEntries = copyEntries;
 
-        if (log.isDebugEnabled()) {
-            log.debug("[{}] Initialized managed-ledger entry cache", ml.getName());
-        }
+        log.debug().attr("managedLedger", ml.getName()).log("Initialized managed-ledger entry cache");
     }
 
     @VisibleForTesting
@@ -135,10 +133,8 @@ public class RangeEntryCacheImpl implements EntryCache {
     public boolean insert(Entry entry) {
         int entryLength = entryLengthFunction.getEntryLength(ml, entry);
 
-        if (log.isDebugEnabled()) {
-            log.debug("[{}] Adding entry to cache: {} - size: {}", ml.getName(), entry.getPosition(),
-                    entryLength);
-        }
+        log.debug().attr("managedLedger", ml.getName()).attr("position", entry.getPosition())
+                .attr("size", entryLength).log("Adding entry to cache");
 
         ByteBuf cachedData;
         if (copyEntries) {
@@ -177,7 +173,8 @@ public class RangeEntryCacheImpl implements EntryCache {
         try {
             cachedData = ALLOCATOR.directBuffer(size, size);
         } catch (Throwable t) {
-            log.warn("[{}] Failed to allocate buffer for entry cache: {}", ml.getName(), t.getMessage());
+            log.warn().attr("managedLedger", ml.getName()).exceptionMessage(t)
+                    .log("Failed to allocate buffer for entry cache");
             return null;
         }
 
@@ -196,10 +193,8 @@ public class RangeEntryCacheImpl implements EntryCache {
         final Position firstPosition = PositionFactory.create(-1, 0);
 
         if (firstPosition.compareTo(lastPosition) > 0) {
-            if (log.isDebugEnabled()) {
-                log.debug("Attempted to invalidate entries in an invalid range : {} ~ {}",
-                        firstPosition, lastPosition);
-            }
+            log.debug().attr("firstPosition", firstPosition).attr("lastPosition", lastPosition)
+                    .log("Attempted to invalidate entries in an invalid range");
             return;
         }
 
@@ -211,9 +206,8 @@ public class RangeEntryCacheImpl implements EntryCache {
         final Position firstPosition = PositionFactory.create(ledgerId, 0);
         final Position lastPosition = PositionFactory.create(ledgerId + 1, 0);
 
-        if (log.isDebugEnabled()) {
-            log.debug("[{}] Invalidating all entries on ledger {}", ml.getName(), ledgerId);
-        }
+        log.debug().attr("managedLedger", ml.getName()).attr("ledgerId", ledgerId)
+                .log("Invalidating all entries on ledger");
         removeRangeAndNotify(firstPosition, lastPosition);
         pendingReadsManager.invalidateLedger(ledgerId);
     }
@@ -222,10 +216,10 @@ public class RangeEntryCacheImpl implements EntryCache {
         Pair<Integer, Long> removed = entries.removeRange(firstPosition, lastPosition, false);
         int entriesRemoved = removed.getLeft();
         long sizeRemoved = removed.getRight();
-        if (log.isTraceEnabled()) {
-            log.trace("[{}] Invalidated entries in range [{}, {}] - Entries removed: {} - Size removed: {}",
-                    ml.getName(), firstPosition, lastPosition, entriesRemoved, sizeRemoved);
-        }
+        log.trace().attr("managedLedger", ml.getName())
+                .attr("firstPosition", firstPosition).attr("lastPosition", lastPosition)
+                .attr("entriesRemoved", entriesRemoved).attr("sizeRemoved", sizeRemoved)
+                .log("Invalidated entries in range");
         manager.entriesRemoved(sizeRemoved, entriesRemoved);
     }
 
@@ -251,7 +245,8 @@ public class RangeEntryCacheImpl implements EntryCache {
                 }
             }, ctx, true);
         } catch (Throwable t) {
-            log.warn("failed to read entries for {}-{}", lh.getId(), position, t);
+            log.warn().attr("ledgerId", lh.getId()).attr("position", position).exception(t)
+                    .log("Failed to read entries");
             // invalidate all entries related to ledger from the cache (it might happen if entry gets corrupt
             // (entry.data is already deallocate due to any race-condition) so, invalidate cache and next time read from
             // the bookie)
@@ -266,7 +261,9 @@ public class RangeEntryCacheImpl implements EntryCache {
         try {
             asyncReadEntry0(lh, firstEntry, lastEntry, expectedReadCount, callback, ctx, true);
         } catch (Throwable t) {
-            log.warn("failed to read entries for {}--{}-{}", lh.getId(), firstEntry, lastEntry, t);
+            log.warn().attr("ledgerId", lh.getId()).attr("firstEntry", firstEntry)
+                    .attr("lastEntry", lastEntry).exception(t)
+                    .log("Failed to read entries");
             // invalidate all entries related to ledger from the cache (it might happen if entry gets corrupt
             // (entry.data is already deallocate due to any race-condition) so, invalidate cache and next time read from
             // the bookie)
@@ -296,10 +293,9 @@ public class RangeEntryCacheImpl implements EntryCache {
                 "Invalid ReadHandle. The ledger %s of the range positions should match the handle's ledger %s.",
                 firstPosition.getLedgerId(), lh.getId());
 
-        if (log.isDebugEnabled()) {
-            log.debug("[{}] Reading {} entries in range {} to {}", ml.getName(), numberOfEntries, firstPosition,
-                    lastPosition);
-        }
+        log.debug().attr("managedLedger", ml.getName()).attr("numberOfEntries", numberOfEntries)
+                .attr("firstPosition", firstPosition).attr("lastPosition", lastPosition)
+                .log("Reading entries in range");
 
         InflightReadsLimiter pendingReadsLimiter = getPendingReadsLimiter();
         if (!acquirePermits || pendingReadsLimiter.isDisabled()) {
@@ -308,11 +304,9 @@ public class RangeEntryCacheImpl implements EntryCache {
         } else {
             long estimatedEntrySize = getEstimatedEntrySize(lh);
             long estimatedReadSize = numberOfEntries * estimatedEntrySize;
-            if (log.isDebugEnabled()) {
-                log.debug("Estimated read size: {} bytes for {} entries with {} estimated entry size",
-                        estimatedReadSize,
-                        numberOfEntries, estimatedEntrySize);
-            }
+            log.debug().attr("estimatedReadSize", estimatedReadSize)
+                    .attr("numberOfEntries", numberOfEntries).attr("estimatedEntrySize", estimatedEntrySize)
+                    .log("Estimated read size");
             Optional<InflightReadsLimiter.Handle> optionalHandle =
                     pendingReadsLimiter.acquire(estimatedReadSize, handle -> {
                         // permits were not immediately available, callback will be executed when permits are acquired
@@ -405,10 +399,9 @@ public class RangeEntryCacheImpl implements EntryCache {
             }
 
             manager.getMlFactoryMBean().recordCacheHits(cachedEntries.size(), totalCachedSize);
-            if (log.isDebugEnabled()) {
-                log.debug("[{}] Cache hit for {} entries in range {} to {}", ml.getName(), numberOfEntries,
-                        firstPosition, lastPosition);
-            }
+            log.debug().attr("managedLedger", ml.getName()).attr("numberOfEntries", numberOfEntries)
+                    .attr("firstPosition", firstPosition).attr("lastPosition", lastPosition)
+                    .log("Cache hit for entries");
 
             if (cachedEntries.size() == numberOfEntries) {
                 callback.readEntriesComplete(entriesToReturn, ctx);
@@ -454,7 +447,7 @@ public class RangeEntryCacheImpl implements EntryCache {
                                 }
                             }
                         }
-                        log.warn("Failed to read missing entries from bookkeeper, retrying by reading all", t);
+                        log.warn().exception(t).log("Failed to read missing entries from bookkeeper, retrying by reading all");
                         // Read all the entries from bookkeeper
                         pendingReadsManager.readEntries(lh, firstPosition.getEntryId(), lastPosition.getEntryId(),
                                 expectedReadCount, callback, ctx);
@@ -468,8 +461,9 @@ public class RangeEntryCacheImpl implements EntryCache {
                                 if (index >= 0 && index < entriesToReturn.size()) {
                                     entriesToReturn.set(index, entry);
                                 } else {
-                                    log.warn("Received entry {} outside of expected range {} to {}",
-                                            entry.getPosition(), firstPosition, lastPosition);
+                                    log.warn().attr("entryPosition", entry.getPosition())
+                                            .attr("firstPosition", firstPosition).attr("lastPosition", lastPosition)
+                                            .log("Received entry outside of expected range");
                                 }
                             }
                         }
@@ -562,7 +556,8 @@ public class RangeEntryCacheImpl implements EntryCache {
 
             Throwable cause = FutureUtil.unwrapCompletionException(exception);
             if (allowRetry && cause instanceof ManagedLedgerException.OffloadReadHandleClosedException) {
-                log.info("[{}] Read handle closed for ledger {}, reopening", ml.getName(), lh.getId());
+                log.info().attr("managedLedger", ml.getName()).attr("ledgerId", lh.getId())
+                        .log("Read handle closed for ledger, reopening");
                 pendingReadsManager.invalidateLedger(lh.getId());
                 return ml.reopenReadHandle(lh.getId())
                         .thenCompose(reopened -> readFromStorage(reopened, firstEntry, lastEntry, expectedReadCount,
@@ -592,5 +587,4 @@ public class RangeEntryCacheImpl implements EntryCache {
         return entries.getSize();
     }
 
-    private static final Logger log = LoggerFactory.getLogger(RangeEntryCacheImpl.class);
 }

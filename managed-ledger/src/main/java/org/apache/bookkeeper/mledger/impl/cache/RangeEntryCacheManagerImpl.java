@@ -36,10 +36,10 @@ import org.apache.bookkeeper.mledger.ManagedLedgerFactoryConfig;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerFactoryImpl;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerFactoryMBeanImpl;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
+import lombok.CustomLog;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@CustomLog
 @SuppressWarnings("checkstyle:javadoctype")
 public class RangeEntryCacheManagerImpl implements EntryCacheManager {
 
@@ -81,7 +81,7 @@ public class RangeEntryCacheManagerImpl implements EntryCacheManager {
                 config.isCacheEvictionExtendTTLOfRecentlyAccessed());
         this.evictionHandler = new RangeEntryCacheManagerEvictionHandler(this, rangeCacheRemovalQueue);
 
-        log.info("Initialized managed-ledger entry cache of {} Mb", maxSize / MB);
+        log.info().attr("maxSizeMb", maxSize / MB).log("Initialized managed-ledger entry cache");
     }
 
     public EntryCache getEntryCache(ManagedLedger ml) {
@@ -122,9 +122,9 @@ public class RangeEntryCacheManagerImpl implements EntryCacheManager {
         long size = entryCache.getSize();
         entryCache.clear();
 
-        if (log.isDebugEnabled()) {
-            log.debug("Removed cache for {} - Size: {} -- Current Size: {}", name, size / MB, currentSize.get() / MB);
-        }
+        log.debug().attr("name", name).attr("sizeMb", size / MB)
+                .attr("currentSizeMb", currentSize.get() / MB)
+                .log("Removed cache");
     }
 
     /**
@@ -175,18 +175,15 @@ public class RangeEntryCacheManagerImpl implements EntryCacheManager {
             if (sizeToEvict > 0) {
                 try {
                     long startTime = System.nanoTime();
-                    if (log.isDebugEnabled()) {
-                        log.debug("Triggering cache eviction. total size: {} Mb -- Need to discard: {} Mb",
-                                currentSize / MB, sizeToEvict / MB);
-                    }
+                    log.debug().attr("totalSizeMb", currentSize / MB)
+                            .attr("sizeToEvictMb", sizeToEvict / MB)
+                            .log("Triggering cache eviction");
                     evictionHandler.evictEntries(sizeToEvict);
-                    if (log.isDebugEnabled()) {
-                        long endTime = System.nanoTime();
-                        double durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
-                        log.debug("Eviction completed. Removed {} Mb in {} ms",
-                                (currentSize - this.currentSize.get()) / MB,
-                                durationMs);
-                    }
+                    long endTime = System.nanoTime();
+                    double durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
+                    log.debug().attr("removedMb", (currentSize - this.currentSize.get()) / MB)
+                            .attr("durationMs", durationMs)
+                            .log("Eviction completed");
                 } finally {
                     mlFactoryMBean.recordCacheEviction();
                 }
@@ -272,5 +269,4 @@ public class RangeEntryCacheManagerImpl implements EntryCacheManager {
         rangeCacheRemovalQueue.forEachEntry(consumer);
     }
 
-    private static final Logger log = LoggerFactory.getLogger(RangeEntryCacheManagerImpl.class);
 }
