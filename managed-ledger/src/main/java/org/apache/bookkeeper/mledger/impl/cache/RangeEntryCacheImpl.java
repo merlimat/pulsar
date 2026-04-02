@@ -74,6 +74,8 @@ public class RangeEntryCacheImpl implements EntryCache {
     public static final long BOOKKEEPER_READ_OVERHEAD_PER_ENTRY = 64;
     public static final int DEFAULT_ESTIMATED_ENTRY_SIZE = 10 * 1024;
     private static final boolean DEFAULT_CACHE_INDIVIDUAL_READ_ENTRY = false;
+    private static final io.github.merlimat.slog.Logger slog =
+            io.github.merlimat.slog.Logger.get(RangeEntryCacheImpl.class);
 
     private final RangeEntryCacheManagerImpl manager;
     final ManagedLedgerImpl ml;
@@ -99,7 +101,7 @@ public class RangeEntryCacheImpl implements EntryCache {
                         PendingReadsManager pendingReadsManager) {
         this.manager = manager;
         this.ml = ml;
-        this.log = ml.getLogger();
+        this.log = slog.with().ctx(ml.getLogger()).build();
         this.pendingReadsManager = pendingReadsManager == null ? new PendingReadsManager(this) : pendingReadsManager;
         this.entryLengthFunction = entryLengthFunction;
         this.interceptor = ml.getManagedLedgerInterceptor();
@@ -216,7 +218,7 @@ public class RangeEntryCacheImpl implements EntryCache {
         Pair<Integer, Long> removed = entries.removeRange(firstPosition, lastPosition, false);
         int entriesRemoved = removed.getLeft();
         long sizeRemoved = removed.getRight();
-        log.trace().attr("managedLedger", ml.getName())
+        log.trace()
                 .attr("firstPosition", firstPosition).attr("lastPosition", lastPosition)
                 .attr("entriesRemoved", entriesRemoved).attr("sizeRemoved", sizeRemoved)
                 .log("Invalidated entries in range");
