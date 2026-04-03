@@ -90,12 +90,14 @@ public class IsolatedBookieEnsemblePlacementPolicy extends RackawareEnsemblePlac
             }
             // Only add the bookieMappingCache if we have defined an isolation group
             bookieMappingCache = store.getMetadataCache(BookiesRackConfiguration.class);
-            bookieMappingCache.get(BookieRackAffinityMapping.BOOKIE_INFO_ROOT_PATH).thenAccept(opt -> opt.ifPresent(
-                            bookiesRackConfiguration -> cachedRackConfiguration = bookiesRackConfiguration))
-                    .exceptionally(e -> {
-                        log.warn("Failed to load bookies rack configuration while initialize the PlacementPolicy.");
-                        return null;
-                    });
+            try {
+                bookieMappingCache.get(BookieRackAffinityMapping.BOOKIE_INFO_ROOT_PATH)
+                        .thenAccept(opt -> opt.ifPresent(
+                                bookiesRackConfiguration -> cachedRackConfiguration = bookiesRackConfiguration))
+                        .join();
+            } catch (Exception e) {
+                log.warn("Failed to load bookies rack configuration while initialize the PlacementPolicy.", e);
+            }
         }
         if (conf.getProperty(SECONDARY_ISOLATION_BOOKIE_GROUPS) != null) {
             String secondaryIsolationGroupsString = ConfigurationStringUtil
@@ -197,13 +199,13 @@ public class IsolatedBookieEnsemblePlacementPolicy extends RackawareEnsemblePlac
         }
         try {
             if (bookieMappingCache != null) {
-                bookieMappingCache.get(BookieRackAffinityMapping.BOOKIE_INFO_ROOT_PATH)
-                        .thenAccept(opt -> cachedRackConfiguration = opt.orElse(null)).exceptionally(e -> {
-                            log.warn("Failed to update the newest bookies rack config.");
-                            return null;
-                        });
-
-                BookiesRackConfiguration allGroupsBookieMapping = cachedRackConfiguration;
+                BookiesRackConfiguration allGroupsBookieMapping = bookieMappingCache
+                        .get(BookieRackAffinityMapping.BOOKIE_INFO_ROOT_PATH)
+                        .thenApply(opt -> {
+                            var config = opt.orElse(null);
+                            cachedRackConfiguration = config;
+                            return config;
+                        }).join();
                 if (allGroupsBookieMapping == null) {
                     log.debug("The bookies rack config is not available at now.");
                     return excludedBookies;
