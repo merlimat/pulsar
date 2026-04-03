@@ -385,6 +385,11 @@ public class IsolatedBookieEnsemblePlacementPolicyTest {
                 NullStatsLogger.INSTANCE, BookieSocketAddress.LEGACY_BOOKIEID_RESOLVER);
         isolationPolicy.onClusterChanged(writableBookies, readOnlyBookies);
 
+        // Wait for the async cache load triggered by initialize() to complete
+        Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+                assertNotNull(isolationPolicy.getBookieMappingCache()
+                        .getIfCached(BookieRackAffinityMapping.BOOKIE_INFO_ROOT_PATH)));
+
         List<BookieId> ensemble = isolationPolicy.newEnsemble(2, 2, 2,
                 Collections.emptyMap(), new HashSet<>()).getResult();
         assertTrue(ensemble.contains(new BookieSocketAddress(BOOKIE1).toBookieId()));
