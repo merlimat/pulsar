@@ -1251,6 +1251,14 @@ public abstract class PulsarFunctionsTest extends PulsarFunctionsTestBase {
     }
 
     private void getFunctionStats(String functionName, int numMessages) throws Exception {
+        Awaitility.await()
+                .pollInterval(Duration.ofSeconds(1))
+                .atMost(Duration.ofSeconds(15))
+                .ignoreExceptions()
+                .untilAsserted(() -> doGetFunctionStats(functionName, numMessages));
+    }
+
+    private void doGetFunctionStats(String functionName, int numMessages) throws Exception {
         ContainerExecResult result = pulsarCluster.getAnyWorker().execCmd(
                 PulsarCluster.ADMIN_SCRIPT,
                 "functions",
