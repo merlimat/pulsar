@@ -56,14 +56,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pulsar.common.policies.data.OffloadPoliciesImpl;
 import org.apache.pulsar.metadata.api.MetadataStoreException;
 import org.apache.pulsar.metadata.impl.FaultInjectionMetadataStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.CustomLog;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+@CustomLog
 public class OffloadPrefixTest extends MockedBookKeeperTestCase {
-    private static final Logger log = LoggerFactory.getLogger(OffloadPrefixTest.class);
 
     @Test
     public void testNullOffloader() throws Exception {

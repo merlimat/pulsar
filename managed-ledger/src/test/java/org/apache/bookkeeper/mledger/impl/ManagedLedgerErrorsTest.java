@@ -53,10 +53,10 @@ import org.apache.bookkeeper.test.MockedBookKeeperTestCase;
 import org.apache.pulsar.metadata.api.MetadataStoreException;
 import org.apache.pulsar.metadata.impl.FaultInjectionMetadataStore;
 import org.awaitility.Awaitility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.CustomLog;
 import org.testng.annotations.Test;
 
+@CustomLog
 public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
 
     @Test
@@ -562,7 +562,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
 
             @Override
             public void addFailed(ManagedLedgerException exception, Object ctx) {
-                log.warn("Error in write", exception);
+                log.warn().exception(exception).log("Error in write");
                 ex.set(exception);
                 counter.countDown();
             }
@@ -651,5 +651,4 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         factory2.shutdown();
     }
 
-    private static final Logger log = LoggerFactory.getLogger(ManagedLedgerErrorsTest.class);
 }

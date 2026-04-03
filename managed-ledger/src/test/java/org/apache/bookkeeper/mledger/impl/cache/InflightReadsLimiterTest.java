@@ -32,13 +32,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.Cleanup;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-@Slf4j
+@CustomLog
 public class InflightReadsLimiterTest {
     private static final int ACQUIRE_QUEUE_SIZE = 1000;
     private static final int ACQUIRE_TIMEOUT_MILLIS = 500;

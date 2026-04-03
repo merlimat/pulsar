@@ -88,8 +88,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import lombok.Cleanup;
+import lombok.CustomLog;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.AsyncCallback.AddCallback;
 import org.apache.bookkeeper.client.BKException;
@@ -158,7 +158,7 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-@Slf4j
+@CustomLog
 public class ManagedLedgerTest extends MockedBookKeeperTestCase {
     private static final Charset Encoding = StandardCharsets.UTF_8;
 
@@ -294,14 +294,14 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         while (cursor.hasMoreEntries()) {
 
             List<Entry> entries = cursor.readEntries(20);
-            log.debug("Read {} entries", entries.size());
+            log.debug().attr("count", entries.size()).log("Read entries");
 
             // Acknowledge only on last entry
             Entry lastEntry = entries.get(entries.size() - 1);
             cursor.markDelete(lastEntry.getPosition());
 
             for (Entry entry : entries) {
-                log.info("Read entry. Position={} Content='{}'", entry.getPosition(), new String(entry.getData()));
+                log.info().attr("position", entry.getPosition()).attr("content", new String(entry.getData())).log("Read entry");
                 entry.release();
             }
 
@@ -586,7 +586,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
                                         final Position position = entry.getPosition();
                                         assertEquals(new String(entry.getDataAndRelease(), Encoding), "test");
 
-                                        log.debug("Mark-Deleting to position {}", position);
+                                        log.debug().attr("position", position).log("Mark-deleting");
                                         cursor.asyncMarkDelete(position, new MarkDeleteCallback() {
                                             @Override
                                             public void markDeleteComplete(Object ctx) {
@@ -660,7 +660,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         Position last = entries.get(entries.size() - 1).getPosition();
         entries.forEach(Entry::release);
 
-        log.info("First={} Last={}", first, last);
+        log.info().attr("first", first).attr("last", last).log("Position range");
         assertTrue(first.getLedgerId() < last.getLedgerId());
         assertEquals(first.getEntryId(), 0);
         assertEquals(last.getEntryId(), 0);
@@ -734,7 +734,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         assertFalse(cursor.hasMoreEntries());
         entries.forEach(Entry::release);
 
-        log.info("First={} Last={}", first, last);
+        log.info().attr("first", first).attr("last", last).log("Position range");
         assertTrue(first.getLedgerId() < last.getLedgerId());
         assertEquals(first.getEntryId(), 0);
         assertEquals(last.getEntryId(), 0);
@@ -905,7 +905,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
                     assertNotNull(ctx);
                     assertEquals(copyBytesFromByteBuf(entryData), content.getBytes(Encoding));
 
-                    log.info("Successfully added {}", content);
+                    log.info().attr("content", content).log("Successfully added entry");
                     done.countDown();
                 }
 
@@ -1101,13 +1101,13 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         // in a short time (in a background thread)
         ledger.addEntry("entry-2".getBytes(Encoding));
         while (ledger.getNumberOfEntries() > 1) {
-            log.debug("entries={}", ledger.getNumberOfEntries());
+            log.debug().attr("entries", ledger.getNumberOfEntries()).log("Current entry count");
             Thread.sleep(100);
         }
 
         ledger.addEntry("entry-3".getBytes(Encoding));
         while (ledger.getNumberOfEntries() > 1) {
-            log.debug("entries={}", ledger.getNumberOfEntries());
+            log.debug().attr("entries", ledger.getNumberOfEntries()).log("Current entry count");
             Thread.sleep(100);
         }
     }
@@ -1185,14 +1185,14 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         ledger.addEntry("entry-1".getBytes(Encoding));
         log.debug("Added 1st message");
         List<Entry> entries = cursor.readEntries(1);
-        log.debug("read message ok");
+        log.debug("Read message ok");
         assertEquals(entries.size(), 1);
         entries.forEach(Entry::release);
 
         ledger.addEntry("entry-2".getBytes(Encoding));
         log.debug("Added 2nd message");
         ledger.addEntry("entry-3".getBytes(Encoding));
-        log.debug("Added 3nd message");
+        log.debug("Added 3rd message");
 
         assertTrue(cursor.hasMoreEntries());
         assertEquals(cursor.getNumberOfEntries(), 2);
@@ -2499,7 +2499,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
             c1.markDelete(position);
         }
         entryList.forEach(entry -> {
-            log.info("Read entry position {}:{}", entry.getLedgerId(), entry.getEntryId());
+            log.info().attr("ledgerId", entry.getLedgerId()).attr("entryId", entry.getEntryId()).log("Read entry position");
             entry.release();
         });
 
@@ -2654,7 +2654,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         assertEquals(5, managedLedger.getLedgersInfoAsList().get(0).getEntries());
         assertEquals(5, managedLedger.getLedgersInfoAsList().get(1).getEntries());
         assertEquals(0, managedLedger.getLedgersInfoAsList().get(2).getEntries());
-        log.info("### ledgers {}", managedLedger.getLedgersInfo());
+        log.info().attr("ledgers", managedLedger.getLedgersInfo()).log("Ledger info");
 
         long firstLedger = managedLedger.getLedgersInfo().firstKey();
         long secondLedger = managedLedger.getLedgersInfoAsList().get(1).getLedgerId();
@@ -2674,7 +2674,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         long length = managedCursor.getNumberOfEntriesInStorage();
         // return the last confirm entry position if searchPosition is exceed the last confirm entry
         targetPosition = managedLedger.getPositionAfterN(searchPosition, length, PositionBound.startExcluded);
-        log.info("Target position is {}", targetPosition);
+        log.info().attr("targetPosition", targetPosition).log("Target position");
         assertEquals(targetPosition.getLedgerId(), secondLedger);
         assertEquals(targetPosition.getEntryId(), 4);
 
@@ -2721,7 +2721,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         });
         assertEquals(5, managedLedger.getLedgersInfoAsList().get(0).getEntries());
         assertEquals(5, managedLedger.getLedgersInfoAsList().get(1).getEntries());
-        log.info("### ledgers {}", managedLedger.getLedgersInfo());
+        log.info().attr("ledgers", managedLedger.getLedgersInfo()).log("Ledger info");
         long length = managedCursor.getNumberOfEntriesInStorage();
         assertEquals(length, numberOfEntries);
     }
@@ -2867,7 +2867,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         // Acknowledge only on last entry
         cursor1.markDelete(entries1.get(entries1.size() - 1).getPosition());
         for (Entry entry : entries1) {
-            log.info("Read entry. Position={} Content='{}'", entry.getPosition(), new String(entry.getData()));
+            log.info().attr("position", entry.getPosition()).attr("content", new String(entry.getData())).log("Read entry");
             entry.release();
         }
 
@@ -2877,14 +2877,14 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         // Acknowledge only on last entry
         cursor2.markDelete((entries2.get(entries2.size() - 1)).getPosition());
         for (Entry entry : entries2) {
-            log.info("Read entry. Position={} Content='{}'", entry.getPosition(), new String(entry.getData()));
+            log.info().attr("position", entry.getPosition()).attr("content", new String(entry.getData())).log("Read entry");
             entry.release();
         }
 
         ledger.waitForPendingCacheEvictions();
 
         // (3) Validate: cache should remove all entries read by both active cursors
-        log.info("expected, found : {}, {}", 5 * (totalInsertedEntries - readEntries), entryCache.getSize());
+        log.info().attr("expected", 5 * (totalInsertedEntries - readEntries)).attr("found", entryCache.getSize()).log("Cache size check");
         assertEquals(entryCache.getSize(), 5 * (totalInsertedEntries - readEntries));
 
         final int remainingEntries = totalInsertedEntries - readEntries;
@@ -2893,7 +2893,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         cursor1.markDelete(entries1.get(entries1.size() - 1).getPosition());
 
         for (Entry entry : entries1) {
-            log.info("Read entry. Position={} Content='{}'", entry.getPosition(), new String(entry.getData()));
+            log.info().attr("position", entry.getPosition()).attr("content", new String(entry.getData())).log("Read entry");
             entry.release();
         }
 
@@ -2946,7 +2946,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         // read 20 entries
         List<Entry> entries1 = cursor1.readEntries(totalInsertedEntries);
         for (Entry entry : entries1) {
-            log.info("Read entry. Position={} Content='{}'", entry.getPosition(), new String(entry.getData()));
+            log.info().attr("position", entry.getPosition()).attr("content", new String(entry.getData())).log("Read entry");
             entry.release();
         }
 
@@ -3938,7 +3938,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         List<Entry> entryList = cursor.readEntries(3);
         assertEquals(entryList.size(), 3);
         Awaitility.await().untilAsserted(() -> {
-            log.error("ledger.ledgerCache.size() : " + ledger.ledgerCache.size());
+            log.error().attr("cacheSize", ledger.ledgerCache.size()).log("Ledger cache size");
             assertEquals(ledger.ledgerCache.size(), 3);
             assertEquals(ledger.ledgers.size(), 4);
         });
@@ -4729,23 +4729,24 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
 
         // ===== PHASE 1: Write entries to create multiple ledgers =====
         int totalEntries = 60;
-        log.info("=== PHASE 1: Writing {} entries to create multiple ledgers ===", totalEntries);
+        log.info().attr("totalEntries", totalEntries).log("=== PHASE 1: Writing entries to create multiple ledgers ===");
         for (int i = 0; i < totalEntries; i++) {
             Position pos = ledger.addEntry(("message-" + i).getBytes());
-            log.info("Added entry: {}", pos);
+            log.info().attr("position", pos).log("Added entry");
         }
 
         List<LedgerInfo> ledgersAfterWrite = ledger.getLedgersInfoAsList();
-        log.info("Created {} ledgers: {}", ledgersAfterWrite.size(),
-                ledgersAfterWrite.stream()
+        log.info().attr("ledgerCount", ledgersAfterWrite.size())
+                .attr("ledgers", ledgersAfterWrite.stream()
                         .map(l -> String.format("L%d(%d entries)", l.getLedgerId(), l.getEntries()))
-                        .toArray());
+                        .toArray())
+                .log("Created ledgers");
 
         assertTrue(ledgersAfterWrite.size() >= 5, "Should have at least 5 ledgers");
         long firstLedgerId = ledgersAfterWrite.get(0).getLedgerId();
 
         // ===== PHASE 2: Initial acknowledgments (entries 0, 5-9) and wait for persistence =====
-        log.info("=== PHASE 2: Acknowledging initial entries in first ledger {} ===", firstLedgerId);
+        log.info().attr("firstLedgerId", firstLedgerId).log("=== PHASE 2: Acknowledging initial entries in first ledger ===");
         List<Entry> entries = cursor.readEntries(10);
 
         // Delete entries 5-9 first (out of order)
@@ -4766,7 +4767,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
                 "Mark-delete should be at entry 0");
 
         // Wait for this position to be persisted
-        log.info("Waiting for initial mark-delete position to persist: {}", initialMarkDelete);
+        log.info().attr("initialMarkDelete", initialMarkDelete).log("Waiting for initial mark-delete position to persist");
         Awaitility.await().untilAsserted(() -> {
             assertEquals(cursor.getPersistentMarkDeletedPosition(), initialMarkDelete,
                     "Persistent position should catch up to in-memory position");
@@ -4775,8 +4776,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
 
         // ===== PHASE 3: Inject delay to simulate slow persistence =====
         long delay = 30;
-        log.info("=== PHASE 3: Injecting {}s delay for cursor persistence ===",
-                delay);
+        log.info().attr("delaySeconds", delay).log("=== PHASE 3: Injecting delay for cursor persistence ===");
         bkc.addEntryResponseDelay(delay, TimeUnit.SECONDS);
 
         // ===== PHASE 4: Asynchronously acknowledge entries 1-4 (persistence will be delayed) =====
@@ -4786,12 +4786,12 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
             cursor.asyncDelete(entries.get(i).getPosition(), new AsyncCallbacks.DeleteCallback() {
                 @Override
                 public void deleteComplete(Object ctx) {
-                    log.info("Entry {} deletion completed", index);
+                    log.info().attr("entryIndex", index).log("Entry deletion completed");
                 }
 
                 @Override
                 public void deleteFailed(ManagedLedgerException exception, Object ctx) {
-                    log.error("Entry {} deletion failed", index, exception);
+                    log.error().attr("entryIndex", index).exception(exception).log("Entry deletion failed");
                 }
             }, null);
         }
@@ -4802,7 +4802,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
                 "Mark-delete should still be in first ledger");
         assertEquals(newMarkDelete.getEntryId(), entries.get(9).getEntryId(),
                 "Mark-delete should have advanced to entry 9 (in-memory)");
-        log.info("In-memory mark-delete position: {}", newMarkDelete);
+        log.info().attr("position", newMarkDelete).log("In-memory mark-delete position");
 
         // ===== PHASE 5: Update cursor before trimming (important synchronization point) =====
         log.info("=== PHASE 5: Calling maybeUpdateCursorBeforeTrimmingConsumedLedger ===");
@@ -4822,8 +4822,8 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         Position persistentPosition = cursor.getPersistentMarkDeletedPosition();
         assertEquals(persistentPosition, initialMarkDelete,
                 "Persistent position should not have advanced (delayed)");
-        log.info("Persistent mark-delete position (as expected): {}", persistentPosition);
-        log.info("In-memory mark-delete position: {}", newMarkDelete);
+        log.info().attr("persistentPosition", persistentPosition).log("Persistent mark-delete position (as expected)");
+        log.info().attr("position", newMarkDelete).log("In-memory mark-delete position");
 
         // First ledger should still exist (not trimmed)
         Awaitility.await().untilAsserted(() -> {
@@ -4832,7 +4832,7 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
                     "First ledger should NOT be trimmed because persistent cursor position "
                             + "is still pointing to it (entry 0)");
         });
-        log.info("SUCCESS: First ledger {} was correctly preserved", firstLedgerId);
+        log.info().attr("firstLedgerId", firstLedgerId).log("SUCCESS: First ledger was correctly preserved");
 
         // ===== CLEANUP =====
         entries.forEach(Entry::release);

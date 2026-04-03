@@ -46,13 +46,12 @@ import org.apache.pulsar.common.policies.data.OffloadPoliciesImpl;
 import org.apache.pulsar.common.policies.data.OffloadedReadPriority;
 import org.awaitility.Awaitility;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.CustomLog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+@CustomLog
 public class OffloadLedgerDeleteTest extends MockedBookKeeperTestCase {
-    private static final Logger log = LoggerFactory.getLogger(OffloadLedgerDeleteTest.class);
 
 
     static class MockFileSystemLedgerOffloader implements LedgerOffloader {

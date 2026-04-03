@@ -58,11 +58,11 @@ import org.apache.pulsar.common.api.proto.CommandSubscribe;
 import org.awaitility.Awaitility;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.CustomLog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+@CustomLog
 public class NonDurableCursorTest extends MockedBookKeeperTestCase {
 
     private static final Charset Encoding = StandardCharsets.UTF_8;
@@ -411,7 +411,7 @@ public class NonDurableCursorTest extends MockedBookKeeperTestCase {
             cursor.resetCursor(resetPosition);
             moveStatus.set(true);
         } catch (Exception e) {
-            log.warn("error in reset cursor", e.getCause());
+            log.warn().exception(e.getCause()).log("error in reset cursor");
         }
 
         assertTrue(moveStatus.get());
@@ -463,10 +463,10 @@ public class NonDurableCursorTest extends MockedBookKeeperTestCase {
         Position p3 = ledger.addEntry("dummy-entry-3".getBytes(Encoding));
         Position p4 = ledger.addEntry("dummy-entry-4".getBytes(Encoding));
 
-        log.debug("p1: {}", p1);
-        log.debug("p2: {}", p2);
-        log.debug("p3: {}", p3);
-        log.debug("p4: {}", p4);
+        log.debug().attr("p1", p1).log("position p1");
+        log.debug().attr("p2", p2).log("position p2");
+        log.debug().attr("p3", p3).log("position p3");
+        log.debug().attr("p4", p4).log("position p4");
 
         assertEquals(c1.getNumberOfEntries(), 4);
         assertEquals(c1.getNumberOfEntriesInBacklog(false), 4);
@@ -720,11 +720,11 @@ public class NonDurableCursorTest extends MockedBookKeeperTestCase {
 
         ManagedLedgerImpl ledger = (ManagedLedgerImpl) factory.open(mlName, new ManagedLedgerConfig());
         Position p1 = ledger.addEntry(c1.getBytes(UTF_8));
-        log.info("write entry 1 : pos = {}", p1);
+        log.info().attr("position", p1).log("write entry 1");
         Position p2 = ledger.addEntry(nc1.getBytes(UTF_8));
-        log.info("write entry 2 : pos = {}", p2);
+        log.info().attr("position", p2).log("write entry 2");
         Position p3 = ledger.addEntry(nc1.getBytes(UTF_8));
-        log.info("write entry 3 : pos = {}", p3);
+        log.info().attr("position", p3).log("write entry 3");
 
         ManagedCursor cursor1 = ledger.openCursor(c1);
         cursor1.seek(p3);
@@ -900,6 +900,4 @@ public class NonDurableCursorTest extends MockedBookKeeperTestCase {
         ledger.close();
     }
 
-
-    private static final Logger log = LoggerFactory.getLogger(NonDurableCursorTest.class);
 }
