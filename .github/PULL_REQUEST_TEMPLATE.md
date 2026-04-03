@@ -71,15 +71,6 @@ This change added tests and can be verified as follows:
 - [ ] The metrics
 - [ ] Anything that affects deployment
 
-### Documentation
-
-<!-- DO NOT REMOVE THIS SECTION. CHECK THE PROPER BOX ONLY. -->
-
-- [ ] `doc` <!-- Your PR contains doc changes. -->
-- [ ] `doc-required` <!-- Your PR changes impact docs and you will update later -->
-- [ ] `doc-not-needed` <!-- Your PR changes do not impact docs -->
-- [ ] `doc-complete` <!-- Docs have been already added -->
-
 ### Matching PR in forked repository
 
 PR in forked repository: <!-- ENTER URL HERE -->
