@@ -742,6 +742,9 @@ public class FunctionRuntimeManagerTest {
                     .get("worker-2").get("test-tenant/test-namespace/func-1:0"), assignment2);
             assertNull(functionRuntimeManager.functionRuntimeInfos.get("test-tenant/test-namespace/func-1:0"));
 
+            // Clear invocations to ensure the next verify block starts fresh
+            Mockito.clearInvocations(functionActioner);
+
             /** Test transfer from other worker to me **/
 
             Assignment assignment3 = createAssignment("worker-1", function1, 0);
