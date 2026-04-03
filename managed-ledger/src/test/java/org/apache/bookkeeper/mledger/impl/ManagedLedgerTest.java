@@ -2309,8 +2309,10 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
         c1 = ml.openCursor("c1noretention");
         ml.addEntry("shortmessage".getBytes());
         c1.skipEntries(1, IndividualDeletedEntries.Exclude);
-        // sleep for trim
-        Thread.sleep(1000);
+        // Explicitly trigger trimming and wait for it to complete
+        CompletableFuture<Void> trimFuture = new CompletableFuture<>();
+        ml.trimConsumedLedgersInBackground(trimFuture);
+        trimFuture.join();
         ml.close();
 
         assertTrue(ml.getLedgersInfoAsList().size() <= 1);
