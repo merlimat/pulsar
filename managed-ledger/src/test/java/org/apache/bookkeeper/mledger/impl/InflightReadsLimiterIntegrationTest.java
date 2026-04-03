@@ -168,9 +168,11 @@ public class InflightReadsLimiterIntegrationTest extends MockedBookKeeperTestCas
         long bytesAcquired1 = calculateBytesSizeBeforeFirstReading(readCount1 + readCount2, sizePerEntry);
         long remainingBytesExpected1 = totalCapacity - bytesAcquired1;
         log.info().attr("bytesAcquired", bytesAcquired1).log("Acquired bytes before first reading");
-        log.info().attr("remainingBytesExpected", remainingBytesExpected1).log("Remaining bytes expected before first reading");
+        log.info().attr("remainingBytesExpected", remainingBytesExpected1)
+                .log("Remaining bytes expected before first reading");
         Awaitility.await().untilAsserted(() -> {
-            log.info().attr("remainingBytes", limiter.getRemainingBytes()).log("Remaining bytes before first reading completes");
+            log.info().attr("remainingBytes", limiter.getRemainingBytes())
+                    .log("Remaining bytes before first reading completes");
             Assert.assertEquals(limiter.getRemainingBytes(), remainingBytesExpected1);
         });
 
@@ -181,9 +183,11 @@ public class InflightReadsLimiterIntegrationTest extends MockedBookKeeperTestCas
         long bytesAcquired2 = calculateBytesSizeBeforeFirstReading(readCount2, sizePerEntry);
         long remainingBytesExpected2 = totalCapacity - bytesAcquired2;
         log.info().attr("bytesAcquired", bytesAcquired2).log("Acquired bytes after first reading");
-        log.info().attr("remainingBytesExpected", remainingBytesExpected2).log("Remaining bytes expected after first reading");
+        log.info().attr("remainingBytesExpected", remainingBytesExpected2)
+                .log("Remaining bytes expected after first reading");
         Awaitility.await().untilAsserted(() -> {
-            log.info().attr("remainingBytes", limiter.getRemainingBytes()).log("Remaining bytes after first reading completes");
+            log.info().attr("remainingBytes", limiter.getRemainingBytes())
+                    .log("Remaining bytes after first reading completes");
             Assert.assertEquals(limiter.getRemainingBytes(), remainingBytesExpected2);
         });
 

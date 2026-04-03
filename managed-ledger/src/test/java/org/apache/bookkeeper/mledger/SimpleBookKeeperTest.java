@@ -21,11 +21,11 @@ package org.apache.bookkeeper.mledger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
+import lombok.CustomLog;
 import org.apache.bookkeeper.client.BookKeeper.DigestType;
 import org.apache.bookkeeper.client.LedgerEntry;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.test.MockedBookKeeperTestCase;
-import lombok.CustomLog;
 import org.testng.annotations.Test;
 
 @CustomLog
@@ -54,7 +54,8 @@ public class SimpleBookKeeperTest extends MockedBookKeeperTestCase {
         while (entries.hasMoreElements()) {
             LedgerEntry entry = entries.nextElement();
             String content = new String(entry.getEntry(), Encoding);
-            log.info().attr("entryId", entry.getEntryId()).attr("length", entry.getLength()).attr("content", content).log("Entry read");
+            log.info().attr("entryId", entry.getEntryId()).attr("length", entry.getLength())
+                    .attr("content", content).log("Entry read");
         }
 
         ledger.close();

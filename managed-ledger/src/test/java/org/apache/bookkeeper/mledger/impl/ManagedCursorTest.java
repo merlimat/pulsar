@@ -84,6 +84,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.Cleanup;
+import lombok.CustomLog;
 import org.apache.bookkeeper.client.AsyncCallback.OpenCallback;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.BookKeeper;
@@ -135,7 +136,6 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import lombok.CustomLog;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
@@ -3869,9 +3869,12 @@ public class ManagedCursorTest extends MockedBookKeeperTestCase {
         Position markDeletePos = cursor.getMarkDeletedPosition();
 
         log.info("Backlog size after individual acks");
-        log.info().attr("expected", expectedBacklogSize).attr("actual", actualBacklogSize).log("Backlog size comparison");
+        log.info().attr("expected", expectedBacklogSize).attr("actual", actualBacklogSize)
+                .log("Backlog size comparison");
         log.info().attr("markDeletePosition", markDeletePos).log("Mark delete position");
-        log.info().attr("individualDeleted", ((ManagedCursorImpl) cursor).getIndividuallyDeletedMessagesSet()).log("Individual deleted messages");
+        log.info().attr("individualDeleted",
+                ((ManagedCursorImpl) cursor).getIndividuallyDeletedMessagesSet())
+                .log("Individual deleted messages");
 
         // After fix: backlog size should now correctly account for individual deletions
         assertEquals(actualBacklogSize, expectedBacklogSize,

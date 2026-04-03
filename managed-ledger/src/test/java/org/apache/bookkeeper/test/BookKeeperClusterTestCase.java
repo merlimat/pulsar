@@ -47,6 +47,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.CustomLog;
 import org.apache.bookkeeper.bookie.Bookie;
 import org.apache.bookkeeper.bookie.BookieException;
 import org.apache.bookkeeper.client.PulsarBookKeeperTestClient;
@@ -71,7 +72,6 @@ import org.apache.pulsar.metadata.impl.FaultInjectionMetadataStore;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
 import org.awaitility.Awaitility;
-import lombok.CustomLog;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -165,7 +165,8 @@ public abstract class BookKeeperClusterTestCase {
             // start bookkeeper service
             this.metadataServiceUri = getMetadataServiceUri(ledgersRootPath);
             startBKCluster(metadataServiceUri);
-            log.info().attr("testCase", testName).attr("metadataServiceUri", metadataServiceUri).attr("elapsedMs", sw.elapsed(TimeUnit.MILLISECONDS)).log("Setup testcase");
+            log.info().attr("testCase", testName).attr("metadataServiceUri", metadataServiceUri)
+                    .attr("elapsedMs", sw.elapsed(TimeUnit.MILLISECONDS)).log("Setup testcase");
         } catch (Exception e) {
             log.error().exception(e).log("Error setting up");
             throw e;
@@ -223,7 +224,8 @@ public abstract class BookKeeperClusterTestCase {
             executor.shutdownNow();
         }
 
-        log.info().attr("testName", testName).attr("elapsedMs", sw.elapsed(TimeUnit.MILLISECONDS)).log("Tearing down test");
+        log.info().attr("testName", testName)
+                .attr("elapsedMs", sw.elapsed(TimeUnit.MILLISECONDS)).log("Tearing down test");
         if (tearDownException != null) {
             throw tearDownException;
         }

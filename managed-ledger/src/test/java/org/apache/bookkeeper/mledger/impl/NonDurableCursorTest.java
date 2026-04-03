@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.Cleanup;
+import lombok.CustomLog;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.AddEntryCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.MarkDeleteCallback;
@@ -58,7 +59,6 @@ import org.apache.pulsar.common.api.proto.CommandSubscribe;
 import org.awaitility.Awaitility;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import lombok.CustomLog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
