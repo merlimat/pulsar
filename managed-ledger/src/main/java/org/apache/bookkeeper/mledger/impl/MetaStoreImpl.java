@@ -184,7 +184,8 @@ public class MetaStoreImpl implements MetaStore, Consumer<Notification> {
     @Override
     public void asyncUpdateLedgerIds(String ledgerName, ManagedLedgerInfo mlInfo, Stat stat,
             MetaStoreCallback<Void> callback) {
-        log.debug().attr("ledgerName", ledgerName).attr("version", stat).attr("content", mlInfo).log("Updating metadata");
+        log.debug().attr("ledgerName", ledgerName).attr("version", stat)
+                .attr("content", mlInfo).log("Updating metadata");
 
         String path = PREFIX + ledgerName;
         store.put(path, compressLedgerInfo(mlInfo), Optional.of(stat.getVersion()))
@@ -241,7 +242,12 @@ public class MetaStoreImpl implements MetaStore, Consumer<Notification> {
     @Override
     public void asyncUpdateCursorInfo(String ledgerName, String cursorName, ManagedCursorInfo info, Stat stat,
             MetaStoreCallback<Void> callback) {
-        log.debug().attr("ledgerName", ledgerName).attr("cursorName", cursorName).attr("cursorsLedgerId", info.getCursorsLedgerId()).attr("markDeleteLedgerId", info.getMarkDeleteLedgerId()).attr("markDeleteEntryId", info.getMarkDeleteEntryId()).attr("lastActive", info.getLastActive()).log("Updating cursor info");
+        log.debug().attr("ledgerName", ledgerName).attr("cursorName", cursorName)
+                .attr("cursorsLedgerId", info.getCursorsLedgerId())
+                .attr("markDeleteLedgerId", info.getMarkDeleteLedgerId())
+                .attr("markDeleteEntryId", info.getMarkDeleteEntryId())
+                .attr("lastActive", info.getLastActive())
+                .log("Updating cursor info");
 
         String path = PREFIX + ledgerName + "/" + cursorName;
         byte[] content = compressCursorInfo(info);
@@ -250,10 +256,12 @@ public class MetaStoreImpl implements MetaStore, Consumer<Notification> {
 
         if (stat != null) {
             expectedVersion = stat.getVersion();
-            log.debug().attr("ledgerName", ledgerName).attr("cursorName", cursorName).attr("info", info).log("Creating consumer on meta-data store");
+            log.debug().attr("ledgerName", ledgerName).attr("cursorName", cursorName)
+                    .attr("info", info).log("Creating consumer on meta-data store");
         } else {
             expectedVersion = -1;
-            log.debug().attr("ledgerName", ledgerName).attr("cursorName", cursorName).attr("info", info).log("Updating consumer on meta-data store");
+            log.debug().attr("ledgerName", ledgerName).attr("cursorName", cursorName)
+                    .attr("info", info).log("Updating consumer on meta-data store");
         }
         store.put(path, content, Optional.of(expectedVersion))
                 .thenAcceptAsync(optStat -> callback.operationComplete(null, optStat), executor
@@ -279,7 +287,9 @@ public class MetaStoreImpl implements MetaStore, Consumer<Notification> {
                     executor.executeOrdered(ledgerName, () -> {
                         Throwable actEx = FutureUtil.unwrapCompletionException(ex);
                         if (actEx instanceof MetadataStoreException.NotFoundException){
-                            log.info().attr("ledgerName", ledgerName).attr("cursorName", cursorName).log("Cursor delete done because it did not exist");
+                            log.info().attr("ledgerName", ledgerName)
+                                    .attr("cursorName", cursorName)
+                                    .log("Cursor delete done because it did not exist");
                             callback.operationComplete(null, null);
                             return;
                         }
@@ -458,7 +468,8 @@ public class MetaStoreImpl implements MetaStore, Consumer<Notification> {
                     uncompressed.release();
                 }
             } catch (Exception e) {
-                log.error().exception(e).log("Failed to parse managedLedgerInfo metadata, fall back to parse managedLedgerInfo directly");
+                log.error().exception(e).log("Failed to parse managedLedgerInfo metadata,"
+                        + " fall back to parse managedLedgerInfo directly");
                 ManagedLedgerInfo info = new ManagedLedgerInfo();
                 info.parseFrom(data);
                 return info;
@@ -491,7 +502,8 @@ public class MetaStoreImpl implements MetaStore, Consumer<Notification> {
                     uncompressed.release();
                 }
             } catch (Exception e) {
-                log.error().exception(e).log("Failed to parse ManagedCursorInfo metadata, fall back to parse ManagedCursorInfo directly");
+                log.error().exception(e).log("Failed to parse ManagedCursorInfo metadata,"
+                        + " fall back to parse ManagedCursorInfo directly");
                 ManagedCursorInfo info = new ManagedCursorInfo();
                 info.parseFrom(data);
                 return info;

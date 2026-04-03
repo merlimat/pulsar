@@ -32,6 +32,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.util.concurrent.RateLimiter;
+import io.github.merlimat.slog.Logger;
 import java.time.Clock;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -115,7 +116,6 @@ import org.apache.pulsar.common.util.collections.LongPairRangeSet.LongPairConsum
 import org.apache.pulsar.common.util.collections.LongPairRangeSet.RangeBoundConsumer;
 import org.apache.pulsar.metadata.api.Stat;
 import org.jspecify.annotations.Nullable;
-import io.github.merlimat.slog.Logger;
 
 @SuppressWarnings("checkstyle:javadoctype")
 public class ManagedCursorImpl implements ManagedCursor {
@@ -3073,7 +3073,9 @@ public class ManagedCursorImpl implements ManagedCursor {
 
                     @Override
                     public void closeFailed(ManagedLedgerException exception, Object ctx) {
-                        log.warn("Persistent position failure when closing, the state will remain in state-closing and will no longer work");
+                        log.warn("Persistent position failure when closing,"
+                                + " the state will remain in state-closing"
+                                + " and will no longer work");
                         callback.closeFailed(exception, ctx);
                     }
                 }, ctx);
@@ -3682,7 +3684,8 @@ public class ManagedCursorImpl implements ManagedCursor {
                     flushPendingMarkDeletes();
                 } else if (PENDING_MARK_DELETED_SUBMITTED_COUNT_UPDATER.get(this) != 0) {
                     log.info()
-                            .log("Read operation completed and cursor was closed, need to call any queued cursor close");
+                            .log("Read operation completed and cursor was closed,"
+                                    + " need to call any queued cursor close");
                 }
             }
         }

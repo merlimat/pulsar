@@ -190,7 +190,9 @@ public final class OffloadUtils {
     public static CompletableFuture<Void> cleanupOffloaded(long ledgerId, UUID uuid, ManagedLedgerConfig mlConfig,
                                      Map<String, String> offloadDriverMetadata, String cleanupReason,
                                      String name, org.apache.bookkeeper.common.util.OrderedScheduler executor) {
-        log.info().attr("name", name).attr("ledgerId", ledgerId).attr("uuid", uuid.toString()).attr("cleanupReason", cleanupReason).log("Cleanup offload");
+        log.info().attr("name", name).attr("ledgerId", ledgerId)
+                .attr("uuid", uuid.toString())
+                .attr("cleanupReason", cleanupReason).log("Cleanup offload");
         Map<String, String> metadataMap = new HashMap<>(offloadDriverMetadata);
         metadataMap.put("ManagedLedgerName", name);
 
@@ -200,7 +202,10 @@ public final class OffloadUtils {
                 () -> mlConfig.getLedgerOffloader().deleteOffloaded(ledgerId, uuid, metadataMap),
                 executor, name).whenComplete((ignored, exception) -> {
             if (exception != null) {
-                log.warn().attr("name", name).attr("ledgerId", ledgerId).attr("cleanupReason", cleanupReason).exception(exception).log("Error cleaning up offload");
+                log.warn().attr("name", name).attr("ledgerId", ledgerId)
+                        .attr("cleanupReason", cleanupReason)
+                        .exception(exception)
+                        .log("Error cleaning up offload");
             }
         });
     }

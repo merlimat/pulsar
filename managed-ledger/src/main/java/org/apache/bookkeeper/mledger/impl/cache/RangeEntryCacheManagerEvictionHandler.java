@@ -56,7 +56,11 @@ class RangeEntryCacheManagerEvictionHandler {
         Pair<Integer, Long> evicted = rangeCacheRemovalQueue.evictLeastAccessedEntries(sizeToFree);
         int evictedEntries = evicted.getLeft();
         long evictedSize = evicted.getRight();
-        log.debug().attr("sizeToFreeMb", sizeToFree / MB).attr("evictedEntries", evictedEntries).attr("evictedSizeMb", evictedSize / MB).attr("currentSizeMb", manager.getSize() / MB).log("Doing cache eviction");
+        log.debug().attr("sizeToFreeMb", sizeToFree / MB)
+                .attr("evictedEntries", evictedEntries)
+                .attr("evictedSizeMb", evictedSize / MB)
+                .attr("currentSizeMb", manager.getSize() / MB)
+                .log("Doing cache eviction");
         manager.entriesRemoved(evictedSize, evictedEntries);
         return evicted;
     }

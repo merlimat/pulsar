@@ -441,21 +441,29 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                     ManagedLedgerImpl l = existingFuture.get();
                     if (l.getState().isFenced() || l.getState() == State.Closed) {
                         // Managed ledger is in unusable state. Recreate it.
-                        log.warn().attr("managedLedger", name).attr("state", l.getState())
-                                .log("Attempted to open ledger in unusable state. Removing from the map to recreate it");
+                        log.warn().attr("managedLedger", name)
+                                .attr("state", l.getState())
+                                .log("Attempted to open ledger in unusable"
+                                        + " state. Removing from the map to"
+                                        + " recreate it");
                         ledgers.remove(name, existingFuture);
                     }
                 } catch (Exception e) {
                     // Unable to get the future
-                    log.warn().attr("managedLedger", name).exception(e).log("Got exception while trying to retrieve ledger");
+                    log.warn().attr("managedLedger", name).exception(e)
+                            .log("Got exception while trying to"
+                                    + " retrieve ledger");
                 }
             } else {
                 PendingInitializeManagedLedger pendingLedger = pendingInitializeLedgers.get(name);
                 if (null != pendingLedger) {
                     long pendingMs = System.currentTimeMillis() - pendingLedger.createTimeMs;
                     if (pendingMs > TimeUnit.SECONDS.toMillis(config.getMetadataOperationsTimeoutSeconds())) {
-                        log.warn().attr("managedLedger", name).attr("pendingMs", pendingMs)
-                            .log("Managed ledger has been pending in initialize state too long, remove it from cache to retry");
+                        log.warn().attr("managedLedger", name)
+                            .attr("pendingMs", pendingMs)
+                            .log("Managed ledger has been pending in"
+                                    + " initialize state too long,"
+                                    + " remove it from cache to retry");
                         ledgers.remove(name, existingFuture);
                         pendingInitializeLedgers.remove(name, pendingLedger);
                     }
@@ -495,7 +503,9 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                             @Override
                             public void initializeFailed(ManagedLedgerException e) {
                                 if (config.isCreateIfMissing()) {
-                                    log.error().attr("managedLedger", name).exceptionMessage(e).log("Failed to initialize managed ledger");
+                                    log.error().attr("managedLedger", name)
+                                        .exceptionMessage(e)
+                                        .log("Failed to initialize managed ledger");
                                 }
 
                                 // Clean the map if initialization fails
@@ -557,10 +567,15 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                             store, config, scheduledExecutor, managedLedgerName);
                     return roManagedLedger.initialize().thenApply(v -> roManagedLedger);
                 }).thenAccept(roManagedLedger -> {
-                    log.info().attr("managedLedger", managedLedgerName).log("Successfully initialize Read-only managed ledger");
+                    log.info().attr("managedLedger", managedLedgerName)
+                            .log("Successfully initialize Read-only"
+                                    + " managed ledger");
                     callback.openReadOnlyManagedLedgerComplete(roManagedLedger, ctx);
                 }).exceptionally(e -> {
-                    log.error().attr("managedLedger", managedLedgerName).exception(e).log("Failed to initialize Read-only managed ledger");
+                    log.error().attr("managedLedger", managedLedgerName)
+                            .exception(e)
+                            .log("Failed to initialize Read-only"
+                                    + " managed ledger");
                     callback.openReadOnlyManagedLedgerFailed(ManagedLedgerException
                             .getManagedLedgerException(FutureUtil.unwrapCompletionException(e)), ctx);
                     return null;
@@ -1011,7 +1026,9 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
 
                     @Override
                     public void operationFailed(MetaStoreException e) {
-                        log.error().attr("managedLedger", managedLedgerName).exception(e).log("Failed to get managed ledger info");
+                        log.error().attr("managedLedger", managedLedgerName)
+                                .exception(e)
+                                .log("Failed to get managed ledger info");
                         ledgerInfosFuture.completeExceptionally(e);
                     }
                 });
@@ -1101,7 +1118,8 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                         if (ex != null) {
                             int rc = BKException.getExceptionCode(ex);
                             if (Errors.isNoSuchLedgerExistsException(rc)) {
-                                log.info().attr("ledgerId", cursor.cursorsLedgerId).log("Ledger does not exist, ignoring");
+                                log.info().attr("ledgerId", cursor.cursorsLedgerId)
+                                        .log("Ledger does not exist, ignoring");
                                 return null;
                             }
                             throw new CompletionException(ex);
@@ -1242,18 +1260,22 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                                     ledgers.put(id, info);
                                     mlMetaCounter.countDown();
                                 } else if (Errors.isNoSuchLedgerExistsException(rc)) {
-                                    log.warn().attr("managedLedger", managedLedgerName).attr("ledgerId", ledgers.lastKey())
+                                    log.warn().attr("managedLedger", managedLedgerName)
+                                            .attr("ledgerId", ledgers.lastKey())
                                             .log("Ledger not found");
                                     ledgers.remove(ledgers.lastKey());
                                     mlMetaCounter.countDown();
                                 } else {
-                                    log.error().attr("managedLedger", managedLedgerName).attr("ledgerId", id)
-                                            .attr("result", BKException.getMessage(rc)).log("Failed to open ledger");
+                                    log.error().attr("managedLedger", managedLedgerName)
+                                            .attr("ledgerId", id)
+                                            .attr("result", BKException.getMessage(rc))
+                                            .log("Failed to open ledger");
                                     mlMetaCounter.countDown();
                                 }
                             };
 
-                            log.debug().attr("managedLedger", managedLedgerName).attr("ledgerId", id).log("Opening ledger");
+                            log.debug().attr("managedLedger", managedLedgerName)
+                                    .attr("ledgerId", id).log("Opening ledger");
                             getBookKeeper()
                                     .thenAccept(bk -> {
                                         bk.asyncOpenLedgerNoRecovery(id, digestType, password, opencb, null);
@@ -1411,8 +1433,10 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                                 public void operationComplete(ManagedCursorInfo info,
                                                               Stat stat) {
                                     long cursorLedgerId = info.getCursorsLedgerId();
-                                    log.debug().attr("managedLedger", managedLedgerName).attr("cursor", cursorName)
-                                            .attr("cursorLedgerId", cursorLedgerId).log("Cursor meta-data read ledger id");
+                                    log.debug().attr("managedLedger", managedLedgerName)
+                                            .attr("cursor", cursorName)
+                                            .attr("cursorLedgerId", cursorLedgerId)
+                                            .log("Cursor meta-data read ledger id");
                                     if (cursorLedgerId != -1) {
                                         bk.asyncOpenLedgerNoRecovery(cursorLedgerId, digestType, password,
                                                 cursorLedgerOpenCb, null);
@@ -1446,7 +1470,9 @@ public class ManagedLedgerFactoryImpl implements ManagedLedgerFactory {
                         cursorCounter.await(META_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                     }
                 } catch (Exception e) {
-                    log.warn().attr("managedLedger", managedLedgerName).exception(e).log("Error reading subscription positions");
+                    log.warn().attr("managedLedger", managedLedgerName)
+                            .exception(e)
+                            .log("Error reading subscription positions");
                 } finally {
                     allCursorsCounter.countDown();
                 }

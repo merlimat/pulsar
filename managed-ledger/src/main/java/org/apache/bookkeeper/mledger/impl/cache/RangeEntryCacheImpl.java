@@ -449,7 +449,9 @@ public class RangeEntryCacheImpl implements EntryCache {
                                 }
                             }
                         }
-                        log.warn().exception(t).log("Failed to read missing entries from bookkeeper, retrying by reading all");
+                        log.warn().exception(t)
+                                .log("Failed to read missing entries"
+                                        + " from bookkeeper, retrying by reading all");
                         // Read all the entries from bookkeeper
                         pendingReadsManager.readEntries(lh, firstPosition.getEntryId(), lastPosition.getEntryId(),
                                 expectedReadCount, callback, ctx);

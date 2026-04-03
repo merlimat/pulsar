@@ -57,7 +57,9 @@ public class CallbackMutex {
     public void unlock() {
         owner = null;
         position = null;
-        log.debug().attr("lockHash", this.hashCode()).attr("position", Thread.currentThread().getStackTrace()[2]).log("Lock released");
+        log.debug().attr("lockHash", this.hashCode())
+                .attr("position", Thread.currentThread().getStackTrace()[2])
+                .log("Lock released");
 
         semaphore.release();
     }

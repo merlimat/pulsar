@@ -21,8 +21,8 @@ package org.apache.bookkeeper.mledger.offload;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Data;
 import lombok.CustomLog;
+import lombok.Data;
 import org.apache.bookkeeper.mledger.LedgerOffloaderFactory;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pulsar.common.nar.NarClassLoader;
@@ -49,12 +49,17 @@ public class Offloaders implements AutoCloseable {
             try {
                 offloader.getRight().close();
             } catch (Exception e) {
-                log.warn().attr("offloaderClass", offloader.getRight().getClass()).attr("errorMessage", e.getMessage()).log("Failed to close offloader");
+                log.warn().attr("offloaderClass", offloader.getRight().getClass())
+                        .attr("errorMessage", e.getMessage())
+                        .log("Failed to close offloader");
             }
             try {
                 offloader.getLeft().close();
             } catch (IOException e) {
-                log.warn().attr("offloaderClass", offloader.getRight().getClass()).attr("errorMessage", e.getMessage()).log("Failed to close nar class loader for offloader");
+                log.warn().attr("offloaderClass", offloader.getRight().getClass())
+                        .attr("errorMessage", e.getMessage())
+                        .log("Failed to close nar class loader"
+                                + " for offloader");
             }
         });
     }

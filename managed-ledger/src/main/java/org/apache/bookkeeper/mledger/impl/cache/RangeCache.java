@@ -198,7 +198,9 @@ class RangeCache {
      * @return an pair of ints, containing the number of removed entries and the total size
      */
     public Pair<Integer, Long> removeRange(Position first, Position last, boolean lastInclusive) {
-        log.debug().attr("first", first).attr("last", last).attr("lastInclusive", lastInclusive).log("Removing entries in range");
+        log.debug().attr("first", first).attr("last", last)
+                .attr("lastInclusive", lastInclusive)
+                .log("Removing entries in range");
         RangeCacheRemovalCounters counters = RangeCacheRemovalCounters.create();
         Map<Position, RangeCacheEntryWrapper> subMap = entries.subMap(first, true, last, lastInclusive);
         for (Map.Entry<Position, RangeCacheEntryWrapper> entry : subMap.entrySet()) {
@@ -255,7 +257,9 @@ class RangeCache {
                     // remove the cache reference
                     value.release();
                 } else {
-                    log.info().attr("refCnt", value.refCnt()).attr("key", key).log("Unexpected refCnt, removed entry without releasing the value");
+                    log.info().attr("refCnt", value.refCnt()).attr("key", key)
+                            .log("Unexpected refCnt, removed entry"
+                                    + " without releasing the value");
                 }
                 return true;
             } else {

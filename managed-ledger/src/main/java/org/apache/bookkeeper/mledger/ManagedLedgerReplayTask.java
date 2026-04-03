@@ -22,9 +22,9 @@ import static org.apache.bookkeeper.mledger.util.ManagedLedgerUtils.readEntries;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import lombok.CustomLog;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.CustomLog;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -81,7 +81,9 @@ public class ManagedLedgerReplayTask {
                     try {
                         processor.process(position, buffer);
                     } catch (Throwable throwable) {
-                        log.error().attr("name", name).attr("position", position).exception(throwable).log("Failed to process entry");
+                        log.error().attr("name", name).attr("position", position)
+                                .exception(throwable)
+                                .log("Failed to process entry");
                         return CompletableFuture.completedFuture(Optional.ofNullable(processedPosition));
                     }
                     // It does not need to be atomic because the update happens before the future completes

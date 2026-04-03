@@ -102,7 +102,10 @@ class OpFindNewest implements ReadEntryCallback {
                 searchPosition = ledger.getPositionAfterN(searchPosition, max, PositionBound.startExcluded);
                 Position lastPosition = ledger.getLastPosition();
                 if (lastPosition.compareTo(searchPosition) < 0) {
-                    log.debug().attr("firstPosition", position).attr("expectedLastPosition", searchPosition).attr("actualLastPosition", lastPosition).log("First position matches, but moving to lastPos");
+                    log.debug().attr("firstPosition", position)
+                            .attr("expectedLastPosition", searchPosition)
+                            .attr("actualLastPosition", lastPosition)
+                            .log("First position matches, but moving to lastPos");
                     searchPosition = lastPosition;
                 }
                 find();
@@ -145,7 +148,9 @@ class OpFindNewest implements ReadEntryCallback {
         if (exception instanceof ManagedLedgerException.NonRecoverableLedgerException
             && ledger.getConfig().isAutoSkipNonRecoverableData()) {
             try {
-                log.info().attr("ledgerName", ledger.getName()).attr("searchPosition", searchPosition).attr("state", state).log("Ledger is not recoverable, skip non-recoverable data");
+                log.info().attr("ledgerName", ledger.getName())
+                        .attr("searchPosition", searchPosition).attr("state", state)
+                        .log("Ledger is not recoverable, skip non-recoverable data");
                 checkArgument(state == State.checkFirst || state == State.checkLast || state == State.searching);
                 if (state == State.checkFirst) {
                     // If we failed to read the first entry, try next valid position
@@ -187,7 +192,9 @@ class OpFindNewest implements ReadEntryCallback {
                 }
 
                 // If don't find any entry, return the last matched position
-                log.warn().attr("ledgerName", ledger.getName()).attr("lastMatchedPosition", lastMatchedPosition).log("Failed to find next valid entry. Returning last matched position");
+                log.warn().attr("ledgerName", ledger.getName())
+                        .attr("lastMatchedPosition", lastMatchedPosition)
+                        .log("Failed to find next valid entry. Returning last matched position");
                 callback.findEntryComplete(lastMatchedPosition, OpFindNewest.this.ctx);
                 return;
             } catch (Exception e) {

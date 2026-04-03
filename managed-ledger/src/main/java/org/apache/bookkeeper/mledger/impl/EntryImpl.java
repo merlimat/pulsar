@@ -24,9 +24,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.util.Recycler;
 import io.netty.util.Recycler.Handle;
 import io.netty.util.ReferenceCounted;
+import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.CustomLog;
 import org.apache.bookkeeper.client.api.LedgerEntry;
 import org.apache.bookkeeper.client.impl.LedgerEntryImpl;
 import org.apache.bookkeeper.mledger.Entry;
@@ -314,7 +314,10 @@ public final class EntryImpl extends AbstractCASReferenceCounted
                 Commands.parseMessageMetadata(data.duplicate(), msgMetadata);
                 this.messageMetadata = msgMetadata;
             } catch (Throwable t) {
-                log.warn().attr("managedLedgerName", managedLedgerName).attr("ledgerId", ledgerId).attr("entryId", entryId).exception(t).log("Failed to parse message metadata for entry");
+                log.warn().attr("managedLedgerName", managedLedgerName)
+                        .attr("ledgerId", ledgerId).attr("entryId", entryId)
+                        .exception(t)
+                        .log("Failed to parse message metadata for entry");
             }
         }
     }

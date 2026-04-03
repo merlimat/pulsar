@@ -155,7 +155,12 @@ public class ReadOnlyManagedLedgerImpl extends ManagedLedgerImpl {
             this.getLedgerHandle(position.getLedgerId())
                     .thenAccept((ledger) -> asyncReadEntry(ledger, position, callback, ctx))
                     .exceptionally((ex) -> {
-                        log.error().attr("ledgerName", this.name).attr("position", position).attr("errorMessage", ex.getMessage()).attr("callback", callback).log("Error opening ledger for reading at position");
+                        log.error().attr("ledgerName", this.name)
+                                .attr("position", position)
+                                .attr("errorMessage", ex.getMessage())
+                                .attr("callback", callback)
+                                .log("Error opening ledger for reading"
+                                        + " at position");
                         callback.readEntryFailed(ManagedLedgerException.getManagedLedgerException(ex.getCause()), ctx);
                         return null;
                     });
