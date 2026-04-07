@@ -872,7 +872,7 @@ jobs:
           develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ env.CODEQL_LANGUAGE }}
 
@@ -880,7 +880,7 @@ jobs:
         run: ./gradlew assemble
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ env.CODEQL_LANGUAGE }}"
 
