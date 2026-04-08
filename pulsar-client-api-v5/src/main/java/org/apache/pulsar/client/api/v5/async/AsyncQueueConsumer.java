@@ -36,37 +36,53 @@ public interface AsyncQueueConsumer<T> {
 
     /**
      * Receive a single message asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes with the next available message
      */
     CompletableFuture<Message<T>> receive();
 
     /**
      * Acknowledge a single message by its ID.
+     *
+     * @param messageId the ID of the message to acknowledge
      */
     void acknowledge(MessageId messageId);
 
     /**
      * Acknowledge a single message.
+     *
+     * @param message the message to acknowledge
      */
     void acknowledge(Message<T> message);
 
     /**
      * Acknowledge within a transaction. The acknowledgment becomes effective when the
      * transaction is committed.
+     *
+     * @param messageId the ID of the message to acknowledge
+     * @param txn the transaction to associate this acknowledgment with
      */
     void acknowledge(MessageId messageId, Transaction txn);
 
     /**
      * Signal that this message could not be processed. It will be redelivered later.
+     *
+     * @param messageId the ID of the message to negatively acknowledge
      */
     void negativeAcknowledge(MessageId messageId);
 
     /**
      * Signal that this message could not be processed. It will be redelivered later.
+     *
+     * @param message the message to negatively acknowledge
      */
     void negativeAcknowledge(Message<T> message);
 
     /**
      * Close this consumer asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes when the consumer has been closed
+     *         and all resources have been released
      */
     CompletableFuture<Void> close();
 }

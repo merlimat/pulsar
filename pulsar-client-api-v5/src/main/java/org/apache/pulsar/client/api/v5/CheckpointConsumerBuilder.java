@@ -34,11 +34,16 @@ public interface CheckpointConsumerBuilder<T> {
 
     /**
      * Create the checkpoint consumer, blocking until it is ready.
+     *
+     * @return the created {@link CheckpointConsumer}
+     * @throws PulsarClientException if the creation fails or a connection error occurs
      */
     CheckpointConsumer<T> create() throws PulsarClientException;
 
     /**
      * Create the checkpoint consumer asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes with the created {@link CheckpointConsumer}
      */
     CompletableFuture<CheckpointConsumer<T>> createAsync();
 
@@ -46,6 +51,9 @@ public interface CheckpointConsumerBuilder<T> {
 
     /**
      * The topic to consume from.
+     *
+     * @param topicName the topic name
+     * @return this builder instance for chaining
      */
     CheckpointConsumerBuilder<T> topic(String topicName);
 
@@ -59,6 +67,9 @@ public interface CheckpointConsumerBuilder<T> {
      * create the appropriate starting position.
      *
      * <p>Defaults to {@link Checkpoint#latest()} if not specified.
+     *
+     * @param checkpoint the checkpoint representing the desired start position
+     * @return this builder instance for chaining
      */
     CheckpointConsumerBuilder<T> startPosition(Checkpoint checkpoint);
 
@@ -66,12 +77,17 @@ public interface CheckpointConsumerBuilder<T> {
 
     /**
      * A custom name for this consumer instance.
+     *
+     * @param name the consumer name
+     * @return this builder instance for chaining
      */
     CheckpointConsumerBuilder<T> consumerName(String name);
 
     /**
      * Configure end-to-end message encryption for decryption.
      *
+     * @param policy the encryption policy to use
+     * @return this builder instance for chaining
      * @see EncryptionPolicy#forConsumer
      */
     CheckpointConsumerBuilder<T> encryptionPolicy(EncryptionPolicy policy);
@@ -80,11 +96,18 @@ public interface CheckpointConsumerBuilder<T> {
 
     /**
      * Add a single property to the consumer metadata.
+     *
+     * @param key   the property key
+     * @param value the property value
+     * @return this builder instance for chaining
      */
     CheckpointConsumerBuilder<T> property(String key, String value);
 
     /**
      * Add multiple properties to the consumer metadata.
+     *
+     * @param properties the properties to add
+     * @return this builder instance for chaining
      */
     CheckpointConsumerBuilder<T> properties(Map<String, String> properties);
 }

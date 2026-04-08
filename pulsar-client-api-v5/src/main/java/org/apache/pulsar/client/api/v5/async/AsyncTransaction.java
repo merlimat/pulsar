@@ -31,11 +31,17 @@ public interface AsyncTransaction {
 
     /**
      * Commit this transaction, making all produced messages visible and all acknowledgments durable.
+     *
+     * @return a {@link CompletableFuture} that completes when the transaction has been
+     *         successfully committed
      */
     CompletableFuture<Void> commit();
 
     /**
      * Abort this transaction, discarding all produced messages and rolling back acknowledgments.
+     *
+     * @return a {@link CompletableFuture} that completes when the transaction has been
+     *         successfully aborted
      */
     CompletableFuture<Void> abort();
 

@@ -39,50 +39,83 @@ public interface StreamConsumer<T> extends Closeable {
 
     /**
      * The topic this consumer is subscribed to.
+     *
+     * @return the fully qualified topic name
      */
     String topic();
 
     /**
      * The subscription name.
+     *
+     * @return the subscription name
      */
     String subscription();
 
     /**
      * The consumer name (system-assigned or user-specified).
+     *
+     * @return the consumer name, never {@code null}
      */
     String consumerName();
 
     /**
      * Receive a single message, blocking indefinitely.
+     *
+     * @return the received {@link Message}
+     * @throws PulsarClientException if the consumer is closed or a connection error occurs
      */
     Message<T> receive() throws PulsarClientException;
 
     /**
      * Receive a single message, blocking up to the given timeout.
      * Returns {@code null} if the timeout elapses without a message.
+     *
+     * @param timeout the maximum time to wait for a message
+     * @return the received {@link Message}, or {@code null} if the timeout elapses
+     * @throws PulsarClientException if the consumer is closed or a connection error occurs
      */
     Message<T> receive(Duration timeout) throws PulsarClientException;
 
+    /**
+     * Receive a batch of messages, blocking up to the given timeout.
+     *
+     * @param maxNumMessages the maximum number of messages to return
+     * @param timeout        the maximum time to wait for messages
+     * @return the received {@link Messages} batch
+     * @throws PulsarClientException if the consumer is closed or a connection error occurs
+     */
     Messages<T> receiveMulti(int maxNumMessages, Duration timeout) throws PulsarClientException;
 
     /**
      * Acknowledge all messages up to and including the given message ID.
+     *
+     * @param messageId the ID of the message to acknowledge cumulatively
      */
     void acknowledgeCumulative(MessageId messageId);
 
     /**
      * Acknowledge within a transaction. The acknowledgment becomes effective when the
      * transaction is committed.
+     *
+     * @param messageId the ID of the message to acknowledge cumulatively
+     * @param txn       the transaction to associate the acknowledgment with
      */
     void acknowledgeCumulative(MessageId messageId, Transaction txn);
 
     /**
      * Return the asynchronous view of this consumer.
+     *
+     * @return the {@link AsyncStreamConsumer} counterpart of this consumer
      */
     AsyncStreamConsumer<T> async();
 
     // --- Lifecycle ---
 
+    /**
+     * Close the consumer and release all resources.
+     *
+     * @throws PulsarClientException if an error occurs while closing the consumer
+     */
     @Override
     void close() throws PulsarClientException;
 }

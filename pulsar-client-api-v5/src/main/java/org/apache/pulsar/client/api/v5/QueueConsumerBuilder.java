@@ -37,11 +37,16 @@ public interface QueueConsumerBuilder<T> {
 
     /**
      * Subscribe and create the queue consumer, blocking until ready.
+     *
+     * @return the created {@link QueueConsumer}
+     * @throws PulsarClientException if the subscription fails or a connection error occurs
      */
     QueueConsumer<T> subscribe() throws PulsarClientException;
 
     /**
      * Subscribe and create the queue consumer asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes with the created {@link QueueConsumer}
      */
     CompletableFuture<QueueConsumer<T>> subscribeAsync();
 
@@ -49,21 +54,33 @@ public interface QueueConsumerBuilder<T> {
 
     /**
      * The topic(s) to subscribe to.
+     *
+     * @param topicNames one or more topic names
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> topic(String... topicNames);
 
     /**
      * The topics to subscribe to.
+     *
+     * @param topicNames the list of topic names
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> topics(List<String> topicNames);
 
     /**
      * Subscribe to all topics matching a regex pattern.
+     *
+     * @param pattern the compiled regex pattern to match topic names against
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> topicsPattern(Pattern pattern);
 
     /**
      * Subscribe to all topics matching a regex pattern (string form).
+     *
+     * @param regex the regex pattern string to match topic names against
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> topicsPattern(String regex);
 
@@ -71,16 +88,25 @@ public interface QueueConsumerBuilder<T> {
 
     /**
      * The subscription name. Required for managed consumers.
+     *
+     * @param subscriptionName the subscription name
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> subscriptionName(String subscriptionName);
 
     /**
      * Properties to attach to the subscription.
+     *
+     * @param properties the subscription properties
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> subscriptionProperties(Map<String, String> properties);
 
     /**
      * Initial position when the subscription is first created.
+     *
+     * @param position the initial position
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> subscriptionInitialPosition(SubscriptionInitialPosition position);
 
@@ -88,17 +114,26 @@ public interface QueueConsumerBuilder<T> {
 
     /**
      * A custom name for this consumer instance.
+     *
+     * @param consumerName the consumer name
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> consumerName(String consumerName);
 
     /**
      * Size of the receiver queue. Controls prefetch depth.
+     *
+     * @param receiverQueueSize the receiver queue size
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> receiverQueueSize(int receiverQueueSize);
 
     /**
      * Priority level for this consumer (lower values mean higher priority for
      * message dispatch).
+     *
+     * @param priorityLevel the priority level
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> priorityLevel(int priorityLevel);
 
@@ -107,16 +142,25 @@ public interface QueueConsumerBuilder<T> {
     /**
      * If a message is not acknowledged within this duration, it is automatically redelivered.
      * Set to zero to disable.
+     *
+     * @param timeout the ack timeout duration
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> ackTimeout(Duration timeout);
 
     /**
      * How frequently acknowledgments are flushed to the broker.
+     *
+     * @param delay the acknowledgment group time
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> acknowledgmentGroupTime(Duration delay);
 
     /**
      * Maximum number of acknowledgments to group before flushing.
+     *
+     * @param size the maximum acknowledgment group size
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> maxAcknowledgmentGroupSize(int size);
 
@@ -125,6 +169,8 @@ public interface QueueConsumerBuilder<T> {
     /**
      * Backoff strategy for redelivery after negative acknowledgment.
      *
+     * @param backoff the backoff policy to use for negative ack redelivery
+     * @return this builder instance for chaining
      * @see BackoffPolicy#fixed(Duration)
      * @see BackoffPolicy#exponential(Duration, Duration)
      */
@@ -133,6 +179,8 @@ public interface QueueConsumerBuilder<T> {
     /**
      * Backoff strategy for redelivery after ack timeout.
      *
+     * @param backoff the backoff policy to use for ack timeout redelivery
+     * @return this builder instance for chaining
      * @see BackoffPolicy#fixed(Duration)
      * @see BackoffPolicy#exponential(Duration, Duration)
      */
@@ -142,6 +190,9 @@ public interface QueueConsumerBuilder<T> {
 
     /**
      * Configure the dead letter queue policy.
+     *
+     * @param policy the dead letter policy
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> deadLetterPolicy(DeadLetterPolicy policy);
 
@@ -149,6 +200,9 @@ public interface QueueConsumerBuilder<T> {
 
     /**
      * How often to re-discover topics matching the pattern.
+     *
+     * @param interval the auto-discovery interval
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> patternAutoDiscoveryPeriod(Duration interval);
 
@@ -157,6 +211,8 @@ public interface QueueConsumerBuilder<T> {
     /**
      * Configure end-to-end message encryption for decryption.
      *
+     * @param policy the encryption policy to use
+     * @return this builder instance for chaining
      * @see EncryptionPolicy#forConsumer
      */
     QueueConsumerBuilder<T> encryptionPolicy(EncryptionPolicy policy);
@@ -166,11 +222,18 @@ public interface QueueConsumerBuilder<T> {
 
     /**
      * Add a single property to the consumer metadata.
+     *
+     * @param key   the property key
+     * @param value the property value
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> property(String key, String value);
 
     /**
      * Add multiple properties to the consumer metadata.
+     *
+     * @param properties the properties to add
+     * @return this builder instance for chaining
      */
     QueueConsumerBuilder<T> properties(Map<String, String> properties);
 }

@@ -30,6 +30,10 @@ public interface MessageBuilder<T> extends MessageMetadata<T, MessageBuilder<T>>
 
     /**
      * Send the message synchronously and return its message ID.
+     *
+     * @return the {@link MessageId} assigned to the published message by the broker
+     * @throws PulsarClientException if the message could not be sent (e.g., connection failure,
+     *         send timeout, or topic authorization error)
      */
     MessageId send() throws PulsarClientException;
 }

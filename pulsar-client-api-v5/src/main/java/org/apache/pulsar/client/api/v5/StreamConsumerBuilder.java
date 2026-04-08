@@ -34,11 +34,16 @@ public interface StreamConsumerBuilder<T> {
 
     /**
      * Subscribe and create the stream consumer, blocking until ready.
+     *
+     * @return the created {@link StreamConsumer}
+     * @throws PulsarClientException if the subscription fails or a connection error occurs
      */
     StreamConsumer<T> subscribe() throws PulsarClientException;
 
     /**
      * Subscribe and create the stream consumer asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes with the created {@link StreamConsumer}
      */
     CompletableFuture<StreamConsumer<T>> subscribeAsync();
 
@@ -46,11 +51,17 @@ public interface StreamConsumerBuilder<T> {
 
     /**
      * The topic(s) to subscribe to.
+     *
+     * @param topicNames one or more topic names
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> topic(String... topicNames);
 
     /**
      * The subscription name.
+     *
+     * @param subscriptionName the subscription name
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> subscriptionName(String subscriptionName);
 
@@ -58,12 +69,18 @@ public interface StreamConsumerBuilder<T> {
 
     /**
      * Reset the subscription to a specific message ID.
+     *
+     * @param messageId the message ID to seek to
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> seek(MessageId messageId);
 
     /**
      * Reset the subscription to a specific timestamp. The subscription
      * will be positioned at the first message published at or after this timestamp.
+     *
+     * @param timestamp the timestamp to seek to
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> seek(Instant timestamp);
 
@@ -71,31 +88,49 @@ public interface StreamConsumerBuilder<T> {
 
     /**
      * Properties to attach to the subscription.
+     *
+     * @param properties the subscription properties
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> subscriptionProperties(Map<String, String> properties);
 
     /**
      * Initial position when the subscription is first created (no existing cursor).
+     *
+     * @param position the initial position
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> subscriptionInitialPosition(SubscriptionInitialPosition position);
 
     /**
      * A custom name for this consumer instance.
+     *
+     * @param consumerName the consumer name
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> consumerName(String consumerName);
 
     /**
      * How frequently cumulative acknowledgments are flushed to the broker.
+     *
+     * @param delay the acknowledgment group time
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> acknowledgmentGroupTime(Duration delay);
 
     /**
      * Whether to read from the compacted topic (only latest value per key).
+     *
+     * @param readCompacted {@code true} to read from the compacted topic
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> readCompacted(boolean readCompacted);
 
     /**
      * Enable replication of subscription state across geo-replicated clusters.
+     *
+     * @param replicate {@code true} to replicate subscription state
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> replicateSubscriptionState(boolean replicate);
 
@@ -104,6 +139,8 @@ public interface StreamConsumerBuilder<T> {
     /**
      * Configure end-to-end message encryption for decryption.
      *
+     * @param policy the encryption policy to use
+     * @return this builder instance for chaining
      * @see EncryptionPolicy#forConsumer
      */
     StreamConsumerBuilder<T> encryptionPolicy(EncryptionPolicy policy);
@@ -112,11 +149,18 @@ public interface StreamConsumerBuilder<T> {
 
     /**
      * Add a single property to the consumer metadata.
+     *
+     * @param key   the property key
+     * @param value the property value
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> property(String key, String value);
 
     /**
      * Add multiple properties to the consumer metadata.
+     *
+     * @param properties the properties to add
+     * @return this builder instance for chaining
      */
     StreamConsumerBuilder<T> properties(Map<String, String> properties);
 }

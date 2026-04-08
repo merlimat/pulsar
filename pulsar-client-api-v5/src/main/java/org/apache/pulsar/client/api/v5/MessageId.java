@@ -31,11 +31,18 @@ public interface MessageId extends Comparable<MessageId> {
 
     /**
      * Serialize this message ID to a byte array for external storage.
+     *
+     * @return a byte array representation of this message ID that can be restored
+     *         via {@link #fromByteArray(byte[])}
      */
     byte[] toByteArray();
 
     /**
      * Deserialize a message ID from bytes previously produced by {@link #toByteArray()}.
+     *
+     * @param data the byte array previously obtained from {@link #toByteArray()}
+     * @return the deserialized {@link MessageId}
+     * @throws IOException if the byte array is malformed or cannot be deserialized
      */
     static MessageId fromByteArray(byte[] data) throws IOException {
         return PulsarClientProvider.get().messageIdFromBytes(data);
@@ -43,6 +50,8 @@ public interface MessageId extends Comparable<MessageId> {
 
     /**
      * Sentinel representing the oldest available message in the topic.
+     *
+     * @return a sentinel {@link MessageId} representing the earliest position in the topic
      */
     static MessageId earliest() {
         return PulsarClientProvider.get().earliestMessageId();
@@ -50,6 +59,8 @@ public interface MessageId extends Comparable<MessageId> {
 
     /**
      * Sentinel representing the next message to be published (i.e., the end of the topic).
+     *
+     * @return a sentinel {@link MessageId} representing the latest position in the topic
      */
     static MessageId latest() {
         return PulsarClientProvider.get().latestMessageId();

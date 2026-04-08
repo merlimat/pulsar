@@ -38,11 +38,16 @@ public interface Checkpoint {
 
     /**
      * Serialize this checkpoint for external storage.
+     *
+     * @return a serializable byte representation of this checkpoint that can be restored
+     *         via {@link #fromByteArray(byte[])}
      */
     byte[] toByteArray();
 
     /**
      * The time at which this checkpoint was created.
+     *
+     * @return the creation timestamp of this checkpoint as an {@link Instant}
      */
     Instant creationTime();
 
@@ -50,6 +55,8 @@ public interface Checkpoint {
 
     /**
      * A sentinel checkpoint representing the beginning of the topic (oldest available data).
+     *
+     * @return a sentinel {@link Checkpoint} representing the earliest position in the topic
      */
     static Checkpoint earliest() {
         return PulsarClientProvider.get().earliestCheckpoint();
@@ -57,6 +64,8 @@ public interface Checkpoint {
 
     /**
      * A sentinel checkpoint representing the end of the topic (next message to be published).
+     *
+     * @return a sentinel {@link Checkpoint} representing the latest position in the topic
      */
     static Checkpoint latest() {
         return PulsarClientProvider.get().latestCheckpoint();
@@ -64,6 +73,10 @@ public interface Checkpoint {
 
     /**
      * A checkpoint that positions at the first message published at or after the given timestamp.
+     *
+     * @param timestamp the timestamp to position at
+     * @return a {@link Checkpoint} that will start consuming from the first message at or after
+     *         the given timestamp
      */
     static Checkpoint atTimestamp(Instant timestamp) {
         return PulsarClientProvider.get().checkpointAtTimestamp(timestamp);
@@ -71,6 +84,10 @@ public interface Checkpoint {
 
     /**
      * Deserialize a checkpoint from a byte array previously obtained via {@link #toByteArray()}.
+     *
+     * @param data the byte array previously obtained from {@link #toByteArray()}
+     * @return the deserialized {@link Checkpoint}
+     * @throws IOException if the byte array is malformed or cannot be deserialized
      */
     static Checkpoint fromByteArray(byte[] data) throws IOException {
         return PulsarClientProvider.get().checkpointFromBytes(data);

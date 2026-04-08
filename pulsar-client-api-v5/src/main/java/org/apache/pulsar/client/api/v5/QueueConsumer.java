@@ -38,16 +38,22 @@ public interface QueueConsumer<T> extends AutoCloseable {
 
     /**
      * The topic this consumer is subscribed to.
+     *
+     * @return the fully qualified topic name
      */
     String topic();
 
     /**
      * The subscription name.
+     *
+     * @return the subscription name
      */
     String subscription();
 
     /**
      * The consumer name (system-assigned or user-specified).
+     *
+     * @return the consumer name, never {@code null}
      */
     String consumerName();
 
@@ -55,36 +61,57 @@ public interface QueueConsumer<T> extends AutoCloseable {
 
     /**
      * Receive a single message, blocking indefinitely.
+     *
+     * @return the received {@link Message}
+     * @throws PulsarClientException if the consumer is closed or a connection error occurs
      */
     Message<T> receive() throws PulsarClientException;
 
     /**
      * Receive a single message, blocking up to the given timeout.
      * Returns {@code null} if the timeout elapses without a message.
+     *
+     * @param timeout the maximum time to wait for a message
+     * @return the received {@link Message}, or {@code null} if the timeout elapses
+     * @throws PulsarClientException if the consumer is closed or a connection error occurs
      */
     Message<T> receive(Duration timeout) throws PulsarClientException;
 
     /**
      * Acknowledge a single message by its ID.
+     *
+     * @param messageId the ID of the message to acknowledge
      */
     void acknowledge(MessageId messageId);
 
     /**
      * Acknowledge within a transaction. The acknowledgment becomes effective when the
      * transaction is committed.
+     *
+     * @param messageId the ID of the message to acknowledge
+     * @param txn       the transaction to associate the acknowledgment with
      */
     void acknowledge(MessageId messageId, Transaction txn);
 
     /**
      * Signal that the message with this ID could not be processed.
+     *
+     * @param messageId the ID of the message to negatively acknowledge
      */
     void negativeAcknowledge(MessageId messageId);
 
     /**
      * Return the asynchronous view of this consumer.
+     *
+     * @return the {@link AsyncQueueConsumer} counterpart of this consumer
      */
     AsyncQueueConsumer<T> async();
 
+    /**
+     * Close the consumer and release all resources.
+     *
+     * @throws PulsarClientException if an error occurs while closing the consumer
+     */
     @Override
     void close() throws PulsarClientException;
 }

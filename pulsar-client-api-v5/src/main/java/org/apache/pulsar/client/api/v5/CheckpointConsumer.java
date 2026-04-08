@@ -43,6 +43,8 @@ public interface CheckpointConsumer<T> extends Closeable {
 
     /**
      * The topic this consumer reads from.
+     *
+     * @return the fully qualified topic name
      */
     String topic();
 
@@ -50,20 +52,29 @@ public interface CheckpointConsumer<T> extends Closeable {
 
     /**
      * Receive a single message, blocking indefinitely.
+     *
+     * @return the received {@link Message}
+     * @throws PulsarClientException if the consumer is closed or a connection error occurs
      */
     Message<T> receive() throws PulsarClientException;
 
     /**
      * Receive a single message, blocking up to the given timeout.
      * Returns {@code null} if the timeout elapses without a message.
+     *
+     * @param timeout the maximum time to wait for a message
+     * @return the received {@link Message}, or {@code null} if the timeout elapses
+     * @throws PulsarClientException if the consumer is closed or a connection error occurs
      */
     Message<T> receive(Duration timeout) throws PulsarClientException;
 
     /**
      * Receive a batch of messages, blocking up to the given timeout.
      *
-     * @param maxMessages maximum number of messages to return
-     * @param timeout     maximum time to wait for messages
+     * @param maxMessages the maximum number of messages to return
+     * @param timeout     the maximum time to wait for messages
+     * @return the received {@link Messages} batch
+     * @throws PulsarClientException if the consumer is closed or a connection error occurs
      */
     Messages<T> receiveMulti(int maxMessages, Duration timeout) throws PulsarClientException;
 
@@ -75,6 +86,8 @@ public interface CheckpointConsumer<T> extends Closeable {
      *
      * <p>The returned {@link Checkpoint} can be serialized via {@link Checkpoint#toByteArray()}
      * and stored in the connector framework's state backend.
+     *
+     * @return an opaque {@link Checkpoint} representing the current read positions
      */
     Checkpoint checkpoint();
 
@@ -83,6 +96,9 @@ public interface CheckpointConsumer<T> extends Closeable {
     /**
      * Seek to a previously saved checkpoint, or to a sentinel position such as
      * {@link Checkpoint#earliest()} or {@link Checkpoint#latest()}.
+     *
+     * @param checkpoint the checkpoint to seek to
+     * @throws PulsarClientException if the seek fails or a connection error occurs
      */
     void seek(Checkpoint checkpoint) throws PulsarClientException;
 
@@ -90,11 +106,18 @@ public interface CheckpointConsumer<T> extends Closeable {
 
     /**
      * Return the asynchronous view of this consumer.
+     *
+     * @return the {@link AsyncCheckpointConsumer} counterpart of this consumer
      */
     AsyncCheckpointConsumer<T> async();
 
     // --- Lifecycle ---
 
+    /**
+     * Close the consumer and release all resources.
+     *
+     * @throws PulsarClientException if an error occurs while closing the consumer
+     */
     @Override
     void close() throws PulsarClientException;
 }

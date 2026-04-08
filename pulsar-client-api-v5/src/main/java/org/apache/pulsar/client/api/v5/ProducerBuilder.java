@@ -36,18 +36,28 @@ public interface ProducerBuilder<T> {
 
     /**
      * Create the producer, blocking until it is ready.
+     *
+     * @return the configured {@link Producer} instance
+     * @throws PulsarClientException if the producer cannot be created (e.g. topic does not exist,
+     *         authorization failure, or connection error)
      */
     Producer<T> create() throws PulsarClientException;
 
     /**
      * Create the producer asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes with the configured {@link Producer},
+     *         or completes exceptionally with {@link PulsarClientException} on failure
      */
     CompletableFuture<Producer<T>> createAsync();
 
     // --- Required ---
 
     /**
-     * The topic to produce to.
+     * The topic to produce to. This is required and must be set before calling {@link #create()}.
+     *
+     * @param topicName the fully qualified topic name (e.g. {@code topic://tenant/namespace/my-topic})
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> topic(String topicName);
 
@@ -55,29 +65,46 @@ public interface ProducerBuilder<T> {
 
     /**
      * Set a custom producer name. If not set, the broker assigns a unique name.
+     * The producer name is used for message deduplication and appears in broker logs.
+     *
+     * @param producerName the producer name
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> producerName(String producerName);
 
     /**
      * Access mode for this producer on the topic.
+     *
+     * @param accessMode the access mode (e.g. {@link ProducerAccessMode#SHARED},
+     *        {@link ProducerAccessMode#EXCLUSIVE})
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> accessMode(ProducerAccessMode accessMode);
 
     /**
-     * Timeout for a send operation. If the message is not acknowledged within this
-     * duration, the send future completes exceptionally.
+     * Timeout for a send operation. If the message is not acknowledged by the broker within
+     * this duration, the send future completes exceptionally. A value of {@link Duration#ZERO}
+     * disables the timeout.
+     *
+     * @param timeout the send timeout duration
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> sendTimeout(Duration timeout);
 
     /**
      * Whether the producer should block when the pending message queue is full,
      * rather than failing immediately. Default is {@code true}.
+     *
+     * @param blockIfQueueFull {@code true} to block, {@code false} to fail immediately
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> blockIfQueueFull(boolean blockIfQueueFull);
 
     /**
      * Configure compression for message payloads.
      *
+     * @param policy the compression policy
+     * @return this builder instance for chaining
      * @see CompressionPolicy#of(org.apache.pulsar.client.api.v5.config.CompressionType)
      * @see CompressionPolicy#disabled()
      */
@@ -87,6 +114,8 @@ public interface ProducerBuilder<T> {
      * Configure message batching. When enabled, the producer groups multiple messages
      * into a single broker request to improve throughput.
      *
+     * @param policy the batching policy
+     * @return this builder instance for chaining
      * @see BatchingPolicy#ofDefault()
      * @see BatchingPolicy#ofDisabled()
      * @see BatchingPolicy#of(Duration, int, int)
@@ -95,30 +124,47 @@ public interface ProducerBuilder<T> {
 
     /**
      * Enable chunking for large messages that exceed the broker's max message size.
+     *
+     * @param policy the chunking policy
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> chunkingPolicy(ChunkingPolicy policy);
 
     /**
      * Configure end-to-end message encryption.
      *
+     * @param policy the encryption policy for producing encrypted messages
+     * @return this builder instance for chaining
      * @see EncryptionPolicy#forProducer(org.apache.pulsar.client.api.v5.auth.CryptoKeyReader, String...)
      */
     ProducerBuilder<T> encryptionPolicy(EncryptionPolicy policy);
 
     /**
-     * Set the initial sequence ID for producer message deduplication.
+     * Set the initial sequence ID for producer message deduplication. Subsequent messages
+     * are assigned incrementing sequence IDs starting from this value.
+     *
+     * @param initialSequenceId the starting sequence ID
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> initialSequenceId(long initialSequenceId);
 
     // --- Metadata ---
 
     /**
-     * Add a single property to the producer metadata.
+     * Add a single property to the producer metadata. Properties are sent to the broker
+     * and can be used for filtering and identification.
+     *
+     * @param key   the property key
+     * @param value the property value
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> property(String key, String value);
 
     /**
      * Add multiple properties to the producer metadata.
+     *
+     * @param properties a map of property key-value pairs
+     * @return this builder instance for chaining
      */
     ProducerBuilder<T> properties(Map<String, String> properties);
 }

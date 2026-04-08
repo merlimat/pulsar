@@ -41,18 +41,33 @@ public interface Transaction {
 
     /**
      * Commit this transaction, making all produced messages visible and all acknowledgments durable.
+     *
+     * @throws PulsarClientException if the transaction cannot be committed (e.g., it has already
+     *         been aborted, timed out, or encountered an error)
      */
     void commit() throws PulsarClientException;
 
     /**
      * Abort this transaction, discarding all produced messages and rolling back acknowledgments.
+     *
+     * @return always {@code null}; the {@link Void} return type is used so that this method's
+     *         signature is consistent with the asynchronous {@link AsyncTransaction#abort()} API
+     * @throws PulsarClientException if the transaction cannot be aborted (e.g., it has already
+     *         been committed or encountered an error)
      */
     Void abort() throws PulsarClientException;
 
+    /**
+     * Return an asynchronous view of this transaction.
+     *
+     * @return the {@link AsyncTransaction} counterpart of this transaction
+     */
     AsyncTransaction async();
 
     /**
      * The current state of this transaction.
+     *
+     * @return the current {@link State} of this transaction
      */
     State state();
 }

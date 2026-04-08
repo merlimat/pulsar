@@ -37,11 +37,17 @@ public interface AsyncCheckpointConsumer<T> {
 
     /**
      * Receive a single message asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes with the next available message
      */
     CompletableFuture<Message<T>> receive();
 
     /**
      * Receive a single message, completing with {@code null} if the timeout elapses.
+     *
+     * @param timeout the maximum duration to wait for a message
+     * @return a {@link CompletableFuture} that completes with the next available message,
+     *         or {@code null} if the timeout elapses
      */
     CompletableFuture<Message<T>> receive(Duration timeout);
 
@@ -50,21 +56,33 @@ public interface AsyncCheckpointConsumer<T> {
      *
      * @param maxMessages maximum number of messages to return
      * @param timeout     maximum time to wait for messages
+     * @return a {@link CompletableFuture} that completes with a list of up to
+     *         {@code maxMessages} messages
      */
     CompletableFuture<List<Message<T>>> receiveMulti(int maxMessages, Duration timeout);
 
     /**
      * Create a consistent checkpoint asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes with a {@link Checkpoint} representing
+     *         the current position across all segments of the topic
      */
     CompletableFuture<Checkpoint> checkpoint();
 
     /**
      * Seek to a checkpoint asynchronously.
+     *
+     * @param checkpoint the checkpoint to seek to
+     * @return a {@link CompletableFuture} that completes when the consumer has been repositioned
+     *         to the given checkpoint
      */
     CompletableFuture<Void> seek(Checkpoint checkpoint);
 
     /**
      * Close this consumer asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes when the consumer has been closed
+     *         and all resources have been released
      */
     CompletableFuture<Void> close();
 }

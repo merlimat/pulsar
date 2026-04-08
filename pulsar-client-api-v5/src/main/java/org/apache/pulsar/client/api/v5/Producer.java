@@ -32,30 +32,49 @@ public interface Producer<T> extends AutoCloseable {
 
     /**
      * The topic this producer is attached to.
+     *
+     * @return the fully qualified topic name (e.g. {@code topic://tenant/namespace/my-topic})
      */
     String topic();
 
     /**
-     * The name of this producer (system-assigned or user-specified).
+     * The name of this producer (system-assigned or user-specified via
+     * {@link ProducerBuilder#producerName(String)}).
+     *
+     * @return the producer name, never {@code null}
      */
     String producerName();
 
     /**
      * Create a message builder for advanced message construction (key, properties, etc.).
      * Use {@link MessageBuilder#send()} as the terminal operation.
+     *
+     * @return a new {@link MessageBuilder} instance bound to this producer
      */
     MessageBuilder<T> newMessage();
 
     /**
-     * The last sequence ID published by this producer (for deduplication tracking).
+     * The last sequence ID published by this producer. Used for deduplication tracking.
+     * Returns {@code -1} if no message has been published yet.
+     *
+     * @return the last published sequence ID, or {@code -1} if none
      */
     long lastSequenceId();
 
     /**
-     * Return the asynchronous view of this producer.
+     * Return the asynchronous view of this producer. The returned object shares the same
+     * underlying connection and resources.
+     *
+     * @return the {@link AsyncProducer} counterpart of this producer
      */
     AsyncProducer<T> async();
 
+    /**
+     * Close this producer and release all associated resources. Pending send operations
+     * are completed before the producer is closed.
+     *
+     * @throws PulsarClientException if an error occurs while closing
+     */
     @Override
     void close() throws PulsarClientException;
 }

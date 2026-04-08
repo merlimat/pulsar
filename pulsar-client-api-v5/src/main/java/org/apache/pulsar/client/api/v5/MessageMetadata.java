@@ -38,52 +38,83 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
 
     /**
      * Set the message value.
+     *
+     * @param value the message payload to be serialized using the producer's schema
+     * @return this builder instance for chaining
      */
     BUILDER value(T value);
 
     /**
      * Set the message key. Messages with the same key are guaranteed to be delivered
      * in order to stream consumers. Queue consumers may use the key for routing.
+     *
+     * @param key the message key used for ordering and routing
+     * @return this builder instance for chaining
      */
     BUILDER key(String key);
 
     /**
      * Associate this message with a transaction.
+     *
+     * @param txn the transaction to associate with this message
+     * @return this builder instance for chaining
      */
     BUILDER transaction(Transaction txn);
 
     /**
      * Add a single property to the message.
+     *
+     * @param name the property key
+     * @param value the property value
+     * @return this builder instance for chaining
      */
     BUILDER property(String name, String value);
 
     /**
      * Add multiple properties to the message.
+     *
+     * @param properties a map of property key-value pairs to attach to the message
+     * @return this builder instance for chaining
      */
     BUILDER properties(Map<String, String> properties);
 
     /**
      * Set the event time of the message.
+     *
+     * @param eventTime the application-defined event time for the message
+     * @return this builder instance for chaining
      */
     BUILDER eventTime(Instant eventTime);
 
     /**
      * Set the sequence ID for producer deduplication.
+     *
+     * @param sequenceId the sequence ID to assign to the message for deduplication purposes
+     * @return this builder instance for chaining
      */
     BUILDER sequenceId(long sequenceId);
 
     /**
      * Request delayed delivery: the message becomes visible to consumers after the given delay.
+     *
+     * @param delay the duration to wait before the message becomes visible to consumers
+     * @return this builder instance for chaining
      */
     BUILDER deliverAfter(Duration delay);
 
     /**
      * Request delayed delivery: the message becomes visible to consumers at the given time.
+     *
+     * @param timestamp the absolute time at which the message becomes visible to consumers
+     * @return this builder instance for chaining
      */
     BUILDER deliverAt(Instant timestamp);
 
     /**
      * Restrict geo-replication to the specified clusters only.
+     *
+     * @param clusters the list of cluster names to which this message should be replicated
+     * @return this builder instance for chaining
      */
     BUILDER replicationClusters(List<String> clusters);
 }

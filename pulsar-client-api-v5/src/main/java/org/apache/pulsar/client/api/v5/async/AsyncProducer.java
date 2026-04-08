@@ -34,16 +34,24 @@ public interface AsyncProducer<T> {
     /**
      * Create a message builder for advanced message construction.
      * Use {@link AsyncMessageBuilder#send()} as the terminal operation.
+     *
+     * @return a new {@link AsyncMessageBuilder} for configuring and sending a message
      */
     AsyncMessageBuilder<T> newMessage();
 
     /**
      * Flush all pending messages asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes when all pending messages have been
+     *         flushed to the broker
      */
     CompletableFuture<Void> flush();
 
     /**
      * Close this producer asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes when the producer has been closed
+     *         and all resources have been released
      */
     CompletableFuture<Void> close();
 }

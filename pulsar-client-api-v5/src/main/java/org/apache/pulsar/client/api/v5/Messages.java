@@ -27,13 +27,15 @@ public interface Messages<T> extends Iterable<Message<T>> {
 
     /**
      * The number of messages in this batch.
-     * @return the number of messages in this batch.
+     *
+     * @return the number of messages in this batch
      */
     int count();
 
     /**
      * The last message id in this batch.
-     * @return the last message id in this batch.
+     *
+     * @return the {@link MessageId} of the last message in this batch
      */
     MessageId lastId();
 }

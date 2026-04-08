@@ -34,6 +34,9 @@ public interface AsyncMessageBuilder<T> extends MessageMetadata<T, AsyncMessageB
 
     /**
      * Send the message asynchronously.
+     *
+     * @return a {@link CompletableFuture} that completes with the {@link MessageId} assigned
+     *         to the published message by the broker
      */
     CompletableFuture<MessageId> send();
 }

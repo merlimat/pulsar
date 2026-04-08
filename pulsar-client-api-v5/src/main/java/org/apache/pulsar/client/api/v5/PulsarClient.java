@@ -34,6 +34,8 @@ public interface PulsarClient extends AutoCloseable {
 
     /**
      * Create a new client builder.
+     *
+     * @return a new {@link PulsarClientBuilder} for configuring the client
      */
     static PulsarClientBuilder builder() {
         return PulsarClientProvider.get().newClientBuilder();
@@ -41,16 +43,28 @@ public interface PulsarClient extends AutoCloseable {
 
     /**
      * Create a producer builder with a specific schema.
+     *
+     * @param <T> the message value type
+     * @param schema the schema used for serialization/deserialization
+     * @return a new {@link ProducerBuilder} for configuring the producer
      */
     <T> ProducerBuilder<T> newProducer(Schema<T> schema);
 
     /**
      * Create a stream consumer builder with a specific schema.
+     *
+     * @param <T> the message value type
+     * @param schema the schema used for serialization/deserialization
+     * @return a new {@link StreamConsumerBuilder} for configuring the stream consumer
      */
     <T> StreamConsumerBuilder<T> newStreamConsumer(Schema<T> schema);
 
     /**
      * Create a queue consumer builder with a specific schema.
+     *
+     * @param <T> the message value type
+     * @param schema the schema used for serialization/deserialization
+     * @return a new {@link QueueConsumerBuilder} for configuring the queue consumer
      */
     <T> QueueConsumerBuilder<T> newQueueConsumer(Schema<T> schema);
 
@@ -59,18 +73,29 @@ public interface PulsarClient extends AutoCloseable {
      *
      * <p>Checkpoint consumers are unmanaged — position tracking is external.
      * Designed for connector frameworks (Flink, Spark) that manage their own state.
+     *
+     * @param <T> the message value type
+     * @param schema the schema used for serialization/deserialization
+     * @return a new {@link CheckpointConsumerBuilder} for configuring the checkpoint consumer
      */
     <T> CheckpointConsumerBuilder<T> newCheckpointConsumer(Schema<T> schema);
 
     // --- Transactions ---
 
     /**
-     * Create a new transaction
+     * Create a new transaction.
+     *
+     * @return a new {@link Transaction} in the {@link Transaction.State#OPEN} state
      */
     Transaction newTransaction();
 
     // --- Lifecycle ---
 
+    /**
+     * Close the client and release all resources, waiting for pending operations to complete.
+     *
+     * @throws PulsarClientException if an error occurs while closing the client
+     */
     @Override
     void close() throws PulsarClientException;
 
