@@ -27,21 +27,29 @@ public interface SchemaInfo {
 
     /**
      * The name of the schema.
+     *
+     * @return the schema name
      */
     String name();
 
     /**
      * The type of the schema.
+     *
+     * @return the {@link SchemaType} indicating the serialization format
      */
     SchemaType type();
 
     /**
      * The raw schema definition bytes (e.g., Avro schema JSON, Protobuf descriptor).
+     *
+     * @return the schema definition as a byte array
      */
     byte[] schema();
 
     /**
      * Additional properties associated with the schema.
+     *
+     * @return an unmodifiable map of schema property key-value pairs
      */
     Map<String, String> properties();
 }

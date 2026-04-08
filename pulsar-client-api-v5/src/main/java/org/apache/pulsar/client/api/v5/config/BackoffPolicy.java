@@ -45,6 +45,10 @@ public record BackoffPolicy(
 
     /**
      * Create a fixed backoff (no increase between retries).
+     *
+     * @param initialInterval the constant delay between reconnection attempts
+     * @param maxInterval     the maximum delay between reconnection attempts
+     * @return a {@link BackoffPolicy} with a multiplier of 1.0
      */
     public static BackoffPolicy fixed(Duration initialInterval, Duration maxInterval) {
         return new BackoffPolicy(initialInterval, maxInterval, 1.0);
@@ -52,6 +56,10 @@ public record BackoffPolicy(
 
     /**
      * Create an exponential backoff with the given bounds and a default multiplier of 2.
+     *
+     * @param initialInterval the delay before the first reconnection attempt
+     * @param maxInterval     the maximum delay between reconnection attempts
+     * @return a {@link BackoffPolicy} with a multiplier of 2.0
      */
     public static BackoffPolicy exponential(Duration initialInterval, Duration maxInterval) {
         return new BackoffPolicy(initialInterval, maxInterval, 2.0);
@@ -59,6 +67,11 @@ public record BackoffPolicy(
 
     /**
      * Create an exponential backoff with a custom multiplier.
+     *
+     * @param initialInterval the delay before the first reconnection attempt
+     * @param maxInterval     the maximum delay between reconnection attempts
+     * @param multiplier      the multiplier applied after each attempt, must be &gt;= 1.0
+     * @return a {@link BackoffPolicy} with the specified parameters
      */
     public static BackoffPolicy exponential(Duration initialInterval, Duration maxInterval, double multiplier) {
         return new BackoffPolicy(initialInterval, maxInterval, multiplier);

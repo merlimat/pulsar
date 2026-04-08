@@ -30,7 +30,7 @@ public interface CryptoKeyReader {
      *
      * @param keyName  the name of the key
      * @param metadata additional metadata associated with the key
-     * @return the encryption key info
+     * @return the encryption key info containing the public key data
      */
     EncryptionKeyInfo getPublicKey(String keyName, Map<String, String> metadata);
 
@@ -39,7 +39,7 @@ public interface CryptoKeyReader {
      *
      * @param keyName  the name of the key
      * @param metadata additional metadata associated with the key
-     * @return the encryption key info
+     * @return the encryption key info containing the private key data
      */
     EncryptionKeyInfo getPrivateKey(String keyName, Map<String, String> metadata);
 }

@@ -30,16 +30,27 @@ public interface Authentication extends Closeable {
 
     /**
      * The authentication method name (e.g., "token", "tls").
+     *
+     * @return the authentication method identifier string
      */
     String authMethodName();
 
     /**
      * Get the authentication data to be sent to the broker.
+     *
+     * @return the authentication data containing credentials for the broker
+     * @throws PulsarClientException if the authentication data could not be obtained
      */
     AuthenticationData authData() throws PulsarClientException;
 
     /**
      * Get the authentication data for a specific broker host.
+     *
+     * <p>The default implementation delegates to {@link #authData()}.
+     *
+     * @param brokerHostName the hostname of the broker to authenticate against
+     * @return the authentication data containing credentials for the specified broker
+     * @throws PulsarClientException if the authentication data could not be obtained
      */
     default AuthenticationData authData(String brokerHostName) throws PulsarClientException {
         return authData();
@@ -47,6 +58,8 @@ public interface Authentication extends Closeable {
 
     /**
      * Initialize the authentication provider. Called once when the client is created.
+     *
+     * @throws PulsarClientException if initialization fails
      */
     default void initialize() throws PulsarClientException {
     }

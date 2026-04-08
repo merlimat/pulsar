@@ -27,6 +27,8 @@ public record CompressionPolicy(CompressionType type) {
 
     /**
      * No compression.
+     *
+     * @return a {@link CompressionPolicy} with compression disabled
      */
     public static CompressionPolicy disabled() {
         return new CompressionPolicy(CompressionType.NONE);
@@ -34,6 +36,9 @@ public record CompressionPolicy(CompressionType type) {
 
     /**
      * Create a compression policy with the given codec.
+     *
+     * @param type the compression codec to use for message payloads
+     * @return a {@link CompressionPolicy} configured with the specified codec
      */
     public static CompressionPolicy of(CompressionType type) {
         return new CompressionPolicy(type);

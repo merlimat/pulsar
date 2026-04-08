@@ -34,6 +34,9 @@ public final class AuthenticationFactory {
 
     /**
      * Create token-based authentication with a static token.
+     *
+     * @param token the JWT or other authentication token string
+     * @return an {@link Authentication} instance configured with the given token
      */
     public static Authentication token(String token) {
         return PulsarClientProvider.get().authenticationToken(token);
@@ -41,6 +44,12 @@ public final class AuthenticationFactory {
 
     /**
      * Create token-based authentication with a dynamic token supplier.
+     *
+     * <p>The supplier is invoked each time the client needs to authenticate,
+     * allowing for token refresh without recreating the client.
+     *
+     * @param tokenSupplier a supplier that provides the current authentication token
+     * @return an {@link Authentication} instance that retrieves tokens from the supplier
      */
     public static Authentication token(Supplier<String> tokenSupplier) {
         return PulsarClientProvider.get().authenticationToken(tokenSupplier);
@@ -48,6 +57,10 @@ public final class AuthenticationFactory {
 
     /**
      * Create TLS mutual authentication.
+     *
+     * @param certFilePath the path to the client certificate file (PEM format)
+     * @param keyFilePath  the path to the client private key file (PEM format)
+     * @return an {@link Authentication} instance configured for TLS mutual authentication
      */
     public static Authentication tls(String certFilePath, String keyFilePath) {
         return PulsarClientProvider.get().authenticationTls(certFilePath, keyFilePath);
@@ -55,6 +68,11 @@ public final class AuthenticationFactory {
 
     /**
      * Create an authentication provider by plugin class name and parameter string.
+     *
+     * @param authPluginClassName the fully qualified class name of the authentication plugin
+     * @param authParamsString    the authentication parameters as a serialized string
+     * @return an {@link Authentication} instance created from the specified plugin
+     * @throws PulsarClientException if the plugin class cannot be loaded or instantiated
      */
     public static Authentication create(String authPluginClassName, String authParamsString)
             throws PulsarClientException {
@@ -63,6 +81,11 @@ public final class AuthenticationFactory {
 
     /**
      * Create an authentication provider by plugin class name and parameter map.
+     *
+     * @param authPluginClassName the fully qualified class name of the authentication plugin
+     * @param authParams          the authentication parameters as key-value pairs
+     * @return an {@link Authentication} instance created from the specified plugin
+     * @throws PulsarClientException if the plugin class cannot be loaded or instantiated
      */
     public static Authentication create(String authPluginClassName, Map<String, String> authParams)
             throws PulsarClientException {

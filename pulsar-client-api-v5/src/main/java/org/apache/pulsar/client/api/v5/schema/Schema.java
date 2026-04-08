@@ -30,16 +30,26 @@ public interface Schema<T> {
 
     /**
      * Encode a value to bytes.
+     *
+     * @param message the value to encode
+     * @return the serialized byte array representation of the value
      */
     byte[] encode(T message);
 
     /**
      * Decode bytes to a value.
+     *
+     * @param bytes the byte array to decode
+     * @return the deserialized value
      */
     T decode(byte[] bytes);
 
     /**
      * Decode bytes with a specific schema version. Useful for schema evolution.
+     *
+     * @param bytes         the byte array to decode
+     * @param schemaVersion the schema version to use for decoding, or {@code null} for the latest version
+     * @return the deserialized value
      */
     default T decode(byte[] bytes, byte[] schemaVersion) {
         return decode(bytes);
@@ -47,6 +57,9 @@ public interface Schema<T> {
 
     /**
      * Decode from a ByteBuffer.
+     *
+     * @param data the {@link ByteBuffer} to decode, or {@code null}
+     * @return the deserialized value, or {@code null} if the input is {@code null}
      */
     default T decode(ByteBuffer data) {
         if (data == null) {
@@ -59,59 +72,135 @@ public interface Schema<T> {
 
     /**
      * The schema descriptor for broker-side negotiation.
+     *
+     * @return the {@link SchemaInfo} describing this schema's type and definition
      */
     SchemaInfo schemaInfo();
 
     // --- Built-in schema factories ---
 
+    /**
+     * Get a schema for raw byte arrays (no serialization).
+     *
+     * @return a {@link Schema} for byte arrays
+     */
     static Schema<byte[]> BYTES() {
         return PulsarClientProvider.get().bytesSchema();
     }
 
+    /**
+     * Get a schema for UTF-8 strings.
+     *
+     * @return a {@link Schema} for {@link String} values
+     */
     static Schema<String> STRING() {
         return PulsarClientProvider.get().stringSchema();
     }
 
+    /**
+     * Get a schema for boolean values.
+     *
+     * @return a {@link Schema} for {@link Boolean} values
+     */
     static Schema<Boolean> BOOL() {
         return PulsarClientProvider.get().booleanSchema();
     }
 
+    /**
+     * Get a schema for 8-bit signed integers.
+     *
+     * @return a {@link Schema} for {@link Byte} values
+     */
     static Schema<Byte> INT8() {
         return PulsarClientProvider.get().byteSchema();
     }
 
+    /**
+     * Get a schema for 16-bit signed integers.
+     *
+     * @return a {@link Schema} for {@link Short} values
+     */
     static Schema<Short> INT16() {
         return PulsarClientProvider.get().shortSchema();
     }
 
+    /**
+     * Get a schema for 32-bit signed integers.
+     *
+     * @return a {@link Schema} for {@link Integer} values
+     */
     static Schema<Integer> INT32() {
         return PulsarClientProvider.get().intSchema();
     }
 
+    /**
+     * Get a schema for 64-bit signed integers.
+     *
+     * @return a {@link Schema} for {@link Long} values
+     */
     static Schema<Long> INT64() {
         return PulsarClientProvider.get().longSchema();
     }
 
+    /**
+     * Get a schema for 32-bit floating point numbers.
+     *
+     * @return a {@link Schema} for {@link Float} values
+     */
     static Schema<Float> FLOAT() {
         return PulsarClientProvider.get().floatSchema();
     }
 
+    /**
+     * Get a schema for 64-bit floating point numbers.
+     *
+     * @return a {@link Schema} for {@link Double} values
+     */
     static Schema<Double> DOUBLE() {
         return PulsarClientProvider.get().doubleSchema();
     }
 
+    /**
+     * Get a JSON schema for a POJO class.
+     *
+     * @param <T>  the POJO type
+     * @param pojo the class of the POJO to serialize and deserialize as JSON
+     * @return a {@link Schema} that encodes and decodes the POJO using JSON
+     */
     static <T> Schema<T> JSON(Class<T> pojo) {
         return PulsarClientProvider.get().jsonSchema(pojo);
     }
 
+    /**
+     * Get an Avro schema for a POJO class.
+     *
+     * @param <T>  the POJO type
+     * @param pojo the class of the POJO to serialize and deserialize using Avro
+     * @return a {@link Schema} that encodes and decodes the POJO using Avro
+     */
     static <T> Schema<T> AVRO(Class<T> pojo) {
         return PulsarClientProvider.get().avroSchema(pojo);
     }
 
+    /**
+     * Get a Protobuf schema for a generated message class.
+     *
+     * @param <T>   the Protobuf message type
+     * @param clazz the Protobuf generated message class
+     * @return a {@link Schema} that encodes and decodes the Protobuf message
+     */
     static <T extends com.google.protobuf.GeneratedMessageV3> Schema<T> PROTOBUF(Class<T> clazz) {
         return PulsarClientProvider.get().protobufSchema(clazz);
     }
 
+    /**
+     * Get a schema that auto-detects the topic schema and produces raw bytes accordingly.
+     *
+     * <p>This schema validates that the bytes being produced are compatible with the
+     * schema configured on the topic.
+     *
+     * @return a {@link Schema} for producing raw bytes with automatic schema validation
+     */
     static Schema<byte[]> AUTO_PRODUCE_BYTES() {
         return PulsarClientProvider.get().autoProduceBytesSchema();
     }

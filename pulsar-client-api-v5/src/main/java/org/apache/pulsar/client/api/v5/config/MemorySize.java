@@ -44,6 +44,9 @@ public record MemorySize(long bytes) {
 
     /**
      * Create a memory size from a number of bytes.
+     *
+     * @param bytes the size in bytes
+     * @return a {@link MemorySize} representing the specified number of bytes
      */
     public static MemorySize ofBytes(long bytes) {
         return new MemorySize(bytes);
@@ -51,6 +54,9 @@ public record MemorySize(long bytes) {
 
     /**
      * Create a memory size from a number of kilobytes.
+     *
+     * @param kb the size in kilobytes
+     * @return a {@link MemorySize} representing the specified number of kilobytes
      */
     public static MemorySize ofKilobytes(long kb) {
         return new MemorySize(Math.multiplyExact(kb, KB));
@@ -58,6 +64,9 @@ public record MemorySize(long bytes) {
 
     /**
      * Create a memory size from a number of megabytes.
+     *
+     * @param mb the size in megabytes
+     * @return a {@link MemorySize} representing the specified number of megabytes
      */
     public static MemorySize ofMegabytes(long mb) {
         return new MemorySize(Math.multiplyExact(mb, MB));
@@ -65,11 +74,19 @@ public record MemorySize(long bytes) {
 
     /**
      * Create a memory size from a number of gigabytes.
+     *
+     * @param gb the size in gigabytes
+     * @return a {@link MemorySize} representing the specified number of gigabytes
      */
     public static MemorySize ofGigabytes(long gb) {
         return new MemorySize(Math.multiplyExact(gb, GB));
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return a human-readable string representation using the largest whole unit (GB, MB, KB, or bytes)
+     */
     @Override
     public String toString() {
         if (bytes >= GB && bytes % GB == 0) {

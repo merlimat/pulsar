@@ -36,6 +36,9 @@ public record TlsPolicy(
 ) {
     /**
      * Create a TLS policy that trusts the given CA certificate and verifies hostnames.
+     *
+     * @param trustCertsFilePath the path to the trusted CA certificate file (PEM format)
+     * @return a {@link TlsPolicy} with hostname verification enabled and insecure connections disabled
      */
     public static TlsPolicy of(String trustCertsFilePath) {
         return new TlsPolicy(trustCertsFilePath, null, null, false, true);
@@ -43,6 +46,11 @@ public record TlsPolicy(
 
     /**
      * Create a TLS policy with mutual TLS (mTLS) authentication.
+     *
+     * @param trustCertsFilePath the path to the trusted CA certificate file (PEM format)
+     * @param keyFilePath        the path to the client private key file (PEM format)
+     * @param certificateFilePath the path to the client certificate file (PEM format)
+     * @return a {@link TlsPolicy} configured for mutual TLS with hostname verification enabled
      */
     public static TlsPolicy ofMutualTls(String trustCertsFilePath, String keyFilePath, String certificateFilePath) {
         return new TlsPolicy(trustCertsFilePath, keyFilePath, certificateFilePath, false, true);
@@ -50,6 +58,8 @@ public record TlsPolicy(
 
     /**
      * Create an insecure TLS policy that accepts any certificate (for development only).
+     *
+     * @return a {@link TlsPolicy} with insecure connections allowed and hostname verification disabled
      */
     public static TlsPolicy ofInsecure() {
         return new TlsPolicy(null, null, null, true, false);

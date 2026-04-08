@@ -50,6 +50,10 @@ public record EncryptionPolicy(
 
     /**
      * Create an encryption policy for producers.
+     *
+     * @param keyReader the crypto key reader for loading encryption keys
+     * @param keyNames  one or more encryption key names to use
+     * @return an {@link EncryptionPolicy} configured for producer-side encryption
      */
     public static EncryptionPolicy forProducer(CryptoKeyReader keyReader, String... keyNames) {
         return new EncryptionPolicy(keyReader, List.of(keyNames), CryptoFailureAction.FAIL);
@@ -57,6 +61,10 @@ public record EncryptionPolicy(
 
     /**
      * Create an encryption policy for consumers/readers.
+     *
+     * @param keyReader     the crypto key reader for loading decryption keys
+     * @param failureAction the action to take when decryption fails
+     * @return an {@link EncryptionPolicy} configured for consumer-side decryption
      */
     public static EncryptionPolicy forConsumer(CryptoKeyReader keyReader, CryptoFailureAction failureAction) {
         return new EncryptionPolicy(keyReader, List.of(), failureAction);

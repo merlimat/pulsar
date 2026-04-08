@@ -57,6 +57,8 @@ public record BatchingPolicy(
 
     /**
      * Batching disabled.
+     *
+     * @return a {@link BatchingPolicy} with batching disabled
      */
     public static BatchingPolicy ofDisabled() {
         return DISABLED;
@@ -64,6 +66,8 @@ public record BatchingPolicy(
 
     /**
      * Batching enabled with default thresholds (1ms delay, 1000 messages, 128KB).
+     *
+     * @return a {@link BatchingPolicy} with default batching thresholds
      */
     public static BatchingPolicy ofDefault() {
         return DEFAULT;
@@ -71,6 +75,11 @@ public record BatchingPolicy(
 
     /**
      * Batching enabled with custom thresholds.
+     *
+     * @param maxPublishDelay the maximum time to wait before flushing a batch
+     * @param maxMessages     the maximum number of messages in a single batch
+     * @param maxSize         the maximum size of a single batch
+     * @return a {@link BatchingPolicy} with batching enabled and the specified thresholds
      */
     public static BatchingPolicy of(Duration maxPublishDelay, int maxMessages, MemorySize maxSize) {
         return new BatchingPolicy(true, maxPublishDelay, maxMessages, maxSize);

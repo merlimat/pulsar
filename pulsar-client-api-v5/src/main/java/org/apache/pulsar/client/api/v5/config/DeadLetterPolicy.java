@@ -43,6 +43,9 @@ public record DeadLetterPolicy(
 
     /**
      * Create a dead letter policy with just a max redeliver count, using default topic names.
+     *
+     * @param maxRedeliverCount the maximum number of redelivery attempts before sending to the dead letter topic
+     * @return a {@link DeadLetterPolicy} with auto-generated topic names and no initial subscription
      */
     public static DeadLetterPolicy of(int maxRedeliverCount) {
         return new DeadLetterPolicy(maxRedeliverCount, null, null, null);
