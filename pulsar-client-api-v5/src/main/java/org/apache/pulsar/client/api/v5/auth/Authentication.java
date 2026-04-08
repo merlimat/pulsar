@@ -18,8 +18,8 @@
  */
 package org.apache.pulsar.client.api.v5.auth;
 
-import org.apache.pulsar.client.api.v5.PulsarClientException;
 import java.io.Closeable;
+import org.apache.pulsar.client.api.v5.PulsarClientException;
 
 /**
  * Pluggable authentication provider for Pulsar clients.

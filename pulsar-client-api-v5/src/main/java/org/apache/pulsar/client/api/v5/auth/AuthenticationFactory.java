@@ -18,11 +18,10 @@
  */
 package org.apache.pulsar.client.api.v5.auth;
 
-import org.apache.pulsar.client.api.v5.PulsarClientException;
-import org.apache.pulsar.client.api.v5.internal.PulsarClientProvider;
-
 import java.util.Map;
 import java.util.function.Supplier;
+import org.apache.pulsar.client.api.v5.PulsarClientException;
+import org.apache.pulsar.client.api.v5.internal.PulsarClientProvider;
 
 /**
  * Factory for creating common authentication providers.

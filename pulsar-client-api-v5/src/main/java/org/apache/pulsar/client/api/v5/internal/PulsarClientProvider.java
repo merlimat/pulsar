@@ -36,7 +36,6 @@ import org.apache.pulsar.client.api.v5.schema.Schema;
  * <p>The implementation module registers itself via {@code META-INF/services}
  * using the standard Java {@link ServiceLoader} mechanism.
  *
- * @hidden
  */
 public interface PulsarClientProvider {
 

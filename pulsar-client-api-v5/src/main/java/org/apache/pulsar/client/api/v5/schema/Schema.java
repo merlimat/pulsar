@@ -18,8 +18,8 @@
  */
 package org.apache.pulsar.client.api.v5.schema;
 
-import org.apache.pulsar.client.api.v5.internal.PulsarClientProvider;
 import java.nio.ByteBuffer;
+import org.apache.pulsar.client.api.v5.internal.PulsarClientProvider;
 
 /**
  * Defines how message values are serialized to bytes and deserialized from bytes.
@@ -84,7 +84,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for byte arrays
      */
-    static Schema<byte[]> BYTES() {
+    static Schema<byte[]> bytes() {
         return PulsarClientProvider.get().bytesSchema();
     }
 
@@ -93,7 +93,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for {@link String} values
      */
-    static Schema<String> STRING() {
+    static Schema<String> string() {
         return PulsarClientProvider.get().stringSchema();
     }
 
@@ -102,7 +102,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for {@link Boolean} values
      */
-    static Schema<Boolean> BOOL() {
+    static Schema<Boolean> bool() {
         return PulsarClientProvider.get().booleanSchema();
     }
 
@@ -111,7 +111,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for {@link Byte} values
      */
-    static Schema<Byte> INT8() {
+    static Schema<Byte> int8() {
         return PulsarClientProvider.get().byteSchema();
     }
 
@@ -120,7 +120,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for {@link Short} values
      */
-    static Schema<Short> INT16() {
+    static Schema<Short> int16() {
         return PulsarClientProvider.get().shortSchema();
     }
 
@@ -129,7 +129,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for {@link Integer} values
      */
-    static Schema<Integer> INT32() {
+    static Schema<Integer> int32() {
         return PulsarClientProvider.get().intSchema();
     }
 
@@ -138,7 +138,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for {@link Long} values
      */
-    static Schema<Long> INT64() {
+    static Schema<Long> int64() {
         return PulsarClientProvider.get().longSchema();
     }
 
@@ -147,7 +147,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for {@link Float} values
      */
-    static Schema<Float> FLOAT() {
+    static Schema<Float> float32() {
         return PulsarClientProvider.get().floatSchema();
     }
 
@@ -156,7 +156,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for {@link Double} values
      */
-    static Schema<Double> DOUBLE() {
+    static Schema<Double> float64() {
         return PulsarClientProvider.get().doubleSchema();
     }
 
@@ -167,7 +167,7 @@ public interface Schema<T> {
      * @param pojo the class of the POJO to serialize and deserialize as JSON
      * @return a {@link Schema} that encodes and decodes the POJO using JSON
      */
-    static <T> Schema<T> JSON(Class<T> pojo) {
+    static <T> Schema<T> json(Class<T> pojo) {
         return PulsarClientProvider.get().jsonSchema(pojo);
     }
 
@@ -178,7 +178,7 @@ public interface Schema<T> {
      * @param pojo the class of the POJO to serialize and deserialize using Avro
      * @return a {@link Schema} that encodes and decodes the POJO using Avro
      */
-    static <T> Schema<T> AVRO(Class<T> pojo) {
+    static <T> Schema<T> avro(Class<T> pojo) {
         return PulsarClientProvider.get().avroSchema(pojo);
     }
 
@@ -189,7 +189,7 @@ public interface Schema<T> {
      * @param clazz the Protobuf generated message class
      * @return a {@link Schema} that encodes and decodes the Protobuf message
      */
-    static <T extends com.google.protobuf.GeneratedMessageV3> Schema<T> PROTOBUF(Class<T> clazz) {
+    static <T extends com.google.protobuf.GeneratedMessageV3> Schema<T> protobuf(Class<T> clazz) {
         return PulsarClientProvider.get().protobufSchema(clazz);
     }
 
@@ -201,7 +201,7 @@ public interface Schema<T> {
      *
      * @return a {@link Schema} for producing raw bytes with automatic schema validation
      */
-    static Schema<byte[]> AUTO_PRODUCE_BYTES() {
+    static Schema<byte[]> autoProduceBytes() {
         return PulsarClientProvider.get().autoProduceBytesSchema();
     }
 }

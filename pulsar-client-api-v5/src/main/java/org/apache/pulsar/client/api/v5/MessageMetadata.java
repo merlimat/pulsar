@@ -28,13 +28,13 @@ import java.util.Map;
  *
  * <p>This is the shared base for {@link MessageBuilder} (sync) and
  * {@link org.apache.pulsar.client.api.v5.async.AsyncMessageBuilder AsyncMessageBuilder} (async).
- * The self-referential type parameter {@code BUILDER} enables fluent chaining
+ * The self-referential type parameter {@code BuilderT} enables fluent chaining
  * on both subtypes.
  *
  * @param <T>    the type of the message value
- * @param <BUILDER> the concrete builder type (for fluent returns)
+ * @param <BuilderT> the concrete builder type (for fluent returns)
  */
-public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>> {
+public interface MessageMetadata<T, BuilderT extends MessageMetadata<T, BuilderT>> {
 
     /**
      * Set the message value.
@@ -42,7 +42,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param value the message payload to be serialized using the producer's schema
      * @return this builder instance for chaining
      */
-    BUILDER value(T value);
+    BuilderT value(T value);
 
     /**
      * Set the message key. Messages with the same key are guaranteed to be delivered
@@ -51,7 +51,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param key the message key used for ordering and routing
      * @return this builder instance for chaining
      */
-    BUILDER key(String key);
+    BuilderT key(String key);
 
     /**
      * Associate this message with a transaction.
@@ -59,7 +59,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param txn the transaction to associate with this message
      * @return this builder instance for chaining
      */
-    BUILDER transaction(Transaction txn);
+    BuilderT transaction(Transaction txn);
 
     /**
      * Add a single property to the message.
@@ -68,7 +68,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param value the property value
      * @return this builder instance for chaining
      */
-    BUILDER property(String name, String value);
+    BuilderT property(String name, String value);
 
     /**
      * Add multiple properties to the message.
@@ -76,7 +76,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param properties a map of property key-value pairs to attach to the message
      * @return this builder instance for chaining
      */
-    BUILDER properties(Map<String, String> properties);
+    BuilderT properties(Map<String, String> properties);
 
     /**
      * Set the event time of the message.
@@ -84,7 +84,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param eventTime the application-defined event time for the message
      * @return this builder instance for chaining
      */
-    BUILDER eventTime(Instant eventTime);
+    BuilderT eventTime(Instant eventTime);
 
     /**
      * Set the sequence ID for producer deduplication.
@@ -92,7 +92,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param sequenceId the sequence ID to assign to the message for deduplication purposes
      * @return this builder instance for chaining
      */
-    BUILDER sequenceId(long sequenceId);
+    BuilderT sequenceId(long sequenceId);
 
     /**
      * Request delayed delivery: the message becomes visible to consumers after the given delay.
@@ -100,7 +100,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param delay the duration to wait before the message becomes visible to consumers
      * @return this builder instance for chaining
      */
-    BUILDER deliverAfter(Duration delay);
+    BuilderT deliverAfter(Duration delay);
 
     /**
      * Request delayed delivery: the message becomes visible to consumers at the given time.
@@ -108,7 +108,7 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param timestamp the absolute time at which the message becomes visible to consumers
      * @return this builder instance for chaining
      */
-    BUILDER deliverAt(Instant timestamp);
+    BuilderT deliverAt(Instant timestamp);
 
     /**
      * Restrict geo-replication to the specified clusters only.
@@ -116,5 +116,5 @@ public interface MessageMetadata<T, BUILDER extends MessageMetadata<T, BUILDER>>
      * @param clusters the list of cluster names to which this message should be replicated
      * @return this builder instance for chaining
      */
-    BUILDER replicationClusters(List<String> clusters);
+    BuilderT replicationClusters(List<String> clusters);
 }

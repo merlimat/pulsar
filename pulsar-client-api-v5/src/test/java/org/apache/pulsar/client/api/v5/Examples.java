@@ -18,19 +18,17 @@
  */
 package org.apache.pulsar.client.api.v5;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
-
 import org.apache.pulsar.client.api.v5.async.AsyncProducer;
 import org.apache.pulsar.client.api.v5.async.AsyncQueueConsumer;
 import org.apache.pulsar.client.api.v5.async.AsyncStreamConsumer;
 import org.apache.pulsar.client.api.v5.auth.AuthenticationFactory;
+import org.apache.pulsar.client.api.v5.config.BackoffPolicy;
 import org.apache.pulsar.client.api.v5.config.BatchingPolicy;
 import org.apache.pulsar.client.api.v5.config.CompressionPolicy;
 import org.apache.pulsar.client.api.v5.config.CompressionType;
-import org.apache.pulsar.client.api.v5.config.BackoffPolicy;
 import org.apache.pulsar.client.api.v5.config.DeadLetterPolicy;
 import org.apache.pulsar.client.api.v5.config.MemorySize;
 import org.apache.pulsar.client.api.v5.config.SubscriptionInitialPosition;
@@ -82,7 +80,7 @@ public class Examples {
 
     /** Simple produce — send strings to a topic. */
     void simpleProducer(PulsarClient client) throws Exception {
-        try (var producer = client.newProducer(Schema.STRING())
+        try (var producer = client.newProducer(Schema.string())
                 .topic("my-topic")
                 .create()) {
 
@@ -101,7 +99,7 @@ public class Examples {
 
     /** High-throughput producer — batching + compression. */
     void highThroughputProducer(PulsarClient client) throws Exception {
-        try (var producer = client.newProducer(Schema.JSON(SensorReading.class))
+        try (var producer = client.newProducer(Schema.json(SensorReading.class))
                 .topic("sensor-data")
                 .compressionPolicy(CompressionPolicy.of(CompressionType.ZSTD))
                 .batchingPolicy(BatchingPolicy.of(
@@ -123,7 +121,7 @@ public class Examples {
 
     /** Async producer — fire-and-forget with flush. */
     void asyncProducer(PulsarClient client) throws Exception {
-        try (var producer = client.newProducer(Schema.STRING())
+        try (var producer = client.newProducer(Schema.string())
                 .topic("events")
                 .create()) {
 
@@ -148,7 +146,7 @@ public class Examples {
 
     /** Async producer — pipeline with per-message callback. */
     void asyncProducerWithCallbacks(PulsarClient client) throws Exception {
-        try (var producer = client.newProducer(Schema.STRING())
+        try (var producer = client.newProducer(Schema.string())
                 .topic("events")
                 .create()) {
 
@@ -173,7 +171,7 @@ public class Examples {
 
     /** Simple stream consumer — process messages in order. */
     void streamConsumer(PulsarClient client) throws Exception {
-        try (var consumer = client.newStreamConsumer(Schema.STRING())
+        try (var consumer = client.newStreamConsumer(Schema.string())
                 .topic("my-topic")
                 .subscriptionName("my-sub")
                 .subscriptionInitialPosition(SubscriptionInitialPosition.EARLIEST)
@@ -196,7 +194,7 @@ public class Examples {
 
     /** Batch receive — process messages in chunks. */
     void streamConsumerBatchReceive(PulsarClient client) throws Exception {
-        try (var consumer = client.newStreamConsumer(Schema.JSON(SensorReading.class))
+        try (var consumer = client.newStreamConsumer(Schema.json(SensorReading.class))
                 .topic("sensor-data")
                 .subscriptionName("analytics")
                 .subscribe()) {
@@ -217,7 +215,7 @@ public class Examples {
 
     /** Async stream consumer — non-blocking receive loop. */
     void asyncStreamConsumer(PulsarClient client) throws Exception {
-        try (var consumer = client.newStreamConsumer(Schema.STRING())
+        try (var consumer = client.newStreamConsumer(Schema.string())
                 .topic("my-topic")
                 .subscriptionName("my-sub")
                 .subscribe()) {
@@ -248,14 +246,16 @@ public class Examples {
 
     /** Simple queue consumer — parallel processing with individual ack. */
     void queueConsumer(PulsarClient client) throws Exception {
-        try (var consumer = client.newQueueConsumer(Schema.JSON(Order.class))
+        try (var consumer = client.newQueueConsumer(Schema.json(Order.class))
                 .topic("orders")
                 .subscriptionName("order-processor")
                 .subscribe()) {
 
             while (true) {
                 Message<Order> msg = consumer.receive(Duration.ofSeconds(10));
-                if (msg == null) continue;
+                if (msg == null) {
+                    continue;
+                }
 
                 try {
                     processOrder(msg.value());
@@ -270,7 +270,7 @@ public class Examples {
 
     /** Queue consumer with dead letter policy. */
     void queueConsumerWithDLQ(PulsarClient client) throws Exception {
-        try (var consumer = client.newQueueConsumer(Schema.JSON(Order.class))
+        try (var consumer = client.newQueueConsumer(Schema.json(Order.class))
                 .topic("orders")
                 .subscriptionName("order-processor")
                 .ackTimeout(Duration.ofSeconds(30))
@@ -294,7 +294,7 @@ public class Examples {
 
     /** Async queue consumer — high-throughput parallel processing. */
     void asyncQueueConsumer(PulsarClient client) throws Exception {
-        try (var consumer = client.newQueueConsumer(Schema.JSON(Order.class))
+        try (var consumer = client.newQueueConsumer(Schema.json(Order.class))
                 .topic("orders")
                 .subscriptionName("parallel-processor")
                 .subscribe()) {
@@ -328,17 +328,19 @@ public class Examples {
 
     /** Consume-transform-produce within a transaction. */
     void transactionalProcessing(PulsarClient client) throws Exception {
-        try (var consumer = client.newQueueConsumer(Schema.JSON(Order.class))
+        try (var consumer = client.newQueueConsumer(Schema.json(Order.class))
                      .topic("raw-orders")
                      .subscriptionName("enricher")
                      .subscribe();
-             var producer = client.newProducer(Schema.JSON(EnrichedOrder.class))
+             var producer = client.newProducer(Schema.json(EnrichedOrder.class))
                      .topic("enriched-orders")
                      .create()) {
 
             while (true) {
                 Message<Order> msg = consumer.receive(Duration.ofSeconds(10));
-                if (msg == null) continue;
+                if (msg == null) {
+                    continue;
+                }
 
                 // Start transaction
                 Transaction txn = client.newTransaction();
@@ -369,7 +371,7 @@ public class Examples {
 
     /** Schedule messages for future delivery. */
     void delayedDelivery(PulsarClient client) throws Exception {
-        try (var producer = client.newProducer(Schema.JSON(Reminder.class))
+        try (var producer = client.newProducer(Schema.json(Reminder.class))
                 .topic("reminders")
                 .create()) {
 
@@ -393,7 +395,7 @@ public class Examples {
 
     /** Subscribe to all topics matching a pattern. */
     void patternSubscription(PulsarClient client) throws Exception {
-        try (var consumer = client.newQueueConsumer(Schema.STRING())
+        try (var consumer = client.newQueueConsumer(Schema.string())
                 .topicsPattern("persistent://public/default/events-.*")
                 .subscriptionName("all-events")
                 .patternAutoDiscoveryPeriod(Duration.ofMinutes(1))
@@ -414,7 +416,7 @@ public class Examples {
     /** Use sync for setup, async for data plane. */
     void mixedSyncAsync(PulsarClient client) throws Exception {
         // Sync creation
-        try (var producer = client.newProducer(Schema.STRING())
+        try (var producer = client.newProducer(Schema.string())
                 .topic("my-topic")
                 .create()) {
 
@@ -442,7 +444,7 @@ public class Examples {
 
     /** Checkpoint consumer — read and checkpoint for external state management. */
     void checkpointConsumer(PulsarClient client) throws Exception {
-        try (var consumer = client.newCheckpointConsumer(Schema.JSON(SensorReading.class))
+        try (var consumer = client.newCheckpointConsumer(Schema.json(SensorReading.class))
                 .topic("sensor-data")
                 .startPosition(Checkpoint.earliest())
                 .create()) {
@@ -469,7 +471,7 @@ public class Examples {
         byte[] saved = loadFromExternalState();
         Checkpoint restored = Checkpoint.fromByteArray(saved);
 
-        try (var consumer = client.newCheckpointConsumer(Schema.JSON(SensorReading.class))
+        try (var consumer = client.newCheckpointConsumer(Schema.json(SensorReading.class))
                 .topic("sensor-data")
                 .startPosition(restored)
                 .create()) {
@@ -477,7 +479,9 @@ public class Examples {
             // Continue processing from where we left off
             while (true) {
                 Message<SensorReading> msg = consumer.receive(Duration.ofSeconds(5));
-                if (msg == null) continue;
+                if (msg == null) {
+                    continue;
+                }
 
                 processSensorReading(msg.value());
             }
@@ -486,7 +490,7 @@ public class Examples {
 
     /** Time-travel seek — rewind to a specific timestamp. */
     void checkpointConsumerSeek(PulsarClient client) throws Exception {
-        try (var consumer = client.newCheckpointConsumer(Schema.STRING())
+        try (var consumer = client.newCheckpointConsumer(Schema.string())
                 .topic("events")
                 .startPosition(Checkpoint.latest())
                 .create()) {
@@ -496,7 +500,9 @@ public class Examples {
 
             while (true) {
                 Message<String> msg = consumer.receive(Duration.ofSeconds(5));
-                if (msg == null) break;
+                if (msg == null) {
+                    break;
+                }
                 System.out.printf("[%s] %s%n", msg.publishTime(), msg.value());
             }
         }
@@ -511,10 +517,18 @@ public class Examples {
     record EnrichedOrder(String orderId, String customer, double amount, String region) {}
     record Reminder(String text) {}
 
-    private void processSensorReading(SensorReading reading) {}
-    private void processOrder(Order order) {}
-    private void saveToExternalState(byte[] data) {}
-    private byte[] loadFromExternalState() { return new byte[0]; }
+    private void processSensorReading(SensorReading reading) {
+    }
+
+    private void processOrder(Order order) {
+    }
+
+    private void saveToExternalState(byte[] data) {
+    }
+
+    private byte[] loadFromExternalState() {
+        return new byte[0];
+    }
     private EnrichedOrder enrich(Order order) {
         return new EnrichedOrder(order.orderId, order.customer, order.amount, "us-east-1");
     }
