@@ -88,8 +88,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import lombok.Cleanup;
-import lombok.Data;
 import lombok.CustomLog;
+import lombok.Data;
 import org.apache.bookkeeper.client.AsyncCallback;
 import org.apache.bookkeeper.client.AsyncCallback.AddCallback;
 import org.apache.bookkeeper.client.BKException;
@@ -2502,7 +2502,9 @@ public class ManagedLedgerTest extends MockedBookKeeperTestCase {
             c1.markDelete(position);
         }
         entryList.forEach(entry -> {
-            log.info().attr("ledgerId", entry.getLedgerId()).attr("entryId", entry.getEntryId()).log("Read entry position");
+            log.info().attr("ledgerId", entry.getLedgerId())
+                    .attr("entryId", entry.getEntryId())
+                    .log("Read entry position");
             entry.release();
         });
 
