@@ -28,7 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerMetadataBuilder;
 import org.apache.bookkeeper.client.api.DigestType;
@@ -43,7 +43,7 @@ import org.apache.bookkeeper.mledger.proto.OffloadDriverMetadata;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.bookkeeper.proto.DataFormats;
 
-@Slf4j
+@CustomLog
 public final class OffloadUtils {
 
     private OffloadUtils() {}
@@ -153,7 +153,7 @@ public final class OffloadUtils {
                 try {
                     addressArrayList.add(BookieId.parse(address));
                 } catch (IllegalArgumentException e) {
-                    log.error("Exception when create BookieId {}. ", address, e);
+                    log.error().attr("address", address).exception(e).log("Exception when create BookieId");
                 }
             });
             builder.newEnsembleEntry(segment.getFirstEntryId(), addressArrayList);
@@ -190,8 +190,11 @@ public final class OffloadUtils {
     public static CompletableFuture<Void> cleanupOffloaded(long ledgerId, UUID uuid, ManagedLedgerConfig mlConfig,
                                      Map<String, String> offloadDriverMetadata, String cleanupReason,
                                      String name, org.apache.bookkeeper.common.util.OrderedScheduler executor) {
-        log.info("[{}] Cleanup offload for ledgerId {} uuid {} because of the reason {}.",
-                name, ledgerId, uuid.toString(), cleanupReason);
+        log.info().attr("name", name)
+                .attr("ledgerId", ledgerId)
+                .attr("uuid", uuid.toString())
+                .attr("cleanupReason", cleanupReason)
+                .log("Cleanup offload");
         Map<String, String> metadataMap = new HashMap<>(offloadDriverMetadata);
         metadataMap.put("ManagedLedgerName", name);
 
@@ -201,8 +204,11 @@ public final class OffloadUtils {
                 () -> mlConfig.getLedgerOffloader().deleteOffloaded(ledgerId, uuid, metadataMap),
                 executor, name).whenComplete((ignored, exception) -> {
             if (exception != null) {
-                log.warn("[{}] Error cleaning up offload for {}, (cleanup reason: {})",
-                        name, ledgerId, cleanupReason, exception);
+                log.warn().attr("name", name)
+                        .attr("ledgerId", ledgerId)
+                        .attr("cleanupReason", cleanupReason)
+                        .exception(exception)
+                        .log("Error cleaning up offload");
             }
         });
     }

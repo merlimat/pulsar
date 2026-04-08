@@ -30,7 +30,7 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.roaringbitmap)
     implementation(libs.jctools.core)
-    implementation(libs.slf4j.api)
+    implementation(libs.slog)
     implementation(libs.simpleclient)
     implementation(libs.commons.lang3)
 
