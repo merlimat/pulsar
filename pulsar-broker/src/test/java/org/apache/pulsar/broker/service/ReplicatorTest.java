@@ -1051,13 +1051,16 @@ public class ReplicatorTest extends ReplicatorTestBase {
         assertMetricDoubleGaugeValue(metrics, OpenTelemetryReplicatorStats.DELAY_GAUGE, attributes,
                 aDouble -> assertThat(aDouble).isGreaterThanOrEqualTo(0.0));
 
-        // Consumer will now drain 1 message and the replication backlog will be cleared
+        // Consumer will now drain 1 message, relaxing the backlog quota on r2
         consumer2.receive(1);
 
-        // Wait until the 2nd message got delivered to consumer
-        consumer2.receive(1);
-
+        // Wait for the replicator to detect the relaxed quota and replicate message 2.
+        // This is more deterministic than waiting on consumer.receive() with a fixed timeout,
+        // since Awaitility polls frequently and has a generous default timeout.
         Awaitility.await().untilAsserted(() -> assertEquals(replicator.computeStats().replicationBacklog, 0));
+
+        // Message 2 has been replicated, so it's immediately available on r2
+        consumer2.receive(1);
         metrics = metricReader1.collectAllMetrics();
         assertMetricLongSumValue(metrics, OpenTelemetryReplicatorStats.BACKLOG_COUNTER, attributes, 0);
         assertMetricDoubleGaugeValue(metrics, OpenTelemetryReplicatorStats.DELAY_GAUGE, attributes, 0.0);
