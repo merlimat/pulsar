@@ -22,9 +22,31 @@ package org.apache.pulsar.client.api.v5.config;
  * Compression codec used for message payloads.
  */
 public enum CompressionType {
+
+    /** No compression. Lowest CPU cost but highest bandwidth and storage usage. */
     NONE,
+
+    /**
+     * LZ4 compression. Very fast compression and decompression with moderate compression ratio.
+     * A good general-purpose default for latency-sensitive and CPU-sensitive workloads.
+     */
     LZ4,
+
+    /**
+     * ZLIB compression. Higher compression ratio than LZ4 but significantly slower.
+     * Prefer {@link #ZSTD} which achieves better compression ratios with faster performance.
+     */
     ZLIB,
+
+    /**
+     * Zstandard compression. Best compression ratio of all options with decompression speed
+     * close to LZ4. Recommended for throughput and storage-optimized workloads.
+     */
     ZSTD,
+
+    /**
+     * Snappy compression. Very fast with a compression profile similar to LZ4.
+     * Useful for compatibility with ecosystems that standardize on Snappy.
+     */
     SNAPPY
 }
