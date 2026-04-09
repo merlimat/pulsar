@@ -1008,7 +1008,9 @@ public class InterceptorsTest extends SharedPulsarBaseTest {
         produceAndConsume(msgCount * 2, producer, reader);
         Assert.assertFalse(interceptor1.encounterException.get());
         Assert.assertTrue(interceptor2.encounterException.get());
-        Assert.assertTrue(interceptor3.encounterException.get());
+        // interceptor3 is on reader2 (listener-based), so messages are delivered asynchronously
+        Awaitility.await().untilAsserted(
+                () -> Assert.assertTrue(interceptor3.encounterException.get()));
         Assert.assertNull(reader.readNext(3, TimeUnit.SECONDS));
     }
 

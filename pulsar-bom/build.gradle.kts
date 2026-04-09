@@ -23,10 +23,8 @@
 
 plugins {
     `java-platform`
+    id("pulsar.publish-conventions")
 }
-
-group = "org.apache.pulsar"
-version = the<VersionCatalogsExtension>().named("libs").findVersion("pulsar").get().requiredVersion
 
 // Allow the platform to depend on other projects
 javaPlatform {
