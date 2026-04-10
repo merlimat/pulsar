@@ -29,6 +29,7 @@ import org.apache.pulsar.client.api.v5.config.BackoffPolicy;
 import org.apache.pulsar.client.api.v5.config.BatchingPolicy;
 import org.apache.pulsar.client.api.v5.config.CompressionPolicy;
 import org.apache.pulsar.client.api.v5.config.CompressionType;
+import org.apache.pulsar.client.api.v5.config.ConnectionPolicy;
 import org.apache.pulsar.client.api.v5.config.DeadLetterPolicy;
 import org.apache.pulsar.client.api.v5.config.MemorySize;
 import org.apache.pulsar.client.api.v5.config.SubscriptionInitialPosition;
@@ -64,10 +65,12 @@ public class Examples {
                 .authentication(AuthenticationFactory.token("eyJhbGci..."))
                 .tlsPolicy(TlsPolicy.of("/etc/pulsar/ca.pem"))
                 .operationTimeout(Duration.ofSeconds(30))
-                .connectionTimeout(Duration.ofSeconds(10))
+                .connectionPolicy(ConnectionPolicy.builder()
+                        .connectionTimeout(Duration.ofSeconds(10))
+                        .connectionsPerBroker(2)
+                        .build())
                 .connectionBackoff(BackoffPolicy.exponential(
                         Duration.ofMillis(100), Duration.ofSeconds(30)))
-                .connectionsPerBroker(2)
                 .memoryLimit(MemorySize.ofMegabytes(64))
                 .build()) {
             // use client...

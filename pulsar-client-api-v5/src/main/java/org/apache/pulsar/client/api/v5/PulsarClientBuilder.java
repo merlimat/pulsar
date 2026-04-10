@@ -22,8 +22,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.time.Duration;
 import org.apache.pulsar.client.api.v5.auth.Authentication;
 import org.apache.pulsar.client.api.v5.config.BackoffPolicy;
+import org.apache.pulsar.client.api.v5.config.ConnectionPolicy;
 import org.apache.pulsar.client.api.v5.config.MemorySize;
-import org.apache.pulsar.client.api.v5.config.ProxyProtocol;
 import org.apache.pulsar.client.api.v5.config.TlsPolicy;
 import org.apache.pulsar.client.api.v5.config.TransactionPolicy;
 
@@ -70,8 +70,6 @@ public interface PulsarClientBuilder {
     PulsarClientBuilder authentication(String authPluginClassName, String authParamsString)
             throws PulsarClientException;
 
-    // --- Timeouts ---
-
     /**
      * Timeout for client operations (e.g., creating producers/consumers).
      *
@@ -81,64 +79,14 @@ public interface PulsarClientBuilder {
     PulsarClientBuilder operationTimeout(Duration timeout);
 
     /**
-     * Timeout for establishing a TCP connection to the broker.
+     * Configure connection-level settings such as timeouts, pool size, threading,
+     * keep-alive, and proxy configuration.
      *
-     * @param timeout the maximum duration to wait for a TCP connection to be established
+     * @param policy the connection policy
      * @return this builder instance for chaining
+     * @see ConnectionPolicy#builder()
      */
-    PulsarClientBuilder connectionTimeout(Duration timeout);
-
-    // --- Threading ---
-
-    /**
-     * Number of I/O threads for managing connections and reading data.
-     *
-     * @param numIoThreads the number of I/O threads to use
-     * @return this builder instance for chaining
-     */
-    PulsarClientBuilder ioThreads(int numIoThreads);
-
-    /**
-     * Number of threads for callbacks.
-     *
-     * @param numCallbackThreads the number of threads dedicated to message listener callbacks
-     * @return this builder instance for chaining
-     */
-    PulsarClientBuilder callbackThreads(int numCallbackThreads);
-
-    // --- Connection pool ---
-
-    /**
-     * Maximum number of TCP connections per broker.
-     *
-     * @param connectionsPerBroker the maximum number of connections to maintain per broker
-     * @return this builder instance for chaining
-     */
-    PulsarClientBuilder connectionsPerBroker(int connectionsPerBroker);
-
-    /**
-     * Enable TCP no-delay (disable Nagle's algorithm).
-     *
-     * @param enableTcpNoDelay {@code true} to enable TCP no-delay, {@code false} to use Nagle's algorithm
-     * @return this builder instance for chaining
-     */
-    PulsarClientBuilder enableTcpNoDelay(boolean enableTcpNoDelay);
-
-    /**
-     * Interval for sending keep-alive probes on idle connections.
-     *
-     * @param interval the duration between keep-alive probes
-     * @return this builder instance for chaining
-     */
-    PulsarClientBuilder keepAliveInterval(Duration interval);
-
-    /**
-     * Maximum idle time before a connection is closed.
-     *
-     * @param duration the maximum idle duration before a connection is eligible for closure
-     * @return this builder instance for chaining
-     */
-    PulsarClientBuilder connectionMaxIdleTime(Duration duration);
+    PulsarClientBuilder connectionPolicy(ConnectionPolicy policy);
 
     /**
      * Set the transaction policy.
@@ -161,34 +109,28 @@ public interface PulsarClientBuilder {
      */
     PulsarClientBuilder tlsPolicy(TlsPolicy policy);
 
-    // --- Proxy ---
-
-    /**
-     * Connect through a proxy.
-     *
-     * @param proxyServiceUrl the URL of the proxy service
-     * @param proxyProtocol the protocol to use when connecting through the proxy
-     * @return this builder instance for chaining
-     */
-    PulsarClientBuilder proxyServiceUrl(String proxyServiceUrl, ProxyProtocol proxyProtocol);
-
     // --- Observability ---
 
     /**
-     * Set the OpenTelemetry instance for metrics and tracing.
+     * Provide a custom {@link OpenTelemetry} instance for metrics and tracing.
      *
-     * @param openTelemetry the OpenTelemetry instance to use for emitting metrics and traces
+     * <p>If not set, the client creates its own internal instance that exports metrics
+     * (via a Prometheus-compatible endpoint) with tracing disabled.
+     *
+     * <p>When a custom instance is provided, the client uses whatever {@code MeterProvider}
+     * and {@code TracerProvider} it contains. This means:
+     * <ul>
+     *   <li>To keep metrics only (no tracing), configure the instance with a
+     *       {@code MeterProvider} and leave the {@code TracerProvider} as no-op.</li>
+     *   <li>To enable distributed tracing, configure the instance with both a
+     *       {@code MeterProvider} and a {@code TracerProvider}.</li>
+     *   <li>To disable all telemetry, pass {@link OpenTelemetry#noop()}.</li>
+     * </ul>
+     *
+     * @param openTelemetry the OpenTelemetry instance to use
      * @return this builder instance for chaining
      */
     PulsarClientBuilder openTelemetry(OpenTelemetry openTelemetry);
-
-    /**
-     * Enable distributed tracing.
-     *
-     * @param enable {@code true} to enable distributed tracing, {@code false} to disable it
-     * @return this builder instance for chaining
-     */
-    PulsarClientBuilder enableTracing(boolean enable);
 
     // --- Memory ---
 
