@@ -17,8 +17,6 @@
 # under the License.
 #
 [versions]
-# Core
-pulsar = "4.3.0-SNAPSHOT"
 # Docker
 docker-jdk = "21"
 pulsar-client-python = "3.10.0"
@@ -29,7 +27,7 @@ bookkeeper = "4.17.3"
 zookeeper = "3.9.5"
 netty = "4.1.132.Final"
 netty-iouring = "0.0.26.Final"
-jetty = "12.1.5"
+jetty = "12.1.6"
 jersey = "2.42"
 jackson = "2.18.6"
 protobuf = "3.25.5"

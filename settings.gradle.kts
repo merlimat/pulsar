@@ -73,7 +73,6 @@ include("bouncy-castle:bouncy-castle-bc")
 project(":bouncy-castle:bouncy-castle-bc").projectDir = file("bouncy-castle/bc")
 include("bouncy-castle:bcfips")
 include("pulsar-config-validation")
-include("structured-event-log")
 include("pulsar-client-api")
 
 // Tier 1
