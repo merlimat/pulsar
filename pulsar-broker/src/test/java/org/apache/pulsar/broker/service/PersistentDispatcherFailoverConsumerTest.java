@@ -112,6 +112,7 @@ public class PersistentDispatcherFailoverConsumerTest {
         svcConfig.setClusterName("pulsar-cluster");
         svcConfig.setSystemTopicEnabled(false);
         svcConfig.setTopicLevelPoliciesEnabled(false);
+        svcConfig.setActiveConsumerFailoverDelayTimeMillis(0);
         pulsarTestContext = PulsarTestContext.builderForNonStartableContext()
                 .config(svcConfig)
                 .spyByDefault()
