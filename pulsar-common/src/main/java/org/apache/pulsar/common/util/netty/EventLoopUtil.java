@@ -20,11 +20,13 @@ package org.apache.pulsar.common.util.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.SelectStrategy;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.epoll.EpollMode;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
@@ -35,11 +37,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.incubator.channel.uring.IOUring;
-import io.netty.incubator.channel.uring.IOUringDatagramChannel;
-import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
-import io.netty.incubator.channel.uring.IOUringServerSocketChannel;
-import io.netty.incubator.channel.uring.IOUringSocketChannel;
+import io.netty.channel.uring.IoUring;
+import io.netty.channel.uring.IoUringDatagramChannel;
+import io.netty.channel.uring.IoUringIoHandler;
+import io.netty.channel.uring.IoUringServerSocketChannel;
+import io.netty.channel.uring.IoUringSocketChannel;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
 import lombok.CustomLog;
@@ -53,12 +55,24 @@ public class EventLoopUtil {
     private static final String ENABLE_IO_URING = "pulsar.enableUring";
 
     /**
+     * Marker subclass so we can distinguish io_uring-backed event loops via instanceof.
+     * Netty 4.2 removed the dedicated {@code IOUringEventLoopGroup} class in favor of the
+     * generic {@link MultiThreadIoEventLoopGroup} + {@link IoUringIoHandler} pair, which
+     * makes io_uring groups indistinguishable by type from any other MultiThreadIoEventLoopGroup.
+     */
+    private static final class IoUringMultiThreadIoEventLoopGroup extends MultiThreadIoEventLoopGroup {
+        IoUringMultiThreadIoEventLoopGroup(int nThreads, ThreadFactory threadFactory) {
+            super(nThreads, threadFactory, IoUringIoHandler.newFactory());
+        }
+    }
+
+    /**
      * @return an EventLoopGroup suitable for the current platform
      */
     public static EventLoopGroup newEventLoopGroup(int nThreads, boolean enableBusyWait, ThreadFactory threadFactory) {
         if (Epoll.isAvailable()) {
             if (isIoUringEnabledAndAvailable()) {
-                return new IOUringEventLoopGroup(nThreads, threadFactory);
+                return new IoUringMultiThreadIoEventLoopGroup(nThreads, threadFactory);
             } else {
                 if (!enableBusyWait) {
                     // Regular Epoll based event loop
@@ -96,8 +110,8 @@ public class EventLoopUtil {
         String ioUringSetting = System.getProperty(ENABLE_IO_URING);
         boolean ioUringEnabled = "1".equalsIgnoreCase(ioUringSetting) || "true".equalsIgnoreCase(ioUringSetting);
         if (ioUringEnabled) {
-            // Throw exception if IOUring cannot be used
-            IOUring.ensureAvailability();
+            // Throw exception if IoUring cannot be used
+            IoUring.ensureAvailability();
         }
         return ioUringEnabled;
     }
@@ -109,8 +123,8 @@ public class EventLoopUtil {
      * @return
      */
     public static Class<? extends SocketChannel> getClientSocketChannelClass(EventLoopGroup eventLoopGroup) {
-        if (eventLoopGroup instanceof IOUringEventLoopGroup) {
-            return IOUringSocketChannel.class;
+        if (eventLoopGroup instanceof IoUringMultiThreadIoEventLoopGroup) {
+            return IoUringSocketChannel.class;
         } else if (eventLoopGroup instanceof EpollEventLoopGroup) {
             return EpollSocketChannel.class;
         } else {
@@ -128,7 +142,7 @@ public class EventLoopUtil {
     public static Class<? extends SocketChannel> getClientSocketChannelClass() {
         if (Epoll.isAvailable()) {
             if (isIoUringEnabledAndAvailable()) {
-                return IOUringSocketChannel.class;
+                return IoUringSocketChannel.class;
             } else {
                 return EpollSocketChannel.class;
             }
@@ -138,8 +152,8 @@ public class EventLoopUtil {
     }
 
     public static Class<? extends ServerSocketChannel> getServerSocketChannelClass(EventLoopGroup eventLoopGroup) {
-        if (eventLoopGroup instanceof IOUringEventLoopGroup) {
-            return IOUringServerSocketChannel.class;
+        if (eventLoopGroup instanceof IoUringMultiThreadIoEventLoopGroup) {
+            return IoUringServerSocketChannel.class;
         } else if (eventLoopGroup instanceof EpollEventLoopGroup) {
             return EpollServerSocketChannel.class;
         } else {
@@ -157,7 +171,7 @@ public class EventLoopUtil {
     public static Class<? extends ServerSocketChannel> getServerSocketChannelClass() {
         if (Epoll.isAvailable()) {
             if (isIoUringEnabledAndAvailable()) {
-                return IOUringServerSocketChannel.class;
+                return IoUringServerSocketChannel.class;
             } else {
                 return EpollServerSocketChannel.class;
             }
@@ -167,8 +181,8 @@ public class EventLoopUtil {
     }
 
     public static Class<? extends DatagramChannel> getDatagramChannelClass(EventLoopGroup eventLoopGroup) {
-        if (eventLoopGroup instanceof IOUringEventLoopGroup) {
-            return IOUringDatagramChannel.class;
+        if (eventLoopGroup instanceof IoUringMultiThreadIoEventLoopGroup) {
+            return IoUringDatagramChannel.class;
         } else if (eventLoopGroup instanceof EpollEventLoopGroup) {
             return EpollDatagramChannel.class;
         } else {
@@ -186,7 +200,7 @@ public class EventLoopUtil {
     public static Class<? extends DatagramChannel> getDatagramChannelClass() {
         if (Epoll.isAvailable()) {
             if (isIoUringEnabledAndAvailable()) {
-                return IOUringDatagramChannel.class;
+                return IoUringDatagramChannel.class;
             } else {
                 return EpollDatagramChannel.class;
             }

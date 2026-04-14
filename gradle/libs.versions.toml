@@ -25,8 +25,7 @@ checkstyle = "13.3.0"
 # Major frameworks
 bookkeeper = "4.17.3"
 zookeeper = "3.9.5"
-netty = "4.1.132.Final"
-netty-iouring = "0.0.26.Final"
+netty = "4.2.12.Final"
 jetty = "12.1.6"
 jersey = "2.42"
 jackson = "2.21.2"
@@ -215,8 +214,8 @@ netty-resolver-dns-native-macos = { module = "io.netty:netty-resolver-dns-native
 netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty" }
 netty-transport-native-unix-common = { module = "io.netty:netty-transport-native-unix-common", version.ref = "netty" }
 netty-tcnative-boringssl-static = { module = "io.netty:netty-tcnative-boringssl-static", version.ref = "netty-tcnative" }
-netty-incubator-transport-classes-io_uring = { module = "io.netty.incubator:netty-incubator-transport-classes-io_uring", version.ref = "netty-iouring" }
-netty-incubator-transport-native-io-uring = { module = "io.netty.incubator:netty-incubator-transport-native-io_uring", version.ref = "netty-iouring" }
+netty-transport-classes-io_uring = { module = "io.netty:netty-transport-classes-io_uring", version.ref = "netty" }
+netty-transport-native-io-uring = { module = "io.netty:netty-transport-native-io_uring", version.ref = "netty" }
 netty-reactive-streams = { module = "com.typesafe.netty:netty-reactive-streams", version.ref = "netty-reactive-streams" }
 # Protobuf / gRPC
 protobuf-bom = { module = "com.google.protobuf:protobuf-bom", version.ref = "protobuf" }
