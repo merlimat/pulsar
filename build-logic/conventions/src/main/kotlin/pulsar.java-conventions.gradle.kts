@@ -171,6 +171,18 @@ tasks.withType<Test>().configureEach {
         "-XX:+EnableDynamicAgentLoading",
         "-Xshare:off",
         "-Dio.netty.tryReflectionSetAccessible=true",
+        // Netty 4.2 changed the default SslContextBuilder.endpointIdentificationAlgorithm
+        // from null to "HTTPS", which enables hostname verification on every TLS client
+        // connection that does not explicitly set the algorithm. Pulsar's TLS tests were
+        // written against the 4.1 default (no verification unless explicitly configured),
+        // and several of them either use certificates without matching hostnames or
+        // deliberately exercise "hostname verification disabled" paths. Restore the 4.1
+        // default for the test JVM so those tests keep running. Production launch scripts
+        // are deliberately not changed; a follow-up PR should audit Pulsar's
+        // SslContextBuilder call sites and explicitly set endpointIdentificationAlgorithm
+        // based on the user's hostnameVerification configuration, after which this test
+        // override can be removed.
+        "-Dio.netty.handler.ssl.defaultEndpointVerificationAlgorithm=NONE",
         "-Dpulsar.allocator.pooled=true",
         "-Dpulsar.allocator.exit_on_oom=false",
         "-Dpulsar.allocator.out_of_memory_policy=FallbackToHeap",
