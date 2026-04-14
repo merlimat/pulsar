@@ -36,15 +36,6 @@ configurations.all {
     // NoSuchMethodError in Log4jLoggerFactory at test startup.
     exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
 
-    // Exclude the io.netty.incubator io_uring artifacts pulled in transitively
-    // by BookKeeper (bookkeeper-common and stream-storage-java-client still
-    // reference the 0.0.26.Final incubator jars). io_uring has graduated from
-    // incubator to core Netty in 4.2 (io.netty:netty-transport-*-io_uring);
-    // the incubator jar is compiled against Netty 4.1 internals and is not
-    // safe to leave on the 4.2 classpath. Pulsar uses the core io_uring API
-    // via EventLoopUtil.
-    exclude(group = "io.netty.incubator")
-
     // Force Jackson version to match the version catalog. Transitive dependencies
     // (e.g. from jackson-bom) can pull in newer versions that break API compatibility
     // (EnumResolver.constructUsingToString signature changed in 2.19+).
