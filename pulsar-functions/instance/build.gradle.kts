@@ -18,10 +18,11 @@
  */
 
 plugins {
-    id("pulsar.java-conventions")
+    id("pulsar.public-java-library-conventions")
 }
 
 dependencies {
+    implementation(libs.slog)
     api(project(":pulsar-functions:pulsar-functions-utils"))
     implementation(project(":pulsar-functions:pulsar-functions-api"))
     implementation(project(":pulsar-functions:pulsar-functions-secrets"))

@@ -23,7 +23,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
-    id("pulsar.java-conventions")
+    id("pulsar.public-java-library-conventions")
     id("pulsar.test-certs-conventions")
     alias(libs.plugins.lightproto)
 }
@@ -85,10 +85,10 @@ sourceSets["main"].java.srcDir(generatePulsarVersion.map { layout.buildDirectory
 
 
 dependencies {
+    implementation(libs.slog)
     api(project(":pulsar-client-api"))
     api(project(":pulsar-client-admin-api"))
 
-    implementation(libs.slf4j.api)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.module.parameter.names)
     implementation(libs.jackson.datatype.jsr310)

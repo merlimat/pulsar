@@ -18,12 +18,13 @@
  */
 
 plugins {
-    id("pulsar.java-conventions")
+    id("pulsar.public-java-library-conventions")
     id("pulsar.test-certs-conventions")
 }
 
 dependencies {
     api(project(":pulsar-metadata"))
+    implementation(libs.slog)
     implementation(libs.guava)
     implementation(libs.commons.lang3)
     implementation(libs.bookkeeper.server)

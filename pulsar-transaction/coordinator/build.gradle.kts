@@ -18,11 +18,12 @@
  */
 
 plugins {
-    id("pulsar.java-conventions")
+    id("pulsar.public-java-library-conventions")
     alias(libs.plugins.lightproto)
 }
 
 dependencies {
+    implementation(libs.slog)
     api(project(":pulsar-common"))
     implementation(project(":pulsar-opentelemetry"))
     implementation(project(":managed-ledger"))

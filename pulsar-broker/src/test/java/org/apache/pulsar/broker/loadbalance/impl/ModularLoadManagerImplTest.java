@@ -1063,6 +1063,11 @@ public class ModularLoadManagerImplTest {
         executorService.submit(latch::countDown);
         latch.await();
 
+        // Ensure lm1 has loaded broker data from both brokers before writing bundle data.
+        // Without this, lm1 may only see bundles from one broker, causing fewer than
+        // bundleNumbers bundles to be written to the metadata store.
+        lm1.updateAll();
+
         loadManagerWrapper.writeResourceQuotasToZooKeeper();
 
         MetadataCache<BundleData> bundlesCache = pulsar1.getLocalMetadataStore().getMetadataCache(BundleData.class);

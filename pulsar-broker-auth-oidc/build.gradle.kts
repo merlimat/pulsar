@@ -18,11 +18,12 @@
  */
 
 plugins {
-    id("pulsar.java-conventions")
+    id("pulsar.public-java-library-conventions")
     id("pulsar.test-certs-conventions")
 }
 
 dependencies {
+    implementation(libs.slog)
     implementation(project(":pulsar-broker-common"))
     implementation(libs.auth0.java.jwt)
     implementation(libs.auth0.jwks.rsa)

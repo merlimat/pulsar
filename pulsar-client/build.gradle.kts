@@ -18,7 +18,7 @@
  */
 
 plugins {
-    id("pulsar.java-conventions")
+    id("pulsar.public-java-library-conventions")
     alias(libs.plugins.protobuf)
 }
 
@@ -45,7 +45,7 @@ dependencies {
     implementation(libs.commons.lang3)
     implementation(libs.asynchttpclient)
     implementation(libs.netty.reactive.streams)
-    implementation(libs.slf4j.api)
+    implementation(libs.slog)
     implementation(libs.commons.codec)
     implementation(libs.sketches.core)
     implementation(libs.gson)

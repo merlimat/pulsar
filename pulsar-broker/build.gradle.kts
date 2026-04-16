@@ -18,13 +18,14 @@
  */
 
 plugins {
-    id("pulsar.java-conventions")
+    id("pulsar.public-java-library-conventions")
     id("pulsar.test-certs-conventions")
     alias(libs.plugins.protobuf)
     alias(libs.plugins.lightproto)
 }
 
 dependencies {
+    implementation(libs.slog)
     api(project(":managed-ledger"))
     api(project(":pulsar-broker-common"))
     implementation(project(":pulsar-client-original"))

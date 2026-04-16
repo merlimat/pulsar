@@ -18,10 +18,11 @@
  */
 
 plugins {
-    id("pulsar.java-conventions")
+    id("pulsar.public-java-library-conventions")
 }
 
 dependencies {
+    implementation(libs.slog)
     compileOnly(project(":pulsar-broker"))
     compileOnly(libs.opentelemetry.api)
     implementation(project(":pulsar-broker-common"))

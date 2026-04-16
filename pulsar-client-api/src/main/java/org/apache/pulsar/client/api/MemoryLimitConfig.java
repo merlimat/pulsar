@@ -16,4 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.pulsar.structuredeventlog;
+
+package org.apache.pulsar.client.api;
+
+/**
+ * Configuration interface for memory limit settings.
+ */
+public interface MemoryLimitConfig {
+
+    /**
+     * Configure a limit on the amount of direct memory that will be allocated by this shared client instance.
+     * <p>
+     * See also {@link ClientBuilder#memoryLimit(long, SizeUnit)}.
+     *
+     * @param memoryLimit the memory limit value, setting this to 0 will disable the limit
+     * @param unit        the memory limit size unit
+     * @return the memory limit configuration instance for chained calls
+     */
+    MemoryLimitConfig memoryLimit(long memoryLimit, SizeUnit unit);
+
+}

@@ -16,12 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.pulsar.structuredeventlog;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+package org.apache.pulsar.client.api;
 
-@Retention(value = RetentionPolicy.RUNTIME)
-public @interface EventGroup {
-    String component();
+
+import io.opentelemetry.api.OpenTelemetry;
+
+/**
+ * Configuration interface for open telemetry settings.
+ */
+public interface OpenTelemetryConfig {
+
+    /**
+     * Configure OpenTelemetry for this shared client instance.
+     * <p>
+     * See also {@link ClientBuilder#openTelemetry(OpenTelemetry)}.
+     *
+     * @param openTelemetry the open telemetry instance
+     * @return the open telemetry configuration instance for chained calls
+     */
+    OpenTelemetryConfig openTelemetry(OpenTelemetry openTelemetry);
+
 }
