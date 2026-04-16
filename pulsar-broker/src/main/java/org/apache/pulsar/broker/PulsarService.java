@@ -1093,7 +1093,7 @@ public class PulsarService implements AutoCloseable, ShutdownService {
                     .attr("bootstrapTimeSeconds", bootstrapTimeSeconds)
                     .attr("bootstrapMessage", bootstrapMessage)
                     .attr("cluster", config.getClusterName())
-                    .attr("config", config)
+                    .attr("configOverrides", PulsarConfigurationLoader.runtimeConfigurationOverrides(config))
                     .log("Messaging service is ready");
 
             state = State.Started;
