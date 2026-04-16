@@ -109,11 +109,11 @@ public class ProxyOriginalClientIPTest extends MockedPulsarServiceBaseTest {
 
             // Validate that the client IP passed in X-Forwarded-For is logged
             assertTrue(consoleCaptor.getStandardOutput().stream()
-                    .anyMatch(line -> line.contains("pulsar-external-web-") && line.contains("RequestLog")
-                            && line.contains("R:11.22.33.44")), "Expected to find client IP in proxy logs");
+                    .anyMatch(line -> line.contains("pulsar-external-web-") && line.contains("HTTP request")
+                            && line.contains("clientAddr=11.22.33.44")), "Expected to find client IP in proxy logs");
             assertTrue(consoleCaptor.getStandardOutput().stream()
-                    .anyMatch(line -> line.contains("pulsar-web-") && line.contains("RequestLog")
-                            && line.contains("R:11.22.33.44")), "Expected to find client IP in broker logs");
+                    .anyMatch(line -> line.contains("pulsar-web-") && line.contains("HTTP request")
+                            && line.contains("clientAddr=11.22.33.44")), "Expected to find client IP in broker logs");
         });
     }
 
@@ -132,11 +132,11 @@ public class ProxyOriginalClientIPTest extends MockedPulsarServiceBaseTest {
 
             // Validate that the client IP passed in HA proxy protocol is logged
             assertTrue(consoleCaptor.getStandardOutput().stream()
-                    .anyMatch(line -> line.contains("pulsar-external-web-") && line.contains("RequestLog")
-                            && line.contains("R:99.22.33.44")), "Expected to find client IP in proxy logs");
+                    .anyMatch(line -> line.contains("pulsar-external-web-") && line.contains("HTTP request")
+                            && line.contains("clientAddr=99.22.33.44")), "Expected to find client IP in proxy logs");
             assertTrue(consoleCaptor.getStandardOutput().stream()
-                    .anyMatch(line -> line.contains("pulsar-web-") && line.contains("RequestLog")
-                            && line.contains("R:99.22.33.44")), "Expected to find client IP in broker logs");
+                    .anyMatch(line -> line.contains("pulsar-web-") && line.contains("HTTP request")
+                            && line.contains("clientAddr=99.22.33.44")), "Expected to find client IP in broker logs");
         });
     }
 
