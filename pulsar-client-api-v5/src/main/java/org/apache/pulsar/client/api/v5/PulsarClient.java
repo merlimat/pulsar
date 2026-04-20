@@ -18,6 +18,7 @@
  */
 package org.apache.pulsar.client.api.v5;
 
+import java.util.concurrent.CompletableFuture;
 import org.apache.pulsar.client.api.v5.internal.PulsarClientProvider;
 import org.apache.pulsar.client.api.v5.schema.Schema;
 
@@ -83,11 +84,24 @@ public interface PulsarClient extends AutoCloseable {
     // --- Transactions ---
 
     /**
-     * Create a new transaction.
+     * Create a new transaction, blocking until it is ready. The transaction timeout is taken
+     * from the client-wide {@link org.apache.pulsar.client.api.v5.config.TransactionPolicy}
+     * configured on {@link PulsarClientBuilder#transactionPolicy}.
      *
      * @return a new {@link Transaction} in the {@link Transaction.State#OPEN} state
+     * @throws PulsarClientException if the transaction cannot be created (e.g., transaction
+     *         coordinator unavailable or the client is closed)
      */
-    Transaction newTransaction();
+    Transaction newTransaction() throws PulsarClientException;
+
+    /**
+     * Asynchronous counterpart of {@link #newTransaction()}.
+     *
+     * @return a {@link CompletableFuture} that completes with a new {@link Transaction} in the
+     *         {@link Transaction.State#OPEN} state, or completes exceptionally with
+     *         {@link PulsarClientException} on failure
+     */
+    CompletableFuture<Transaction> newTransactionAsync();
 
     // --- Lifecycle ---
 
@@ -98,6 +112,14 @@ public interface PulsarClient extends AutoCloseable {
      */
     @Override
     void close() throws PulsarClientException;
+
+    /**
+     * Asynchronous counterpart of {@link #close()}.
+     *
+     * @return a {@link CompletableFuture} that completes when the client has finished closing,
+     *         or completes exceptionally with {@link PulsarClientException} on failure
+     */
+    CompletableFuture<Void> closeAsync();
 
     /**
      * Shutdown the client instance.
