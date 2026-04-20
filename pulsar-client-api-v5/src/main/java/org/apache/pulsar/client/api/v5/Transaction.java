@@ -50,12 +50,10 @@ public interface Transaction {
     /**
      * Abort this transaction, discarding all produced messages and rolling back acknowledgments.
      *
-     * @return always {@code null}; the {@link Void} return type is used so that this method's
-     *         signature is consistent with the asynchronous {@link AsyncTransaction#abort()} API
      * @throws PulsarClientException if the transaction cannot be aborted (e.g., it has already
      *         been committed or encountered an error)
      */
-    Void abort() throws PulsarClientException;
+    void abort() throws PulsarClientException;
 
     /**
      * Return an asynchronous view of this transaction.
