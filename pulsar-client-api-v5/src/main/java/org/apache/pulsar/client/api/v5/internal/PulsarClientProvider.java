@@ -75,7 +75,7 @@ public interface PulsarClientProvider {
 
     <T> Schema<T> avroSchema(Class<T> pojo);
 
-    <T extends com.google.protobuf.GeneratedMessageV3> Schema<T> protobufSchema(Class<T> clazz);
+    <T extends com.google.protobuf.Message> Schema<T> protobufSchema(Class<T> clazz);
 
     Schema<byte[]> autoProduceBytesSchema();
 

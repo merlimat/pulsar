@@ -189,7 +189,7 @@ public interface Schema<T> {
      * @param clazz the Protobuf generated message class
      * @return a {@link Schema} that encodes and decodes the Protobuf message
      */
-    static <T extends com.google.protobuf.GeneratedMessageV3> Schema<T> protobuf(Class<T> clazz) {
+    static <T extends com.google.protobuf.Message> Schema<T> protobuf(Class<T> clazz) {
         return PulsarClientProvider.get().protobufSchema(clazz);
     }
 
