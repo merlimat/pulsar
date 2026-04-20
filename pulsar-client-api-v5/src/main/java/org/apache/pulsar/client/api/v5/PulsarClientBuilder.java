@@ -21,7 +21,6 @@ package org.apache.pulsar.client.api.v5;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Duration;
 import org.apache.pulsar.client.api.v5.auth.Authentication;
-import org.apache.pulsar.client.api.v5.config.BackoffPolicy;
 import org.apache.pulsar.client.api.v5.config.ConnectionPolicy;
 import org.apache.pulsar.client.api.v5.config.MemorySize;
 import org.apache.pulsar.client.api.v5.config.TlsPolicy;
@@ -40,8 +39,6 @@ public interface PulsarClientBuilder {
      *         or connection failure)
      */
     PulsarClient build() throws PulsarClientException;
-
-    // --- Connection ---
 
     /**
      * Set the Pulsar service URL (e.g., {@code pulsar://localhost:6650}).
@@ -96,8 +93,6 @@ public interface PulsarClientBuilder {
      */
     PulsarClientBuilder transactionPolicy(TransactionPolicy policy);
 
-    // --- TLS ---
-
     /**
      * Configure TLS for the client connection.
      *
@@ -108,8 +103,6 @@ public interface PulsarClientBuilder {
      * @see TlsPolicy#ofInsecure()
      */
     PulsarClientBuilder tlsPolicy(TlsPolicy policy);
-
-    // --- Observability ---
 
     /**
      * Provide a custom {@link OpenTelemetry} instance for metrics and tracing.
@@ -131,8 +124,6 @@ public interface PulsarClientBuilder {
      * @return this builder instance for chaining
      */
     PulsarClientBuilder openTelemetry(OpenTelemetry openTelemetry);
-
-    // --- Memory ---
 
     /**
      * Maximum amount of direct memory the client can use for pending messages.
@@ -162,15 +153,4 @@ public interface PulsarClientBuilder {
      * @return this builder instance for chaining
      */
     PulsarClientBuilder description(String description);
-
-    // --- Reconnection backoff ---
-
-    /**
-     * Configure the backoff strategy for broker reconnection attempts.
-     *
-     * @param backoff the backoff policy to use when reconnecting to the broker
-     * @return this builder instance for chaining
-     * @see BackoffPolicy#exponential(Duration, Duration)
-     */
-    PulsarClientBuilder connectionBackoff(BackoffPolicy backoff);
 }

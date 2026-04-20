@@ -36,14 +36,15 @@ public record ConnectionPolicy(
         int ioThreads,
         int callbackThreads,
         String proxyServiceUrl,
-        ProxyProtocol proxyProtocol
+        ProxyProtocol proxyProtocol,
+        BackoffPolicy connectionBackoff
 ) {
 
     /**
      * Create a connection policy with the given parameters.
      *
      * @throws NullPointerException if {@code connectionTimeout}, {@code keepAliveInterval},
-     *         or {@code connectionMaxIdleTime} is null
+     *         {@code connectionMaxIdleTime}, or {@code connectionBackoff} is null
      * @throws IllegalArgumentException if {@code connectionsPerBroker}, {@code ioThreads},
      *         or {@code callbackThreads} is less than 1
      */
@@ -51,6 +52,7 @@ public record ConnectionPolicy(
         Objects.requireNonNull(connectionTimeout, "connectionTimeout must not be null");
         Objects.requireNonNull(keepAliveInterval, "keepAliveInterval must not be null");
         Objects.requireNonNull(connectionMaxIdleTime, "connectionMaxIdleTime must not be null");
+        Objects.requireNonNull(connectionBackoff, "connectionBackoff must not be null");
         if (connectionsPerBroker < 1) {
             throw new IllegalArgumentException("connectionsPerBroker must be >= 1");
         }
@@ -84,6 +86,8 @@ public record ConnectionPolicy(
         private int callbackThreads = 1;
         private String proxyServiceUrl;
         private ProxyProtocol proxyProtocol;
+        private BackoffPolicy connectionBackoff =
+                BackoffPolicy.exponential(Duration.ofMillis(100), Duration.ofSeconds(60));
 
         private Builder() {
         }
@@ -179,6 +183,18 @@ public record ConnectionPolicy(
         }
 
         /**
+         * Backoff strategy for broker reconnection attempts.
+         *
+         * @param connectionBackoff the backoff policy to use when reconnecting to the broker
+         * @return this builder
+         * @see BackoffPolicy#exponential(Duration, Duration)
+         */
+        public Builder connectionBackoff(BackoffPolicy connectionBackoff) {
+            this.connectionBackoff = connectionBackoff;
+            return this;
+        }
+
+        /**
          * Build the {@link ConnectionPolicy}.
          *
          * @return a new {@link ConnectionPolicy} instance
@@ -193,7 +209,8 @@ public record ConnectionPolicy(
                     ioThreads,
                     callbackThreads,
                     proxyServiceUrl,
-                    proxyProtocol
+                    proxyProtocol,
+                    connectionBackoff
             );
         }
     }

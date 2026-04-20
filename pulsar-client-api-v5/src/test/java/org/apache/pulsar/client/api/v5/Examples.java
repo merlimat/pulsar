@@ -68,9 +68,9 @@ public class Examples {
                 .connectionPolicy(ConnectionPolicy.builder()
                         .connectionTimeout(Duration.ofSeconds(10))
                         .connectionsPerBroker(2)
+                        .connectionBackoff(BackoffPolicy.exponential(
+                                Duration.ofMillis(100), Duration.ofSeconds(30)))
                         .build())
-                .connectionBackoff(BackoffPolicy.exponential(
-                        Duration.ofMillis(100), Duration.ofSeconds(30)))
                 .memoryLimit(MemorySize.ofMegabytes(64))
                 .build()) {
             // use client...
