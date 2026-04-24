@@ -183,6 +183,10 @@ public class ConsumerMemoryLimitTest extends SharedPulsarBaseTest {
             Assert.assertNotNull(topic2Message);
             Assert.assertEquals(topic2Consumer.getCurrentReceiverQueueSize(), 1);
         }
+        // Drain the (msgCount+1)-th message so the receiveAsync() below sees an empty buffer and
+        // actually triggers expectMoreIncomingMessages(); otherwise the poll() fast-path in
+        // internalReceiveAsync() returns the buffered message and skips the queue-size expansion.
+        Assert.assertNotNull(topic2Consumer.receive());
 
         // Close topic1Consumer to clear release memory.
         topic1Consumer.close();
