@@ -179,7 +179,7 @@ final class ScalableCheckpointConsumer<T> implements CheckpointConsumer<T>, DagW
      * <p>{@code msg} may be null (timeout or interrupt path); returns it unchanged so the
      * caller can pass through the receive result without an extra null-check.
      */
-    private <M extends Message<T>> M advanceCheckpoint(M msg) {
+    private Message<T> advanceCheckpoint(Message<T> msg) {
         if (msg != null && msg.id() instanceof MessageIdV5 id) {
             lastReceivedPositions.put(id.segmentId(), id.v4MessageId());
         }
