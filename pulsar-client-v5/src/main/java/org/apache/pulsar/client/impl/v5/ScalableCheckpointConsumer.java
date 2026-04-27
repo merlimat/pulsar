@@ -122,7 +122,7 @@ final class ScalableCheckpointConsumer<T> implements CheckpointConsumer<T>, DagW
     @Override
     public Message<T> receive() throws PulsarClientException {
         try {
-            return messageQueue.take();
+            return advanceCheckpoint(messageQueue.take());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new PulsarClientException("Receive interrupted", e);
@@ -132,7 +132,7 @@ final class ScalableCheckpointConsumer<T> implements CheckpointConsumer<T>, DagW
     @Override
     public Message<T> receive(Duration timeout) throws PulsarClientException {
         try {
-            return messageQueue.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
+            return advanceCheckpoint(messageQueue.poll(timeout.toMillis(), TimeUnit.MILLISECONDS));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new PulsarClientException("Receive interrupted", e);
@@ -154,14 +154,36 @@ final class ScalableCheckpointConsumer<T> implements CheckpointConsumer<T>, DagW
                 if (msg == null) {
                     break;
                 }
-                batch.add(msg);
+                batch.add(advanceCheckpoint(msg));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new PulsarClientException("Receive interrupted", e);
             }
-            messageQueue.drainTo(batch, maxMessages - batch.size());
+            // Drain whatever else is immediately ready up to maxMessages.
+            List<Message<T>> drained = new ArrayList<>();
+            messageQueue.drainTo(drained, maxMessages - batch.size());
+            for (Message<T> drainedMsg : drained) {
+                batch.add(advanceCheckpoint(drainedMsg));
+            }
         }
         return new MessagesV5<>(batch);
+    }
+
+    /**
+     * Update the checkpoint position for the segment this message belongs to. Called as
+     * messages cross the boundary from the wire-buffer to the application — that's the
+     * point at which a subsequent {@link #checkpoint()} should reflect "I have processed
+     * this message", so a {@link #seek(Checkpoint)} back to that checkpoint redelivers
+     * everything after it.
+     *
+     * <p>{@code msg} may be null (timeout or interrupt path); returns it unchanged so the
+     * caller can pass through the receive result without an extra null-check.
+     */
+    private <M extends Message<T>> M advanceCheckpoint(M msg) {
+        if (msg != null && msg.id() instanceof MessageIdV5 id) {
+            lastReceivedPositions.put(id.segmentId(), id.v4MessageId());
+        }
+        return msg;
     }
 
     @Override
@@ -348,7 +370,12 @@ final class ScalableCheckpointConsumer<T> implements CheckpointConsumer<T>, DagW
 
     private void startReadLoop(Reader<T> reader, long segmentId) {
         reader.readNextAsync().thenAccept(v4Msg -> {
-            lastReceivedPositions.put(segmentId, v4Msg.getMessageId());
+            // Don't advance the checkpoint here — the read loop pre-fetches into the
+            // queue, so updating per-segment positions on wire-receive would skip
+            // messages that the application hasn't pulled yet (e.g., a checkpoint()
+            // taken right after the app received message N could already point past
+            // N+1 if the read loop got ahead). The advance happens in receive() /
+            // receiveMulti() instead, where the message crosses into application code.
             messageQueue.add(new MessageV5<>(v4Msg, segmentId));
             if (!closed) {
                 startReadLoop(reader, segmentId);
