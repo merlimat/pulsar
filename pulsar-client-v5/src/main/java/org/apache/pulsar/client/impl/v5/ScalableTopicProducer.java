@@ -160,12 +160,17 @@ final class ScalableTopicProducer<T> implements Producer<T>, DagWatchClient.Layo
                         eventTime, sequenceId, deliverAfter, deliverAt, replicationClusters)
                         .send();
                 return new MessageIdV5(v4MsgId, segmentId);
-            } catch (org.apache.pulsar.client.api.PulsarClientException.TopicTerminatedException e) {
-                // Segment was terminated (split/merge) — remove stale producer and retry
-                // with the updated layout (which should arrive via DagWatchClient)
+            } catch (org.apache.pulsar.client.api.PulsarClientException.TopicTerminatedException
+                     | org.apache.pulsar.client.api.PulsarClientException.AlreadyClosedException e) {
+                // The segment was sealed (split/merge). We may observe this either as
+                // TopicTerminated (broker reply to a still-open producer) or AlreadyClosed
+                // (the v4 producer noticed first and shut itself down). Either way, drop
+                // the stale per-segment producer and retry — the DAG watch will deliver
+                // the new layout shortly, and routeMessage on the next attempt will land
+                // on an active child.
                 log.info().attr("segmentId", segmentId)
                         .attr("attempt", attempt + 1)
-                        .log("Segment terminated, waiting for layout update");
+                        .log("Segment sealed, waiting for layout update");
                 segmentProducers.remove(segmentId);
                 try {
                     Thread.sleep(100L * (attempt + 1));
@@ -221,10 +226,14 @@ final class ScalableTopicProducer<T> implements Producer<T>, DagWatchClient.Layo
                 .exceptionallyCompose(ex -> {
                     Throwable cause = ex instanceof java.util.concurrent.CompletionException
                             ? ex.getCause() : ex;
-                    if (cause instanceof org.apache.pulsar.client.api.PulsarClientException
-                            .TopicTerminatedException && attempt < 3) {
+                    boolean segmentSealed = cause
+                            instanceof org.apache.pulsar.client.api.PulsarClientException
+                                    .TopicTerminatedException
+                            || cause instanceof org.apache.pulsar.client.api.PulsarClientException
+                                    .AlreadyClosedException;
+                    if (segmentSealed && attempt < 3) {
                         log.info().attr("segmentId", segmentId)
-                                .attr("attempt", attempt + 1).log("Segment terminated, retrying");
+                                .attr("attempt", attempt + 1).log("Segment sealed, retrying");
                         segmentProducers.remove(segmentId);
                         return CompletableFuture.supplyAsync(() -> null,
                                 CompletableFuture.delayedExecutor(
