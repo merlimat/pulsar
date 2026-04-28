@@ -32,18 +32,68 @@ import org.awaitility.Awaitility;
 import org.testng.annotations.Test;
 
 /**
- * Coverage for multi-generation DAG-following: an existing subscription must transparently
- * follow a chain of splits, draining each generation in order without dropping or
- * duplicating messages.
- *
- * <p>{@link V5SegmentSplitTest} covers a single split; this exercises a chain (split,
- * then split one of the children) with a producer + consumer running throughout.
- *
- * <p><b>Known gap (not asserted here):</b> a brand-new subscription created with EARLIEST
- * after a split currently only sees the active children's data, not the sealed parent.
- * Replaying sealed-segment data for new subscriptions is a separate feature.
+ * Coverage for DAG-following on the QueueConsumer:
+ * <ul>
+ *   <li>An existing subscription transparently drains across a chain of splits.</li>
+ *   <li>A brand-new subscription created with EARLIEST after a split replays the sealed
+ *       parent's data before transitioning onto the active children — the QueueConsumer
+ *       subscribes to every segment in the DAG (active + sealed), not just the active
+ *       ones.</li>
+ * </ul>
  */
 public class V5DAGFollowingTest extends V5ClientBaseTest {
+
+    @Test
+    public void testNewEarliestSubscriptionReplaysSealedParent() throws Exception {
+        String topic = newScalableTopic(1);
+
+        @Cleanup
+        Producer<String> producer = v5Client.newProducer(Schema.string())
+                .topic(topic)
+                .create();
+
+        // Write data to the only initial segment, then split it. After the split the
+        // parent is sealed and two children are active.
+        int parentBatch = 30;
+        Set<String> sent = new HashSet<>();
+        for (int i = 0; i < parentBatch; i++) {
+            String v = "parent-" + i;
+            producer.newMessage().key("k-" + i).value(v).send();
+            sent.add(v);
+        }
+
+        admin.scalableTopics().splitSegment(topic, activeIds(topic).get(0));
+        Awaitility.await().untilAsserted(() -> assertEquals(activeIds(topic).size(), 2));
+
+        // Produce more — these route through the new active children.
+        int childBatch = 30;
+        for (int i = 0; i < childBatch; i++) {
+            String v = "child-" + i;
+            producer.newMessage().key("k-child-" + i).value(v).send();
+            sent.add(v);
+        }
+
+        // Brand-new subscription with EARLIEST. It must see both the sealed parent's
+        // backlog and the children's data, in some order.
+        @Cleanup
+        QueueConsumer<String> consumer = v5Client.newQueueConsumer(Schema.string())
+                .topic(topic)
+                .subscriptionName("new-earliest-replay")
+                .subscriptionInitialPosition(SubscriptionInitialPosition.EARLIEST)
+                .subscribe();
+
+        Set<String> received = new HashSet<>();
+        int total = parentBatch + childBatch;
+        for (int i = 0; i < total; i++) {
+            Message<String> msg = consumer.receive(Duration.ofSeconds(10));
+            assertNotNull(msg, "missed message #" + i
+                    + " (received so far: " + received.size() + "/" + total + ")");
+            received.add(msg.value());
+            consumer.acknowledge(msg.id());
+        }
+        assertEquals(received, sent,
+                "new EARLIEST subscription must replay sealed-parent + children");
+    }
 
     @Test
     public void testMultiGenerationDAGFollowing() throws Exception {

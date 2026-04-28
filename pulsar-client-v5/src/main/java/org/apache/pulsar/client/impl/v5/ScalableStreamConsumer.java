@@ -274,23 +274,17 @@ final class ScalableStreamConsumer<T> implements StreamConsumer<T>, DagWatchClie
     }
 
     private CompletableFuture<Void> subscribeSegments(ClientSegmentLayout layout) {
+        // The stream consumer is controller-driven: it only subscribes to the segments
+        // the controller currently designates as active. When a segment moves out of the
+        // active set (because of a split or merge), we leave its v4 consumer alive so
+        // pending acks for messages already pulled from it can still be forwarded; the
+        // receive loop closes the consumer naturally once it sees TopicTerminated.
         var activeIds = ConcurrentHashMap.<Long>newKeySet();
         for (var seg : layout.activeSegments()) {
             activeIds.add(seg.segmentId());
         }
 
-        // Close consumers for segments that are no longer active (fire-and-forget).
-        for (var entry : segmentConsumers.entrySet()) {
-            if (!activeIds.contains(entry.getKey())) {
-                log.info().attr("segmentId", entry.getKey())
-                        .log("Closing consumer for sealed segment");
-                entry.getValue().thenAccept(c -> c.closeAsync());
-                segmentConsumers.remove(entry.getKey());
-                latestDelivered.remove(entry.getKey());
-            }
-        }
-
-        // Subscribe to new segments asynchronously.
+        // Subscribe to newly-active segments asynchronously.
         List<CompletableFuture<?>> futures = new ArrayList<>();
         for (var seg : layout.activeSegments()) {
             futures.add(segmentConsumers.computeIfAbsent(seg.segmentId(),
@@ -346,11 +340,30 @@ final class ScalableStreamConsumer<T> implements StreamConsumer<T>, DagWatchClie
                 startReceiveLoop(v4Consumer, segmentId);
             }
         }).exceptionally(ex -> {
-            if (!closed) {
-                log.warn().attr("segmentId", segmentId)
-                        .exception(ex).log("Error receiving from segment, retrying");
-                startReceiveLoop(v4Consumer, segmentId);
+            Throwable cause = ex instanceof java.util.concurrent.CompletionException ce
+                    && ce.getCause() != null ? ce.getCause() : ex;
+            if (closed
+                    || cause instanceof org.apache.pulsar.client.api.PulsarClientException
+                            .AlreadyClosedException) {
+                // The whole consumer is shutting down or the v4 consumer was closed
+                // externally; stop the receive loop without touching the map.
+                return null;
             }
+            if (cause instanceof org.apache.pulsar.client.api.PulsarClientException
+                    .TopicTerminatedException) {
+                // Segment fully drained server-side. Drop it from the map and close the
+                // v4 consumer; pending acks from this point on are no-ops (cursor is at
+                // the end and the entry is gone).
+                log.info().attr("segmentId", segmentId)
+                        .log("Sealed segment drained, closing v4 consumer");
+                segmentConsumers.remove(segmentId);
+                latestDelivered.remove(segmentId);
+                v4Consumer.closeAsync();
+                return null;
+            }
+            log.warn().attr("segmentId", segmentId)
+                    .exception(ex).log("Error receiving from segment, retrying");
+            startReceiveLoop(v4Consumer, segmentId);
             return null;
         });
     }
