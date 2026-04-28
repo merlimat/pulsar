@@ -31,6 +31,7 @@ import org.apache.pulsar.client.api.v5.config.EncryptionPolicy;
 import org.apache.pulsar.client.api.v5.config.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.v5.schema.Schema;
 import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
+import org.apache.pulsar.common.api.proto.ScalableConsumerType;
 import org.apache.pulsar.common.naming.TopicName;
 
 /**
@@ -74,16 +75,17 @@ final class StreamConsumerBuilderV5<T> implements StreamConsumerBuilder<T> {
         TopicName topic = V5Utils.asScalableTopicName(topicName);
         // Default the consumer name to a stable random when the user didn't set one —
         // ScalableConsumerClient uses it as the registration key with the controller.
+        // Use a full UUID (~122 bits of entropy) so the registration key is unique in
+        // practice, even across many concurrent attaches.
         if (conf.getConsumerName() == null || conf.getConsumerName().isEmpty()) {
-            conf.setConsumerName("v5-stream-"
-                    + java.util.UUID.randomUUID().toString().substring(0, 8));
+            conf.setConsumerName("v5-stream-" + java.util.UUID.randomUUID());
         }
         ScalableConsumerClient session = new ScalableConsumerClient(
                 client.v4Client(),
                 topic,
                 conf.getSubscriptionName(),
                 conf.getConsumerName(),
-                org.apache.pulsar.common.api.proto.ScalableConsumerType.STREAM);
+                ScalableConsumerType.STREAM);
 
         return session.start()
                 .thenCompose(initialAssignment -> ScalableStreamConsumer.createAsync(

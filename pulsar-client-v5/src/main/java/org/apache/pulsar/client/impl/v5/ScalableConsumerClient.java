@@ -19,6 +19,8 @@
 package org.apache.pulsar.client.impl.v5;
 
 import io.github.merlimat.slog.Logger;
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -91,10 +93,37 @@ final class ScalableConsumerClient implements ScalableConsumerSession, AutoClose
     }
 
     /**
-     * Send the subscribe command and complete with the initial assignment.
+     * Resolve the controller-leader broker URL via a DAG-watch lookup, open a
+     * connection to it directly (no v4 topic lookup — scalable topic URIs aren't
+     * resolvable through the v4 lookup service), then send the subscribe command and
+     * complete with the initial assignment.
      */
     CompletableFuture<List<ActiveSegment>> start() {
-        v4Client.getConnection(topicName.toString())
+        DagWatchClient watch = new DagWatchClient(v4Client, topicName);
+        watch.start()
+                .thenCompose(layout -> {
+                    String controllerUrl = layout.controllerBrokerUrl();
+                    if (controllerUrl == null || controllerUrl.isEmpty()) {
+                        // Controller leader election hasn't completed yet (or the broker
+                        // doesn't advertise the URL). Fall back to the configured
+                        // service URL — any broker will forward the subscribe request
+                        // to the controller via getOrCreateController.
+                        log.info()
+                                .log("Layout has no controller URL; connecting to service URL");
+                        return v4Client.getConnectionToServiceUrl();
+                    }
+                    URI uri = URI.create(controllerUrl);
+                    InetSocketAddress addr = InetSocketAddress.createUnresolved(
+                            uri.getHost(), uri.getPort());
+                    return v4Client.getConnection(addr, addr,
+                            v4Client.getCnxPool().genRandomKeyToSelectCon());
+                })
+                .whenComplete((cnx, ex) -> {
+                    // Close the watch session as soon as we have the controller URL —
+                    // the controller pushes assignment updates directly, so we don't
+                    // need a long-lived layout watch on this consumer.
+                    watch.close();
+                })
                 .thenAccept(cnx -> {
                     this.cnx = cnx;
                     cnx.registerScalableConsumerSession(consumerId, this);
