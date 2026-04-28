@@ -235,6 +235,8 @@ public class V5CumulativeAckTest extends V5ClientBaseTest {
         assertTrue(parentId >= 0);
         admin.scalableTopics().splitSegment(topic, parentId);
 
+        // The split is synchronous server-side, but the V5 client's DAG watch is async —
+        // sending before the watch delivers the new layout would fail with TopicTerminated.
         Awaitility.await().untilAsserted(() -> {
             int active = 0;
             var m = admin.scalableTopics().getMetadata(topic);

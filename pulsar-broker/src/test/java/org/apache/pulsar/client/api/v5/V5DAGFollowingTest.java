@@ -70,7 +70,10 @@ public class V5DAGFollowingTest extends V5ClientBaseTest {
             sent.add(v);
         }
 
-        // Split 0 → {1, 2}: now 2 active.
+        // Split 0 → {1, 2}: now 2 active. The admin call is synchronous server-side,
+        // but the V5 client's DAG watch is async — wait for the producer's view to catch
+        // up before sending into the new layout (otherwise the next send hits the now-
+        // sealed parent and fails with TopicTerminated).
         admin.scalableTopics().splitSegment(topic, activeIds(topic).get(0));
         waitForActiveCount(topic, 2);
 
@@ -83,8 +86,7 @@ public class V5DAGFollowingTest extends V5ClientBaseTest {
 
         // Split one of the children: pick the smaller-id active child for determinism.
         // After this we have 3 active.
-        List<Long> active = activeIds(topic);
-        admin.scalableTopics().splitSegment(topic, active.get(0));
+        admin.scalableTopics().splitSegment(topic, activeIds(topic).get(0));
         waitForActiveCount(topic, 3);
 
         // Generation 2: 3 segments.

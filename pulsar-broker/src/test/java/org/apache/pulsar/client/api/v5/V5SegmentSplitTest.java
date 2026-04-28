@@ -75,8 +75,9 @@ public class V5SegmentSplitTest extends V5ClientBaseTest {
 
         admin.scalableTopics().splitSegment(topic, activeSegmentId);
 
-        // Wait for the V5 client's DAG watch to converge on the new layout (2 active
-        // segments, parent sealed).
+        // The split admin call is synchronous server-side, but the V5 client's DAG watch
+        // is async — sending into the now-sealed parent before the watch delivers the new
+        // layout would fail with TopicTerminated. Wait for the producer's view to catch up.
         Awaitility.await().untilAsserted(() -> {
             int active = 0;
             var m = admin.scalableTopics().getMetadata(topic);

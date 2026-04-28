@@ -20,7 +20,6 @@ package org.apache.pulsar.client.api.v5;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -76,7 +75,10 @@ public class V5SegmentMergeTest extends V5ClientBaseTest {
 
         admin.scalableTopics().mergeSegments(topic, activeIds.get(0), activeIds.get(1));
 
-        // Wait for layout to converge: 1 active segment covering the full hash range.
+        // The merge admin call is synchronous server-side, but the V5 client's DAG watch
+        // is async — sending into the now-sealed children before the watch delivers the
+        // new layout would fail with TopicTerminated. Wait for the producer's view to
+        // catch up.
         Awaitility.await().untilAsserted(() -> {
             int active = 0;
             var m = admin.scalableTopics().getMetadata(topic);
@@ -108,6 +110,5 @@ public class V5SegmentMergeTest extends V5ClientBaseTest {
 
         assertEquals(received.size(), total, "expected " + total + " distinct messages");
         assertEquals(received, sent, "received set must equal sent set across the merge");
-        assertTrue(true);
     }
 }
