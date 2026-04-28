@@ -28,6 +28,7 @@ import java.util.Set;
 import lombok.Cleanup;
 import org.apache.pulsar.client.api.v5.config.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.v5.schema.Schema;
+import org.awaitility.Awaitility;
 import org.testng.annotations.Test;
 
 /**
@@ -234,22 +235,16 @@ public class V5CumulativeAckTest extends V5ClientBaseTest {
         assertTrue(parentId >= 0);
         admin.scalableTopics().splitSegment(topic, parentId);
 
-        long deadline = System.currentTimeMillis() + 10_000L;
-        int active = 0;
-        while (System.currentTimeMillis() < deadline) {
-            active = 0;
-            meta = admin.scalableTopics().getMetadata(topic);
-            for (var seg : meta.getSegments().values()) {
+        Awaitility.await().untilAsserted(() -> {
+            int active = 0;
+            var m = admin.scalableTopics().getMetadata(topic);
+            for (var seg : m.getSegments().values()) {
                 if (seg.isActive()) {
                     active++;
                 }
             }
-            if (active == 2) {
-                break;
-            }
-            Thread.sleep(100);
-        }
-        assertEquals(active, 2, "split must produce 2 active children");
+            assertEquals(active, 2, "split must produce 2 active children");
+        });
 
         // Child batch on the new children.
         int childBatch = 30;

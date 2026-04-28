@@ -28,6 +28,7 @@ import java.util.Set;
 import lombok.Cleanup;
 import org.apache.pulsar.client.api.v5.config.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.v5.schema.Schema;
+import org.awaitility.Awaitility;
 import org.testng.annotations.Test;
 
 /**
@@ -120,15 +121,8 @@ public class V5DAGFollowingTest extends V5ClientBaseTest {
         return ids;
     }
 
-    private void waitForActiveCount(String topic, int expected) throws Exception {
-        long deadline = System.currentTimeMillis() + 10_000L;
-        while (System.currentTimeMillis() < deadline) {
-            if (activeIds(topic).size() == expected) {
-                return;
-            }
-            Thread.sleep(100);
-        }
-        assertEquals(activeIds(topic).size(), expected,
-                "layout never converged to " + expected + " active segments");
+    private void waitForActiveCount(String topic, int expected) {
+        Awaitility.await().untilAsserted(() -> assertEquals(activeIds(topic).size(), expected,
+                "layout never converged to " + expected + " active segments"));
     }
 }

@@ -29,6 +29,7 @@ import java.util.Set;
 import lombok.Cleanup;
 import org.apache.pulsar.client.api.v5.config.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.v5.schema.Schema;
+import org.awaitility.Awaitility;
 import org.testng.annotations.Test;
 
 /**
@@ -76,22 +77,16 @@ public class V5SegmentMergeTest extends V5ClientBaseTest {
         admin.scalableTopics().mergeSegments(topic, activeIds.get(0), activeIds.get(1));
 
         // Wait for layout to converge: 1 active segment covering the full hash range.
-        long deadline = System.currentTimeMillis() + 10_000L;
-        int active = 0;
-        while (System.currentTimeMillis() < deadline) {
-            active = 0;
-            meta = admin.scalableTopics().getMetadata(topic);
-            for (var seg : meta.getSegments().values()) {
+        Awaitility.await().untilAsserted(() -> {
+            int active = 0;
+            var m = admin.scalableTopics().getMetadata(topic);
+            for (var seg : m.getSegments().values()) {
                 if (seg.isActive()) {
                     active++;
                 }
             }
-            if (active == 1) {
-                break;
-            }
-            Thread.sleep(100);
-        }
-        assertEquals(active, 1, "merge must collapse to 1 active segment");
+            assertEquals(active, 1, "merge must collapse to 1 active segment");
+        });
 
         // Produce after the merge: must land on the new (sole) segment.
         int secondBatch = 50;
