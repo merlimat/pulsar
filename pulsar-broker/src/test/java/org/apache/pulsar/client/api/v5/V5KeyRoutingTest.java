@@ -20,7 +20,6 @@ package org.apache.pulsar.client.api.v5;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
