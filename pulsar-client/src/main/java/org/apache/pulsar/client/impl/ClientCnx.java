@@ -167,6 +167,17 @@ public class ClientCnx extends PulsarHandler {
                     .concurrencyLevel(1)
                     .build();
 
+    /**
+     * Per-consumer scalable subscribe sessions, keyed by the {@code consumerId} the V5
+     * client assigned at subscribe time. The broker tags every
+     * {@link CommandScalableTopicAssignmentUpdate} with this id.
+     */
+    private final ConcurrentLongHashMap<ScalableConsumerSession> scalableConsumerSessions =
+            ConcurrentLongHashMap.<ScalableConsumerSession>newBuilder()
+                    .expectedItems(4)
+                    .concurrencyLevel(1)
+                    .build();
+
     private final CompletableFuture<Void> connectionFuture = new CompletableFuture<Void>();
     private final ConcurrentLinkedQueue<RequestTime> requestTimeoutQueue = new ConcurrentLinkedQueue<>();
 
@@ -361,6 +372,7 @@ public class ClientCnx extends PulsarHandler {
         transactionMetaStoreHandlers.forEach((id, handler) -> handler.connectionClosed(this));
         topicListWatchers.forEach((__, watcher) -> watcher.connectionClosed(this));
         dagWatchSessions.forEach((__, session) -> session.connectionClosed());
+        scalableConsumerSessions.forEach((__, session) -> session.connectionClosed());
 
         waitingLookupRequests.clear();
 
@@ -368,6 +380,7 @@ public class ClientCnx extends PulsarHandler {
         consumers.clear();
         topicListWatchers.clear();
         dagWatchSessions.clear();
+        scalableConsumerSessions.clear();
 
         timeoutTask.cancel(true);
     }
@@ -1349,6 +1362,65 @@ public class ClientCnx extends PulsarHandler {
 
     public void removeDagWatchSession(long sessionId) {
         dagWatchSessions.remove(sessionId);
+    }
+
+    @Override
+    protected void handleCommandScalableTopicSubscribeResponse(
+            org.apache.pulsar.common.api.proto.CommandScalableTopicSubscribeResponse cmd) {
+        checkArgument(state == State.Ready);
+
+        long requestId = cmd.getRequestId();
+        log.debug().attr("requestId", requestId).log("Received scalableTopicSubscribeResponse");
+
+        if (cmd.hasError()) {
+            CompletableFuture<? extends Object> requestFuture = pendingRequests.remove(requestId);
+            if (requestFuture != null && !requestFuture.isDone()) {
+                requestFuture.completeExceptionally(new PulsarClientException(
+                        "Scalable topic subscribe failed: " + cmd.getError()
+                                + (cmd.hasMessage() ? " - " + cmd.getMessage() : "")));
+            }
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        TimedCompletableFuture<org.apache.pulsar.common.api.proto.ScalableConsumerAssignment>
+                requestFuture = (TimedCompletableFuture<
+                org.apache.pulsar.common.api.proto.ScalableConsumerAssignment>) pendingRequests.remove(requestId);
+        if (requestFuture == null || requestFuture.isDone()) {
+            log.warn().attr("requestId", requestId)
+                    .log("Received scalable topic subscribe response for unknown / completed request");
+            return;
+        }
+        // Defensive copy: the proto payload's backing buffer is reused by the decoder
+        // once we return. Build a snapshot the future's downstream consumers can hold.
+        var assignment = new org.apache.pulsar.common.api.proto.ScalableConsumerAssignment();
+        assignment.copyFrom(cmd.getAssignment());
+        requestFuture.complete(assignment);
+    }
+
+    @Override
+    protected void handleCommandScalableTopicAssignmentUpdate(
+            org.apache.pulsar.common.api.proto.CommandScalableTopicAssignmentUpdate cmd) {
+        checkArgument(state == State.Ready);
+
+        long consumerId = cmd.getConsumerId();
+        ScalableConsumerSession session = scalableConsumerSessions.get(consumerId);
+        if (session == null) {
+            log.warn().attr("consumerId", consumerId)
+                    .log("Received scalable topic assignment update for unknown consumer");
+            return;
+        }
+        var assignment = new org.apache.pulsar.common.api.proto.ScalableConsumerAssignment();
+        assignment.copyFrom(cmd.getAssignment());
+        session.onAssignmentUpdate(assignment);
+    }
+
+    public void registerScalableConsumerSession(long consumerId, ScalableConsumerSession session) {
+        scalableConsumerSessions.put(consumerId, session);
+    }
+
+    public void removeScalableConsumerSession(long consumerId) {
+        scalableConsumerSessions.remove(consumerId);
     }
 
     /**

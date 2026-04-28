@@ -72,11 +72,22 @@ final class StreamConsumerBuilderV5<T> implements StreamConsumerBuilder<T> {
         }
 
         TopicName topic = V5Utils.asScalableTopicName(topicName);
-        DagWatchClient dagWatch = new DagWatchClient(client.v4Client(), topic);
+        // Default the consumer name to a stable random when the user didn't set one —
+        // ScalableConsumerClient uses it as the registration key with the controller.
+        if (conf.getConsumerName() == null || conf.getConsumerName().isEmpty()) {
+            conf.setConsumerName("v5-stream-"
+                    + java.util.UUID.randomUUID().toString().substring(0, 8));
+        }
+        ScalableConsumerClient session = new ScalableConsumerClient(
+                client.v4Client(),
+                topic,
+                conf.getSubscriptionName(),
+                conf.getConsumerName(),
+                org.apache.pulsar.common.api.proto.ScalableConsumerType.STREAM);
 
-        return dagWatch.start()
-                .thenCompose(initialLayout -> ScalableStreamConsumer.createAsync(
-                        client, v5Schema, conf, dagWatch, initialLayout));
+        return session.start()
+                .thenCompose(initialAssignment -> ScalableStreamConsumer.createAsync(
+                        client, v5Schema, conf, session, topic.toString(), initialAssignment));
     }
 
     @Override

@@ -1309,7 +1309,7 @@ public class PulsarClientImpl implements PulsarClient {
         return producerIdGenerator.getAndIncrement();
     }
 
-    long newConsumerId() {
+    public long newConsumerId() {
         return consumerIdGenerator.getAndIncrement();
     }
 

@@ -56,7 +56,8 @@ import org.apache.pulsar.client.impl.v5.SegmentRouter.ActiveSegment;
  * vector. This ensures that acknowledging a single message correctly advances
  * all segments, not just the one it came from.
  */
-final class ScalableStreamConsumer<T> implements StreamConsumer<T>, DagWatchClient.LayoutChangeListener {
+final class ScalableStreamConsumer<T>
+        implements StreamConsumer<T>, ScalableConsumerClient.AssignmentChangeListener {
 
     private static final Logger LOG = Logger.get(ScalableStreamConsumer.class);
     private final Logger log;
@@ -65,7 +66,7 @@ final class ScalableStreamConsumer<T> implements StreamConsumer<T>, DagWatchClie
     private final Schema<T> v5Schema;
     private final org.apache.pulsar.client.api.Schema<T> v4Schema;
     private final ConsumerConfigurationData<T> consumerConf;
-    private final DagWatchClient dagWatch;
+    private final ScalableConsumerClient session;
     private final String topicName;
     private final String subscriptionName;
 
@@ -92,33 +93,36 @@ final class ScalableStreamConsumer<T> implements StreamConsumer<T>, DagWatchClie
     private ScalableStreamConsumer(PulsarClientV5 client,
                                    Schema<T> v5Schema,
                                    ConsumerConfigurationData<T> consumerConf,
-                                   DagWatchClient dagWatch) {
+                                   ScalableConsumerClient session,
+                                   String topicName) {
         this.client = client;
         this.v5Schema = v5Schema;
         this.v4Schema = SchemaAdapter.toV4(v5Schema);
         this.consumerConf = consumerConf;
-        this.dagWatch = dagWatch;
-        this.topicName = dagWatch.topicName().toString();
+        this.session = session;
+        this.topicName = topicName;
         this.subscriptionName = consumerConf.getSubscriptionName();
         this.log = LOG.with().attr("topic", topicName).attr("subscription", subscriptionName).build();
         this.asyncView = new AsyncStreamConsumerV5<>(this);
     }
 
     /**
-     * Create a fully initialized consumer asynchronously. The returned future completes
-     * only after every initial segment has been successfully subscribed. If any segment
-     * fails to subscribe, all already-subscribed segments are closed and the future
-     * completes exceptionally.
+     * Create a fully initialized consumer asynchronously. The session has already
+     * registered with the controller and the {@code initialAssignment} list contains
+     * the segments this consumer should attach to. The returned future completes only
+     * after every assigned segment has been successfully subscribed.
      */
     static <T> CompletableFuture<StreamConsumer<T>> createAsync(PulsarClientV5 client,
                                                                 Schema<T> v5Schema,
                                                                 ConsumerConfigurationData<T> consumerConf,
-                                                                DagWatchClient dagWatch,
-                                                                ClientSegmentLayout initialLayout) {
-        ScalableStreamConsumer<T> consumer = new ScalableStreamConsumer<>(client, v5Schema, consumerConf, dagWatch);
-        return consumer.subscribeSegments(initialLayout)
+                                                                ScalableConsumerClient session,
+                                                                String topicName,
+                                                                List<ActiveSegment> initialAssignment) {
+        ScalableStreamConsumer<T> consumer = new ScalableStreamConsumer<>(
+                client, v5Schema, consumerConf, session, topicName);
+        return consumer.subscribeAssigned(initialAssignment)
                 .thenApply(__ -> {
-                    dagWatch.setListener(consumer);
+                    session.setListener(consumer);
                     return (StreamConsumer<T>) consumer;
                 })
                 .exceptionallyCompose(ex -> consumer.closeAsync().handle((__, ___) -> {
@@ -249,7 +253,7 @@ final class ScalableStreamConsumer<T> implements StreamConsumer<T>, DagWatchClie
 
     CompletableFuture<Void> closeAsync() {
         closed = true;
-        dagWatch.close();
+        session.close();
 
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (var future : segmentConsumers.values()) {
@@ -262,43 +266,45 @@ final class ScalableStreamConsumer<T> implements StreamConsumer<T>, DagWatchClie
                 .whenComplete((__, ___) -> segmentConsumers.clear());
     }
 
-    // --- Layout change handling ---
+    // --- Assignment change handling ---
 
     @Override
-    public void onLayoutChange(ClientSegmentLayout newLayout, ClientSegmentLayout oldLayout) {
+    public void onAssignmentChange(List<ActiveSegment> newSegments, List<ActiveSegment> oldSegments) {
         // Fully async: safe to run on the netty IO thread that delivered the update.
-        subscribeSegments(newLayout).exceptionally(ex -> {
-            log.warn().exceptionMessage(ex).log("Failed to apply layout update");
+        subscribeAssigned(newSegments).exceptionally(ex -> {
+            log.warn().exceptionMessage(ex).log("Failed to apply assignment update");
             return null;
         });
     }
 
-    private CompletableFuture<Void> subscribeSegments(ClientSegmentLayout layout) {
-        var activeIds = ConcurrentHashMap.<Long>newKeySet();
-        for (var seg : layout.activeSegments()) {
-            activeIds.add(seg.segmentId());
+    private CompletableFuture<Void> subscribeAssigned(List<ActiveSegment> assigned) {
+        // Controller-driven assignment: subscribe to whatever segments the controller
+        // currently designates for this consumer.
+        var assignedIds = ConcurrentHashMap.<Long>newKeySet();
+        for (var seg : assigned) {
+            assignedIds.add(seg.segmentId());
         }
 
-        // Close consumers for segments that are no longer active (fire-and-forget).
+        // Segments that fell out of our assignment (rebalanced away to another
+        // consumer): close our v4 consumer so the Exclusive lock is released.
         for (var entry : segmentConsumers.entrySet()) {
-            if (!activeIds.contains(entry.getKey())) {
+            if (!assignedIds.contains(entry.getKey())) {
                 log.info().attr("segmentId", entry.getKey())
-                        .log("Closing consumer for sealed segment");
+                        .log("Closing consumer for segment removed from assignment");
                 entry.getValue().thenAccept(c -> c.closeAsync());
                 segmentConsumers.remove(entry.getKey());
                 latestDelivered.remove(entry.getKey());
             }
         }
 
-        // Subscribe to new segments asynchronously.
+        // Subscribe to newly-assigned segments.
         List<CompletableFuture<?>> futures = new ArrayList<>();
-        for (var seg : layout.activeSegments()) {
+        for (var seg : assigned) {
             futures.add(segmentConsumers.computeIfAbsent(seg.segmentId(),
                     id -> createSegmentConsumerAsync(seg)));
         }
 
-        log.info().attr("epoch", layout.epoch())
-                .attr("segments", activeIds).log("Stream consumer layout applied");
+        log.info().attr("segments", assignedIds).log("Stream consumer assignment applied");
         return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
     }
 
@@ -346,11 +352,30 @@ final class ScalableStreamConsumer<T> implements StreamConsumer<T>, DagWatchClie
                 startReceiveLoop(v4Consumer, segmentId);
             }
         }).exceptionally(ex -> {
-            if (!closed) {
-                log.warn().attr("segmentId", segmentId)
-                        .exception(ex).log("Error receiving from segment, retrying");
-                startReceiveLoop(v4Consumer, segmentId);
+            Throwable cause = ex instanceof java.util.concurrent.CompletionException ce
+                    && ce.getCause() != null ? ce.getCause() : ex;
+            if (closed
+                    || cause instanceof org.apache.pulsar.client.api.PulsarClientException
+                            .AlreadyClosedException) {
+                // The whole consumer is shutting down or the v4 consumer was closed
+                // externally; stop the receive loop without touching the map.
+                return null;
             }
+            if (cause instanceof org.apache.pulsar.client.api.PulsarClientException
+                    .TopicTerminatedException) {
+                // Segment fully drained server-side. Drop it from the map and close the
+                // v4 consumer; pending acks from this point on are no-ops (cursor is at
+                // the end and the entry is gone).
+                log.info().attr("segmentId", segmentId)
+                        .log("Sealed segment drained, closing v4 consumer");
+                segmentConsumers.remove(segmentId);
+                latestDelivered.remove(segmentId);
+                v4Consumer.closeAsync();
+                return null;
+            }
+            log.warn().attr("segmentId", segmentId)
+                    .exception(ex).log("Error receiving from segment, retrying");
+            startReceiveLoop(v4Consumer, segmentId);
             return null;
         });
     }

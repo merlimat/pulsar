@@ -1710,6 +1710,26 @@ public class Commands {
     }
 
     /**
+     * Client -> Broker: register as a scalable consumer (Stream or Checkpoint) and
+     * request the initial segment assignment. The broker leader persists the
+     * registration and replies with a {@link CommandScalableTopicSubscribeResponse}.
+     */
+    public static ByteBuf newScalableTopicSubscribe(long requestId, String topic,
+                                                     String subscription, String consumerName,
+                                                     long consumerId,
+                                                     org.apache.pulsar.common.api.proto.ScalableConsumerType consumerType) {
+        BaseCommand cmd = localCmd(Type.SCALABLE_TOPIC_SUBSCRIBE);
+        cmd.setScalableTopicSubscribe()
+                .setRequestId(requestId)
+                .setTopic(topic)
+                .setSubscription(subscription)
+                .setConsumerName(consumerName)
+                .setConsumerId(consumerId)
+                .setConsumerType(consumerType);
+        return serializeWithSize(cmd);
+    }
+
+    /**
      * Broker -> Client: response to a scalable-topic subscribe request. On success the
      * caller must populate the nested {@link ScalableConsumerAssignment} via
      * {@code response.setAssignment()} before serializing; on failure the error and
