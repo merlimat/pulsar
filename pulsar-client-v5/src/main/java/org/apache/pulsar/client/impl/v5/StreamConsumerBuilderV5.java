@@ -75,10 +75,8 @@ final class StreamConsumerBuilderV5<T> implements StreamConsumerBuilder<T> {
         TopicName topic = V5Utils.asScalableTopicName(topicName);
         // Default the consumer name to a stable random when the user didn't set one —
         // ScalableConsumerClient uses it as the registration key with the controller.
-        // Use a full UUID (~122 bits of entropy) so the registration key is unique in
-        // practice, even across many concurrent attaches.
         if (conf.getConsumerName() == null || conf.getConsumerName().isEmpty()) {
-            conf.setConsumerName("v5-stream-" + java.util.UUID.randomUUID());
+            conf.setConsumerName("v5-stream-" + V5RandomIds.randomAlphanumeric(8));
         }
         ScalableConsumerClient session = new ScalableConsumerClient(
                 client.v4Client(),

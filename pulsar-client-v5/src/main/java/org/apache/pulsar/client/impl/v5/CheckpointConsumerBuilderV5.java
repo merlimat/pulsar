@@ -26,6 +26,7 @@ import org.apache.pulsar.client.api.v5.CheckpointConsumerBuilder;
 import org.apache.pulsar.client.api.v5.PulsarClientException;
 import org.apache.pulsar.client.api.v5.config.EncryptionPolicy;
 import org.apache.pulsar.client.api.v5.schema.Schema;
+import org.apache.pulsar.common.api.proto.ScalableConsumerType;
 import org.apache.pulsar.common.naming.TopicName;
 
 /**
@@ -38,6 +39,7 @@ final class CheckpointConsumerBuilderV5<T> implements CheckpointConsumerBuilder<
     private String topicName;
     private Checkpoint startPosition = CheckpointV5.LATEST;
     private String consumerName;
+    private String consumerGroup;
     private EncryptionPolicy encryptionPolicy;
 
     CheckpointConsumerBuilderV5(PulsarClientV5 client, Schema<T> v5Schema) {
@@ -65,10 +67,27 @@ final class CheckpointConsumerBuilderV5<T> implements CheckpointConsumerBuilder<
         }
 
         TopicName topic = V5Utils.asScalableTopicName(topicName);
-        DagWatchClient dagWatch = new DagWatchClient(client.v4Client(), topic);
 
+        if (consumerGroup != null && !consumerGroup.isEmpty()) {
+            // Managed: register with the broker's subscription coordinator under the
+            // configured group. Each consumer in the group ends up with a disjoint set
+            // of segments.
+            String name = consumerName != null && !consumerName.isEmpty()
+                    ? consumerName
+                    : "v5-checkpoint-" + V5RandomIds.randomAlphanumeric(8);
+            ScalableConsumerClient session = new ScalableConsumerClient(
+                    client.v4Client(), topic, consumerGroup, name,
+                    ScalableConsumerType.CHECKPOINT);
+            return session.start()
+                    .thenCompose(initialAssignment -> ScalableCheckpointConsumer.createManagedAsync(
+                            client, v5Schema, topic.toString(), session, initialAssignment,
+                            startPosition, name));
+        }
+
+        // Unmanaged: read every active segment, no broker-side state.
+        DagWatchClient dagWatch = new DagWatchClient(client.v4Client(), topic);
         return dagWatch.start()
-                .thenCompose(initialLayout -> ScalableCheckpointConsumer.createAsync(
+                .thenCompose(initialLayout -> ScalableCheckpointConsumer.createUnmanagedAsync(
                         client, v5Schema, dagWatch, initialLayout, startPosition, consumerName));
     }
 
@@ -87,6 +106,12 @@ final class CheckpointConsumerBuilderV5<T> implements CheckpointConsumerBuilder<
     @Override
     public CheckpointConsumerBuilderV5<T> consumerName(String name) {
         this.consumerName = name;
+        return this;
+    }
+
+    @Override
+    public CheckpointConsumerBuilderV5<T> consumerGroup(String group) {
+        this.consumerGroup = group;
         return this;
     }
 
