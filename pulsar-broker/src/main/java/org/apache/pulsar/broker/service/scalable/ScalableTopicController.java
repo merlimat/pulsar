@@ -157,12 +157,15 @@ public class ScalableTopicController {
     }
 
     private SubscriptionCoordinator createCoordinator(String subscription) {
+        java.time.Duration gracePeriod = java.time.Duration.ofSeconds(brokerService.getPulsar()
+                .getConfig().getScalableTopicConsumerSessionGracePeriodSeconds());
         return new SubscriptionCoordinator(
                 subscription,
                 topicName,
                 currentLayout,
                 resources,
-                brokerService.getPulsar().getExecutor());
+                brokerService.getPulsar().getExecutor(),
+                gracePeriod);
     }
 
     private CompletableFuture<Void> electLeader() {

@@ -257,4 +257,185 @@ public class V5MultipleConsumersTest extends V5ClientBaseTest {
         t.start();
         return t;
     }
+
+    /**
+     * A consumer that drops out and reconnects with the same consumer name within the
+     * controller's grace period must keep its segment assignment — no rebalance, no
+     * duplicate delivery on the surviving peer.
+     */
+    @Test
+    public void testStreamConsumerReconnectWithinGraceKeepsAssignment() throws Exception {
+        String topic = newScalableTopic(4);
+        String subscription = "stream-reconnect-sub";
+
+        @Cleanup
+        Producer<String> producer = v5Client.newProducer(Schema.string())
+                .topic(topic)
+                .create();
+
+        // Two consumers with explicit names so the broker tracks each session by name.
+        // Use a dedicated client for `alice` so we can force-disconnect just her.
+        PulsarClient aliceClient = newV5Client();
+        StreamConsumer<String> alice = aliceClient.newStreamConsumer(Schema.string())
+                .topic(topic)
+                .subscriptionName(subscription)
+                .consumerName("alice")
+                .subscriptionInitialPosition(SubscriptionInitialPosition.EARLIEST)
+                .subscribe();
+        @Cleanup
+        StreamConsumer<String> bob = v5Client.newStreamConsumer(Schema.string())
+                .topic(topic)
+                .subscriptionName(subscription)
+                .consumerName("bob")
+                .subscriptionInitialPosition(SubscriptionInitialPosition.EARLIEST)
+                .subscribe();
+
+        // First batch: drain across both, and observe each consumer's share.
+        int firstN = 80;
+        java.util.Map<String, Set<String>> firstSent = new java.util.HashMap<>();
+        firstSent.put("v", new HashSet<>());
+        for (int i = 0; i < firstN; i++) {
+            String v = "first-" + i;
+            producer.newMessage().key("k-" + i).value(v).send();
+            firstSent.get("v").add(v);
+        }
+
+        Set<String> aliceFirst = ConcurrentHashMap.newKeySet();
+        Set<String> bobFirst = ConcurrentHashMap.newKeySet();
+        Set<String> received1 = ConcurrentHashMap.newKeySet();
+        Thread t1 = drainStreamTo(alice, received1, aliceFirst);
+        Thread t2 = drainStreamTo(bob, received1, bobFirst);
+        t1.join();
+        t2.join();
+        assertEquals(received1, firstSent.get("v"), "first batch must be delivered exactly once");
+        assertTrue(!aliceFirst.isEmpty() && !bobFirst.isEmpty(),
+                "controller must split the first batch across alice + bob");
+
+        // Force-disconnect alice by closing her client. The broker observes channel
+        // inactive, marks the session disconnected, and arms the grace timer.
+        aliceClient.close();
+
+        // Reconnect alice well within the configured grace period (test cluster uses 2s).
+        // The broker should attach the new connection to her existing session and push
+        // her the SAME assignment without rebalancing bob.
+        Thread.sleep(500);
+        @Cleanup
+        PulsarClient aliceClient2 = newV5Client();
+        @Cleanup
+        StreamConsumer<String> aliceRejoined = aliceClient2.newStreamConsumer(Schema.string())
+                .topic(topic)
+                .subscriptionName(subscription)
+                .consumerName("alice")
+                .subscribe();
+
+        // Second batch: alice should still own the same segments — pin the same key set
+        // so each generation routes to the same segments.
+        int secondN = 80;
+        Set<String> secondSent = new HashSet<>();
+        for (int i = 0; i < secondN; i++) {
+            String v = "second-" + i;
+            producer.newMessage().key("k-" + i).value(v).send();
+            secondSent.add(v);
+        }
+
+        Set<String> aliceSecond = ConcurrentHashMap.newKeySet();
+        Set<String> bobSecond = ConcurrentHashMap.newKeySet();
+        Set<String> received2 = ConcurrentHashMap.newKeySet();
+        Thread r1 = drainStreamTo(aliceRejoined, received2, aliceSecond);
+        Thread r2 = drainStreamTo(bob, received2, bobSecond);
+        r1.join();
+        r2.join();
+        assertEquals(received2, secondSent, "second batch must be delivered exactly once");
+
+        // Same key set hashes to the same segments, so each consumer's per-key share
+        // must be identical across the two batches (modulo the prefix).
+        Set<String> aliceFirstKeys = stripPrefix(aliceFirst, "first-");
+        Set<String> aliceSecondKeys = stripPrefix(aliceSecond, "second-");
+        assertEquals(aliceSecondKeys, aliceFirstKeys,
+                "alice must keep her segments after reconnect within grace");
+        Set<String> bobFirstKeys = stripPrefix(bobFirst, "first-");
+        Set<String> bobSecondKeys = stripPrefix(bobSecond, "second-");
+        assertEquals(bobSecondKeys, bobFirstKeys,
+                "bob must keep his segments unchanged when alice reconnects");
+    }
+
+    /**
+     * If a consumer disconnects and stays away past the controller grace period, its
+     * session is evicted and segments rebalanced. The surviving peer ends up serving
+     * every active segment.
+     */
+    @Test
+    public void testStreamConsumerDisconnectPastGraceTriggersReassignment() throws Exception {
+        String topic = newScalableTopic(4);
+        String subscription = "stream-evict-sub";
+
+        @Cleanup
+        Producer<String> producer = v5Client.newProducer(Schema.string())
+                .topic(topic)
+                .create();
+
+        PulsarClient aliceClient = newV5Client();
+        StreamConsumer<String> alice = aliceClient.newStreamConsumer(Schema.string())
+                .topic(topic)
+                .subscriptionName(subscription)
+                .consumerName("alice")
+                .subscriptionInitialPosition(SubscriptionInitialPosition.EARLIEST)
+                .subscribe();
+        @Cleanup
+        StreamConsumer<String> bob = v5Client.newStreamConsumer(Schema.string())
+                .topic(topic)
+                .subscriptionName(subscription)
+                .consumerName("bob")
+                .subscriptionInitialPosition(SubscriptionInitialPosition.EARLIEST)
+                .subscribe();
+
+        // Pre-disconnect: each consumer owns some segments. We don't care which.
+        int firstN = 60;
+        for (int i = 0; i < firstN; i++) {
+            producer.newMessage().key("k-" + i).value("first-" + i).send();
+        }
+
+        Set<String> received1 = ConcurrentHashMap.newKeySet();
+        Set<String> aliceFirst = ConcurrentHashMap.newKeySet();
+        Set<String> bobFirst = ConcurrentHashMap.newKeySet();
+        Thread t1 = drainStreamTo(alice, received1, aliceFirst);
+        Thread t2 = drainStreamTo(bob, received1, bobFirst);
+        t1.join();
+        t2.join();
+        assertTrue(!aliceFirst.isEmpty() && !bobFirst.isEmpty(),
+                "controller must split first batch across alice + bob");
+
+        // Disconnect alice and stay away past the configured grace period (2s in tests).
+        aliceClient.close();
+        // The grace timer fires at gracePeriod, then the rebalance pushes a new
+        // assignment to bob covering all 4 segments. Wait long enough for that.
+        Thread.sleep(4000);
+
+        // Second batch: bob must now serve every key — alice is gone for good.
+        int secondN = 60;
+        Set<String> secondSent = new HashSet<>();
+        for (int i = 0; i < secondN; i++) {
+            String v = "second-" + i;
+            producer.newMessage().key("k-" + i).value(v).send();
+            secondSent.add(v);
+        }
+
+        Set<String> bobSecond = ConcurrentHashMap.newKeySet();
+        Set<String> received2 = ConcurrentHashMap.newKeySet();
+        Thread r = drainStreamTo(bob, received2, bobSecond);
+        r.join();
+        assertEquals(bobSecond, secondSent,
+                "after past-grace eviction bob must own every segment, got "
+                        + bobSecond.size() + "/" + secondN);
+    }
+
+    private static Set<String> stripPrefix(Set<String> values, String prefix) {
+        Set<String> out = new HashSet<>(values.size());
+        for (String v : values) {
+            if (v.startsWith(prefix)) {
+                out.add(v.substring(prefix.length()));
+            }
+        }
+        return out;
+    }
 }

@@ -148,6 +148,10 @@ public class SharedPulsarCluster {
         config.setForceDeleteTenantAllowed(true);
         config.setBrokerDeleteInactiveTopicsEnabled(false);
         config.setBrokerDeduplicationEnabled(true);
+        // Tests rely on aggressive eviction of disconnected scalable-topic consumer
+        // sessions so reassignment-after-disconnect can be exercised in a few seconds
+        // instead of the production default of 60s.
+        config.setScalableTopicConsumerSessionGracePeriodSeconds(2);
 
         // Reduce thread pool sizes for faster startup (fewer threads to create)
         config.setNumIOThreads(2);
