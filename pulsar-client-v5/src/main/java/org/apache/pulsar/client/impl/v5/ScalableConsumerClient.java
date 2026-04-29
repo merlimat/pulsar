@@ -30,6 +30,7 @@ import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.impl.ClientCnx;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.impl.ScalableConsumerSession;
+import org.apache.pulsar.client.impl.v5.SegmentRouter.ActiveSegment;
 import org.apache.pulsar.client.util.TimedCompletableFuture;
 import org.apache.pulsar.common.api.proto.ScalableAssignedSegment;
 import org.apache.pulsar.common.api.proto.ScalableConsumerAssignment;
@@ -37,7 +38,6 @@ import org.apache.pulsar.common.api.proto.ScalableConsumerType;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.scalable.HashRange;
-import org.apache.pulsar.client.impl.v5.SegmentRouter.ActiveSegment;
 
 /**
  * Client-side session for a scalable-topic consumer (Stream or Checkpoint).
