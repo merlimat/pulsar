@@ -19,6 +19,7 @@
 package org.apache.pulsar.broker.service.scalable;
 
 import io.github.merlimat.slog.Logger;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -157,7 +158,7 @@ public class ScalableTopicController {
     }
 
     private SubscriptionCoordinator createCoordinator(String subscription) {
-        java.time.Duration gracePeriod = java.time.Duration.ofSeconds(brokerService.getPulsar()
+        Duration gracePeriod = Duration.ofSeconds(brokerService.getPulsar()
                 .getConfig().getScalableTopicConsumerSessionGracePeriodSeconds());
         return new SubscriptionCoordinator(
                 subscription,
