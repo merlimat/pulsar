@@ -286,16 +286,29 @@ final class ScalableQueueConsumer<T> implements QueueConsumer<T>, DagWatchClient
     }
 
     private CompletableFuture<Void> subscribeSegments(ClientSegmentLayout layout) {
-        var activeIds = ConcurrentHashMap.<Long>newKeySet();
+        // We subscribe to every segment present in the DAG — both ACTIVE (current write
+        // targets) and SEALED (historical, may still hold unconsumed data for this
+        // subscription). The receive loop drains a sealed segment naturally and closes
+        // it on TopicTerminated; until then, the v4 consumer must remain alive so user
+        // acks for messages received before the seal can still be forwarded.
+        var wantedIds = ConcurrentHashMap.<Long>newKeySet();
+        List<ActiveSegment> wantedSegments = new ArrayList<>(layout.activeSegments().size()
+                + layout.sealedSegments().size());
         for (var seg : layout.activeSegments()) {
-            activeIds.add(seg.segmentId());
+            wantedIds.add(seg.segmentId());
+            wantedSegments.add(seg);
+        }
+        for (var seg : layout.sealedSegments()) {
+            wantedIds.add(seg.segmentId());
+            wantedSegments.add(seg);
         }
 
-        // Close consumers for segments that are no longer active (fire-and-forget).
+        // Close consumers for segments that have dropped out of the DAG entirely (post
+        // garbage collection). Sealed-but-still-present segments stay subscribed.
         for (var entry : segmentConsumers.entrySet()) {
-            if (!activeIds.contains(entry.getKey())) {
+            if (!wantedIds.contains(entry.getKey())) {
                 log.info().attr("segmentId", entry.getKey())
-                        .log("Closing consumer for sealed segment");
+                        .log("Closing consumer for segment no longer in DAG");
                 entry.getValue().thenAccept(c -> c.closeAsync());
                 segmentConsumers.remove(entry.getKey());
             }
@@ -304,13 +317,15 @@ final class ScalableQueueConsumer<T> implements QueueConsumer<T>, DagWatchClient
         // Subscribe to new segments. The returned future completes when all subscribes
         // finish (successfully or with error).
         List<CompletableFuture<?>> futures = new ArrayList<>();
-        for (var seg : layout.activeSegments()) {
+        for (var seg : wantedSegments) {
             futures.add(segmentConsumers.computeIfAbsent(seg.segmentId(),
                     id -> createSegmentConsumerAsync(seg)));
         }
 
         log.info().attr("epoch", layout.epoch())
-                .attr("segments", activeIds).log("Queue consumer layout applied");
+                .attr("active", layout.activeSegments().size())
+                .attr("sealed", layout.sealedSegments().size())
+                .log("Queue consumer layout applied");
         return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
     }
 
@@ -345,8 +360,19 @@ final class ScalableQueueConsumer<T> implements QueueConsumer<T>, DagWatchClient
             Throwable cause = ex instanceof CompletionException ce && ce.getCause() != null ? ce.getCause() : ex;
             if (closed
                     || cause instanceof org.apache.pulsar.client.api.PulsarClientException.AlreadyClosedException) {
-                // This segment consumer is done (either the whole consumer is closing,
-                // or the segment was sealed and its v4 consumer closed by a layout update).
+                // The whole consumer is shutting down or the v4 consumer was closed
+                // externally; stop the receive loop without touching the map.
+                return null;
+            }
+            if (cause instanceof org.apache.pulsar.client.api.PulsarClientException.TopicTerminatedException) {
+                // Segment is sealed and fully drained server-side. Close the v4
+                // consumer and drop it from the map — any further ack on a message
+                // already pulled from this segment is a no-op (the cursor is at the
+                // end and the entry is gone).
+                log.info().attr("segmentId", segmentId)
+                        .log("Sealed segment drained, closing v4 consumer");
+                segmentConsumers.remove(segmentId);
+                v4Consumer.closeAsync();
                 return null;
             }
             log.warn().attr("segmentId", segmentId)

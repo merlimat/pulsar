@@ -278,15 +278,19 @@ final class ScalableStreamConsumer<T>
     }
 
     private CompletableFuture<Void> subscribeAssigned(List<ActiveSegment> assigned) {
-        // Controller-driven assignment: subscribe to whatever segments the controller
-        // currently designates for this consumer.
+        // Controller-driven assignment: the broker's SubscriptionCoordinator decides
+        // which segments this consumer owns at any moment. We subscribe to exactly
+        // those, regardless of whether the controller picked them from the active or
+        // sealed set — to the v4 layer they're just per-segment Exclusive subscriptions.
         var assignedIds = ConcurrentHashMap.<Long>newKeySet();
         for (var seg : assigned) {
             assignedIds.add(seg.segmentId());
         }
 
         // Segments that fell out of our assignment (rebalanced away to another
-        // consumer): close our v4 consumer so the Exclusive lock is released.
+        // consumer): close our v4 consumer so the Exclusive lock is released and
+        // the new owner can attach. Sealed-and-drained segments take a different
+        // path: the receive loop closes them on TopicTerminated.
         for (var entry : segmentConsumers.entrySet()) {
             if (!assignedIds.contains(entry.getKey())) {
                 log.info().attr("segmentId", entry.getKey())

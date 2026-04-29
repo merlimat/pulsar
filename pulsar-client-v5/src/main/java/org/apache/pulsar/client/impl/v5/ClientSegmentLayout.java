@@ -39,17 +39,20 @@ final class ClientSegmentLayout {
 
     private final long epoch;
     private final List<ActiveSegment> activeSegments;
+    private final List<ActiveSegment> sealedSegments;
     private final Map<Long, String> segmentBrokerUrls;
     private final String controllerBrokerUrl;
     private final String controllerBrokerUrlTls;
 
     private ClientSegmentLayout(long epoch,
                                 List<ActiveSegment> activeSegments,
+                                List<ActiveSegment> sealedSegments,
                                 Map<Long, String> segmentBrokerUrls,
                                 String controllerBrokerUrl,
                                 String controllerBrokerUrlTls) {
         this.epoch = epoch;
         this.activeSegments = Collections.unmodifiableList(activeSegments);
+        this.sealedSegments = Collections.unmodifiableList(sealedSegments);
         this.segmentBrokerUrls = Map.copyOf(segmentBrokerUrls);
         this.controllerBrokerUrl = controllerBrokerUrl;
         this.controllerBrokerUrlTls = controllerBrokerUrlTls;
@@ -68,25 +71,32 @@ final class ClientSegmentLayout {
             brokerUrls.put(addr.getSegmentId(), addr.getBrokerUrl());
         }
 
-        // Build active segments list
+        // Partition segments into active and sealed lists.
         List<ActiveSegment> activeSegments = new ArrayList<>();
+        List<ActiveSegment> sealedSegments = new ArrayList<>();
         for (int i = 0; i < dag.getSegmentsCount(); i++) {
             SegmentInfoProto seg = dag.getSegmentAt(i);
+            HashRange range = HashRange.of((int) seg.getHashStart(), (int) seg.getHashEnd());
+            String segTopicName = SegmentTopicName.fromParent(
+                    parentTopic, range, seg.getSegmentId()).toString();
+            ActiveSegment ref = new ActiveSegment(seg.getSegmentId(), range, segTopicName);
             if (seg.getState() == org.apache.pulsar.common.api.proto.SegmentState.ACTIVE) {
-                HashRange range = HashRange.of((int) seg.getHashStart(), (int) seg.getHashEnd());
-                String segTopicName = SegmentTopicName.fromParent(
-                        parentTopic, range, seg.getSegmentId()).toString();
-                activeSegments.add(new ActiveSegment(seg.getSegmentId(), range, segTopicName));
+                activeSegments.add(ref);
+            } else if (seg.getState() == org.apache.pulsar.common.api.proto.SegmentState.SEALED) {
+                sealedSegments.add(ref);
             }
         }
 
-        // Sort by hash range start for efficient routing
+        // Sort by hash range start for efficient routing on the active side. Sealed order
+        // doesn't matter for correctness; sort for stable iteration in tests / logs.
         activeSegments.sort(Comparator.comparingInt(s -> s.hashRange().start()));
+        sealedSegments.sort(Comparator.comparingLong(ActiveSegment::segmentId));
 
         String controllerUrl = dag.hasControllerBrokerUrl() ? dag.getControllerBrokerUrl() : null;
         String controllerUrlTls = dag.hasControllerBrokerUrlTls() ? dag.getControllerBrokerUrlTls() : null;
 
-        return new ClientSegmentLayout(epoch, activeSegments, brokerUrls, controllerUrl, controllerUrlTls);
+        return new ClientSegmentLayout(epoch, activeSegments, sealedSegments, brokerUrls,
+                controllerUrl, controllerUrlTls);
     }
 
     long epoch() {
@@ -95,6 +105,15 @@ final class ClientSegmentLayout {
 
     List<ActiveSegment> activeSegments() {
         return activeSegments;
+    }
+
+    /**
+     * Sealed segments still present in the DAG. These have finite (eventually drained)
+     * data and a v4 consumer subscribing to one of them will receive any remaining
+     * messages and then a {@code TopicTerminatedException}.
+     */
+    List<ActiveSegment> sealedSegments() {
+        return sealedSegments;
     }
 
     Map<Long, String> segmentBrokerUrls() {
