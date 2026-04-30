@@ -158,8 +158,19 @@ public class ScalableTopicController {
     }
 
     private SubscriptionCoordinator createCoordinator(String subscription) {
-        Duration gracePeriod = Duration.ofSeconds(brokerService.getPulsar()
-                .getConfig().getScalableTopicConsumerSessionGracePeriodSeconds());
+        // Defensive: PulsarService.getConfig() is null in some unit-test mocks. Fall
+        // back to the SubscriptionCoordinator's default grace period in that case.
+        var config = brokerService.getPulsar().getConfig();
+        if (config == null) {
+            return new SubscriptionCoordinator(
+                    subscription,
+                    topicName,
+                    currentLayout,
+                    resources,
+                    brokerService.getPulsar().getExecutor());
+        }
+        Duration gracePeriod = Duration.ofSeconds(
+                config.getScalableTopicConsumerSessionGracePeriodSeconds());
         return new SubscriptionCoordinator(
                 subscription,
                 topicName,
