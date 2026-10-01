@@ -19,6 +19,7 @@
 package org.apache.bookkeeper.mledger.offload.jcloud.impl;
 
 import static org.apache.bookkeeper.client.api.BKException.Code.NoSuchLedgerExistsException;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.delegatesTo;
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertEquals;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import lombok.Cleanup;
+import lombok.CustomLog;
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.client.api.LedgerEntries;
 import org.apache.bookkeeper.client.api.LedgerEntry;
@@ -40,20 +42,18 @@ import org.apache.bookkeeper.mledger.LedgerOffloader;
 import org.apache.bookkeeper.mledger.LedgerOffloader.OffloadHandle;
 import org.apache.bookkeeper.mledger.LedgerOffloaderStats;
 import org.apache.bookkeeper.mledger.ManagedLedger;
+import org.apache.bookkeeper.mledger.OffloadedLedgerHandle;
 import org.apache.bookkeeper.mledger.impl.EntryImpl;
 import org.apache.bookkeeper.mledger.offload.jcloud.provider.JCloudBlobStoreProvider;
 import org.apache.bookkeeper.mledger.offload.jcloud.provider.TieredStorageConfiguration;
 import org.apache.bookkeeper.mledger.proto.OffloadContext;
 import org.jclouds.blobstore.BlobStore;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+@CustomLog
 public class BlobStoreManagedLedgerOffloaderStreamingTest extends BlobStoreManagedLedgerOffloaderBase {
-
-    private static final Logger log = LoggerFactory.getLogger(BlobStoreManagedLedgerOffloaderStreamingTest.class);
     private TieredStorageConfiguration mockedConfig;
     private static final Random random = new Random();
     private final LedgerOffloaderStats offloaderStats;
@@ -109,7 +109,7 @@ public class BlobStoreManagedLedgerOffloaderStreamingTest extends BlobStoreManag
         UUID uuid = UUID.randomUUID();
         long beginLedger = 0;
         long beginEntry = 0;
-        log.error("try begin offload");
+        log.info("Trying to begin offload");
         @Cleanup
         OffloadHandle offloadHandle = offloader
                 .streamingOffload(ml, uuid, beginLedger, beginEntry, new HashMap<>()).get();
@@ -119,10 +119,10 @@ public class BlobStoreManagedLedgerOffloaderStreamingTest extends BlobStoreManag
             random.nextBytes(data);
             final OffloadHandle.OfferEntryResult offerEntryResult = offloadHandle
                     .offerEntry(EntryImpl.create(0, i, data));
-            log.info("offer result: {}", offerEntryResult);
+            log.info().attr("result", offerEntryResult).log("Offer result");
         }
         final LedgerOffloader.OffloadResult offloadResult = offloadHandle.getOffloadResultAsync().get();
-        log.info("Offload reasult: {}", offloadResult);
+        log.info().attr("result", offloadResult).log("Offload result");
     }
 
     @Test
@@ -166,6 +166,8 @@ public class BlobStoreManagedLedgerOffloaderStreamingTest extends BlobStoreManag
 
         @Cleanup
         final ReadHandle readHandle = offloader.readOffloaded(0, context, driverMeta).get();
+        // The managed ledger relies on this marker to tell that the entries of a ledger are read from tiered storage
+        assertThat(readHandle).isInstanceOf(OffloadedLedgerHandle.class);
         @Cleanup
         final LedgerEntries ledgerEntries = readHandle.readAsync(0, 9).get();
 

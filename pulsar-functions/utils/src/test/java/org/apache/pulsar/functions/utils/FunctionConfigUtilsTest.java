@@ -19,7 +19,10 @@
 package org.apache.pulsar.functions.utils;
 
 import static org.apache.pulsar.common.functions.FunctionConfig.ProcessingGuarantees.EFFECTIVELY_ONCE;
+import static org.apache.pulsar.common.functions.FunctionConfig.Runtime.GO;
 import static org.apache.pulsar.common.functions.FunctionConfig.Runtime.PYTHON;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
@@ -29,10 +32,11 @@ import com.google.gson.Gson;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.pulsar.client.api.CompressionType;
 import org.apache.pulsar.client.api.ConsumerCryptoFailureAction;
 import org.apache.pulsar.client.api.ProducerCryptoFailureAction;
@@ -62,7 +66,7 @@ import org.testng.annotations.Test;
 /**
  * Unit test of {@link Reflections}.
  */
-@Slf4j
+@CustomLog
 public class FunctionConfigUtilsTest {
     public static class WordCountWindowFunction implements WindowFunction<String, Void> {
         @Override
@@ -697,6 +701,29 @@ public class FunctionConfigUtilsTest {
     }
 
     @Test
+    public void testConsumerProperties() {
+        FunctionConfig functionConfig = createFunctionConfig();
+
+        Map<String, String> consumerProperties = new HashMap<>();
+        consumerProperties.put("consumerName", "window-consumer");
+        Map<String, ConsumerConfig> inputSpecs = new HashMap<>();
+        inputSpecs.put("test-input", ConsumerConfig.builder()
+                .consumerProperties(consumerProperties)
+                .build());
+        functionConfig.setInputSpecs(inputSpecs);
+
+        FunctionDetails functionDetails = FunctionConfigUtils.convert(functionConfig);
+        Map<String, String> detailsConsumerProperties = new HashMap<>();
+        functionDetails.getSource().getInputSpecs("test-input")
+                .forEachConsumerProperties(detailsConsumerProperties::put);
+        assertEquals(detailsConsumerProperties, consumerProperties);
+
+        FunctionConfig convertedConfig = FunctionConfigUtils.convertFromDetails(functionDetails);
+        assertEquals(convertedConfig.getInputSpecs().get("test-input").getConsumerProperties(),
+                consumerProperties);
+    }
+
+    @Test
     public void testConvertProducerSpecToProducerConfigAndBackToProducerSpec() {
         // given
         ProducerSpec producerSpec = new ProducerSpec()
@@ -739,5 +766,104 @@ public class FunctionConfigUtilsTest {
             assertEquals(producerSpec2.getCryptoSpec().getProducerEncryptionKeyNameAt(i),
                     producerSpec.getCryptoSpec().getProducerEncryptionKeyNameAt(i));
         }
+    }
+
+    private static FunctionConfig minimalGoFunctionConfig() {
+        FunctionConfig functionConfig = new FunctionConfig();
+        functionConfig.setTenant("test-tenant");
+        functionConfig.setNamespace("test-namespace");
+        functionConfig.setName("test-function");
+        functionConfig.setInputs(Collections.singletonList("persistent://public/default/input"));
+        functionConfig.setRuntime(GO);
+        functionConfig.setGo("/path/to/function");
+        return functionConfig;
+    }
+
+    @Test
+    public void testGoFunctionAcceptsRetainKeyOrdering() {
+        FunctionConfig functionConfig = minimalGoFunctionConfig();
+        functionConfig.setRetainKeyOrdering(true);
+
+        FunctionConfigUtils.validateNonJavaFunction(functionConfig);
+
+        // The KeyShared subscription the Go runtime selects has to survive conversion, otherwise the
+        // instance never sees it.
+        assertEquals(FunctionConfigUtils.convert(functionConfig).getSource().getSubscriptionType(),
+                SubscriptionType.KEY_SHARED);
+    }
+
+    @Test
+    public void testGoFunctionAcceptsRetainOrdering() {
+        FunctionConfig functionConfig = minimalGoFunctionConfig();
+        functionConfig.setRetainOrdering(true);
+
+        FunctionConfigUtils.validateNonJavaFunction(functionConfig);
+
+        assertEquals(FunctionConfigUtils.convert(functionConfig).getSource().getSubscriptionType(),
+                SubscriptionType.FAILOVER);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class,
+            expectedExceptionsMessageRegExp = "Only one of retain ordering or retain key ordering can be set")
+    public void testGoFunctionRejectsBothOrderingModes() {
+        FunctionConfig functionConfig = minimalGoFunctionConfig();
+        functionConfig.setRetainOrdering(true);
+        functionConfig.setRetainKeyOrdering(true);
+
+        FunctionConfigUtils.validateNonJavaFunction(functionConfig);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class,
+            expectedExceptionsMessageRegExp =
+                    "When effectively once processing guarantee is specified, retain Key ordering cannot be set")
+    public void testGoFunctionRejectsRetainKeyOrderingWithEffectivelyOnce() {
+        FunctionConfig functionConfig = minimalGoFunctionConfig();
+        functionConfig.setRetainKeyOrdering(true);
+        functionConfig.setProcessingGuarantees(EFFECTIVELY_ONCE);
+
+        FunctionConfigUtils.validateNonJavaFunction(functionConfig);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class,
+            expectedExceptionsMessageRegExp = "Message retries not yet supported in Go function")
+    public void testGoFunctionStillRejectsMessageRetries() {
+        FunctionConfig functionConfig = minimalGoFunctionConfig();
+        functionConfig.setMaxMessageRetries(3);
+
+        FunctionConfigUtils.validateNonJavaFunction(functionConfig);
+    }
+
+    @Test
+    public void testConvertClientApi() {
+        FunctionConfig functionConfig = createFunctionConfig();
+        functionConfig.setInputSpecs(new HashMap<>());
+        functionConfig.setInputs(Collections.singletonList("topic://public/default/in"));
+        functionConfig.setOutput("topic://public/default/out");
+        FunctionDetails functionDetails = FunctionConfigUtils.convert(functionConfig);
+        assertThat(functionDetails.getClientApi()).isEqualTo(FunctionDetails.ClientApi.AUTO);
+        assertThat(FunctionConfigUtils.convertFromDetails(functionDetails).getClientApi()).isNull();
+
+        functionConfig.setClientApi(FunctionConfig.ClientApi.V5);
+        functionDetails = FunctionConfigUtils.convert(functionConfig);
+        assertThat(functionDetails.getClientApi()).isEqualTo(FunctionDetails.ClientApi.V5);
+        assertThat(FunctionConfigUtils.convertFromDetails(functionDetails).getClientApi())
+                .isEqualTo(FunctionConfig.ClientApi.V5);
+
+        functionConfig.setClientApi(FunctionConfig.ClientApi.V4);
+        assertThatThrownBy(() -> FunctionConfigUtils.convert(functionConfig))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("clientApi V4 cannot be used with topic 'topic://public/default/in'");
+    }
+
+    @Test
+    public void testMergeClientApi() {
+        FunctionConfig functionConfig = createFunctionConfig();
+        FunctionConfig mergedConfig = FunctionConfigUtils.validateUpdate(functionConfig,
+                createUpdatedFunctionConfig("clientApi", FunctionConfig.ClientApi.V5));
+        assertThat(mergedConfig.getClientApi()).isEqualTo(FunctionConfig.ClientApi.V5);
+
+        functionConfig.setClientApi(FunctionConfig.ClientApi.V5);
+        mergedConfig = FunctionConfigUtils.validateUpdate(functionConfig, createFunctionConfig());
+        assertThat(mergedConfig.getClientApi()).isEqualTo(FunctionConfig.ClientApi.V5);
     }
 }
