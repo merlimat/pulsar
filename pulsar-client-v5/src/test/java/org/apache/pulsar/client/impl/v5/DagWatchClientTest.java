@@ -108,15 +108,18 @@ public class DagWatchClientTest {
             awaitUninterruptibly(resume);
         }));
         caller.start();
-        assertThat(delivering.await(10, TimeUnit.SECONDS)).isTrue();
+        try {
+            assertThat(delivering.await(10, TimeUnit.SECONDS)).isTrue();
 
-        // Epoch 3 arrives on the I/O thread while the caller's thread is still delivering epoch 2: the
-        // I/O thread must neither wait for that delivery nor call the listener alongside it.
-        watch.onUpdate(new ScalableTopicDAG().setEpoch(3L), TOPIC);
-        assertThat(changes).containsExactly("1->2");
-
-        resume.countDown();
-        caller.join();
+            // Epoch 3 arrives on the I/O thread while the caller's thread is still delivering epoch 2: the
+            // I/O thread must neither wait for that delivery nor call the listener alongside it.
+            watch.onUpdate(new ScalableTopicDAG().setEpoch(3L), TOPIC);
+            assertThat(changes).containsExactly("1->2");
+        } finally {
+            // Let the caller's thread finish even if an assertion failed.
+            resume.countDown();
+            caller.join();
+        }
         assertThat(changes).containsExactly("1->2", "2->3");
     }
 
