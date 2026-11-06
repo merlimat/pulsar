@@ -543,6 +543,7 @@ jobs:
 
           - name: Cli
             group: CLI
+            timeout: 100
 
           - name: Messaging
             group: MESSAGING
@@ -675,7 +676,7 @@ jobs:
 
       - name: Upload test reports
         uses: actions/upload-artifact@v7
-        if: ${{ !success() }}
+        if: ${{ !success() || matrix.group == 'CLI' }}
         with:
           name: Integration-${{ matrix.upload_name || matrix.group }}-test-reports
           path: |

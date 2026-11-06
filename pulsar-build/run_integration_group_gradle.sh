@@ -65,7 +65,44 @@ test_group_backwards_compat() {
 }
 
 test_group_cli() {
-  gradle_integration_test -PintegrationTestSuiteFile=pulsar-cli.xml "$@"
+  # TEMPORARY, fork-only A/B (never to be merged): run pulsar-cli.xml four times on the same runner, with the CLI
+  # tools that the tests exec on tiered compilation (master's DockerUtils) and C1-only (this branch's), in ABBA order
+  local f=tests/integration/src/test/java/org/apache/pulsar/tests/integration/utils/DockerUtils.java
+  local c1_copy
+  c1_copy=$(mktemp)
+  cp "$f" "$c1_copy"
+  nproc
+  lscpu | grep -E 'Model name|^CPU\(s\)|Thread|Core|Socket|MHz' || true
+  local mode rc run=0 failed=0
+  for mode in tiered c1 c1 tiered; do
+    if [ "$mode" = tiered ]; then
+      cp pulsar-build/c1-ab/DockerUtils.java.tiered "$f"
+    else
+      cp "$c1_copy" "$f"
+    fi
+    echo "=== C1 A/B: mode $mode start $(date -u +%FT%T.%3NZ)"
+    # The arguments gradle_integration_test passes on a workflow_dispatch run, called directly so that a failed run
+    # is seen and the next one still runs
+    set +e
+    (
+      set -x
+      ./gradlew --no-configuration-cache :tests:integration:integrationTest -PintegrationTestSuiteFile=pulsar-cli.xml \
+        --rerun "$@" -PtestFailFast=false -Pinttest.skipDockerBuild
+    )
+    rc=$?
+    set -e
+    echo "=== C1 A/B: mode $mode end $(date -u +%FT%T.%3NZ) rc=$rc"
+    # One directory per run: move_test_reports' numbered backups would overwrite earlier runs' reports
+    run=$((run + 1))
+    mkdir -p "test-reports/c1-ab-run$run-$mode"
+    find . -path '*/build/test-results/*/TEST-*.xml' -not -path './test-reports/*' -print0 |
+      xargs -0 -r mv -t "test-reports/c1-ab-run$run-$mode"
+    if [ $rc -ne 0 ]; then
+      failed=1
+    fi
+  done
+  cp "$c1_copy" "$f"
+  return $failed
 }
 
 test_group_messaging() {
