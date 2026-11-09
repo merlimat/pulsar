@@ -367,6 +367,12 @@ tasks.withType<Test>().configureEach {
         // loopback would otherwise fail to start.
         "-Djava.net.preferIPv4Stack=true",
     )
+    if (!asyncProfilerEnabled) {
+        // Compile with C1 only. A test JVM runs a lot of code a few times each, so C2 spends more CPU compiling
+        // it than its faster code saves: the JIT compiler threads took a third of a broker test JVM's CPU. A
+        // profile keeps tiered compilation, so that it shows the code that production runs.
+        jvmArgs("-XX:TieredStopAtLevel=1")
+    }
     // Don't fsync the transaction log of the ZooKeeper servers that tests start: the requests that arrive
     // during an fsync wait for it, the clients' pings included, so a slow disk can stall a server long enough
     // for its clients to drop their connection.
