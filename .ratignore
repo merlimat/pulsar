@@ -111,5 +111,6 @@ gradle/wrapper/**
 **/gradle/wrapper/**
 gradlew
 gradlew.bat
-gradle/libs.versions.toml# TEMPORARY, fork-only C1 A/B: master's recorded test class durations
+gradle/libs.versions.toml
+# TEMPORARY, fork-only C1 A/B: master's recorded test class durations
 pulsar-build/c1-ab/durations/*.txt
