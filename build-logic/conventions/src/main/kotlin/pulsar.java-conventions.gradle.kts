@@ -367,7 +367,13 @@ tasks.withType<Test>().configureEach {
         // loopback would otherwise fail to start.
         "-Djava.net.preferIPv4Stack=true",
     )
-    if (!asyncProfilerEnabled) {
+    // TEMPORARY, fork-only C1 A/B (never to be merged): -PabTieredJit keeps tiered compilation, -PabWarmup builds
+    // what the tests need without running them, and the tests run every time, never from the cache.
+    outputs.upToDateWhen { false }
+    outputs.cacheIf("fork-only C1 A/B") { false }
+    val abWarmup = providers.gradleProperty("abWarmup").isPresent
+    onlyIf("not a fork-only C1 A/B warm-up") { !abWarmup }
+    if (!asyncProfilerEnabled && !providers.gradleProperty("abTieredJit").isPresent) {
         // Compile with C1 only. A test JVM runs a lot of code a few times each, so C2 spends more CPU compiling
         // it than its faster code saves: the JIT compiler threads took a third of a broker test JVM's CPU. A
         // profile keeps tiered compilation, so that it shows the code that production runs.

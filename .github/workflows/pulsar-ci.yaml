@@ -246,7 +246,8 @@ jobs:
       NETTY_LEAK_DUMP_DIR: ${{ github.workspace }}/build/netty-leak-dumps
       TEST_DURATIONS_DIR: ${{ github.workspace }}/build/test-durations
     runs-on: ubuntu-24.04
-    timeout-minutes: ${{ matrix.timeout || 60 }}
+    # TEMPORARY, fork-only C1 A/B: a warm-up and four runs of the group
+    timeout-minutes: 240
     needs: ['preconditions', 'build-and-license-check']
     if: ${{ needs.preconditions.outputs.docs_only != 'true' }}
     strategy:
@@ -362,12 +363,12 @@ jobs:
 
       - name: Upload test reports
         uses: actions/upload-artifact@v7
-        if: ${{ !success() || env.TRACE_TEST_RESOURCE_CLEANUP != 'off' }}
+        # TEMPORARY, fork-only C1 A/B: always, the per-run JUnit reports and CPU samples only
+        if: ${{ always() }}
         with:
           name: Unit-${{ matrix.group }}-test-reports
           path: |
             test-reports/
-            **/build/reports/tests/
           retention-days: 7
           if-no-files-found: ignore
 
@@ -638,6 +639,16 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      # TEMPORARY, fork-only C1 A/B
+      - name: Upload CPU samples
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: Integration-${{ matrix.upload_name || matrix.group }}-c1-ab-cpu
+          path: test-reports/c1-ab-cpu.txt
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Upload possible heap dump, core dump or crash files
         uses: actions/upload-artifact@v7
         if: ${{ always() }}
@@ -851,6 +862,16 @@ jobs:
           path: |
             test-reports/
             **/build/reports/tests/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # TEMPORARY, fork-only C1 A/B
+      - name: Upload CPU samples
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: System-${{ matrix.group }}-c1-ab-cpu
+          path: test-reports/c1-ab-cpu.txt
           retention-days: 7
           if-no-files-found: ignore
 

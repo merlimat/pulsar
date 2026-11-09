@@ -52,14 +52,22 @@ function gradle_test() {
       # even if one module's tests fail (similar to Maven's --fail-at-end).
       continue_args="--continue"
     fi
+    # TEMPORARY, fork-only C1 A/B (never to be merged): AB_MODE picks tiered compilation, C1-only or a warm-up that
+    # only builds what the tests need. The durations stay the committed ones and the reports are collected per run.
+    local ab_args=()
+    case "$AB_MODE" in
+      tiered) ab_args=(-PabTieredJit) ;;
+      warmup) ab_args=(-PabWarmup) ;;
+    esac
     echo "::group::Run tests for " "$@"
-    ./gradlew $configuration_cache_arg $continue_args "$@" $failfast_args "${COMMANDLINE_ARGS[@]}"
+    local start end rc=0
+    start=$(date +%s.%N)
+    ./gradlew $configuration_cache_arg $continue_args "$@" $failfast_args "${ab_args[@]}" "${COMMANDLINE_ARGS[@]}" || rc=$?
+    end=$(date +%s.%N)
     echo "::endgroup::"
     set +x
-    if [ -n "$test_durations_file" ]; then
-      "$SCRIPT_DIR/pulsar_ci_tool.sh" record_test_durations "$test_durations_file"
-    fi
-    "$SCRIPT_DIR/pulsar_ci_tool.sh" move_test_reports
+    printf 'gradle\t%s\t%s\t%s\t%s\t%s\t%s\n' "$AB_RUN" "$AB_MODE" "$start" "$end" "$rc" "$*" >> "$AB_LOG"
+    exit $rc
   )
 }
 
@@ -231,8 +239,45 @@ COMMANDLINE_ARGS=("$@")
 echo "Test Group : $TEST_GROUP"
 test_group_function_name="test_group_$(echo "$TEST_GROUP" | tr '[:upper:]' '[:lower:]')"
 if [[ "$(LC_ALL=C type -t "${test_group_function_name}")" == "function" ]]; then
-  set -x
-  eval "$test_group_function_name"
+  # TEMPORARY, fork-only C1 A/B (never to be merged): after a warm-up that builds what the tests need, run the
+  # group four times on this runner, with tiered compilation and C1-only test JVMs in ABBA order. Each run's JUnit
+  # reports go to test-reports/c1-ab-run<N>-<mode>, the Gradle invocations to test-reports/c1-ab-runs.tsv and a CPU
+  # sample a second to test-reports/c1-ab-cpu.txt.
+  ab_dir="${GITHUB_WORKSPACE:-$PWD}/test-reports"
+  mkdir -p "$ab_dir"
+  export AB_LOG="$ab_dir/c1-ab-runs.tsv"
+  nproc
+  lscpu | grep -E 'Model name|^CPU\(s\)|Thread|Core|Socket|MHz' || true
+  free -m
+  durations_dir="${TEST_DURATIONS_DIR:-$PWD/build/test-durations}"
+  if [ -f "$SCRIPT_DIR/c1-ab/durations/${TEST_GROUP}.txt" ]; then
+    mkdir -p "$durations_dir"
+    cp "$SCRIPT_DIR/c1-ab/durations/${TEST_GROUP}.txt" "$durations_dir/${TEST_GROUP}.txt"
+  fi
+  "$SCRIPT_DIR/c1-ab/sample_cpu.sh" "$ab_dir/c1-ab-cpu.txt" &
+  sampler_pid=$!
+  trap 'kill "$sampler_pid" 2> /dev/null || true' EXIT
+  ab_run=0
+  for ab_mode in warmup tiered c1 c1 tiered; do
+    export AB_RUN=$ab_run AB_MODE=$ab_mode
+    printf 'run\t%s\t%s\t%s\tstart\n' "$ab_run" "$ab_mode" "$(date +%s.%N)" >> "$AB_LOG"
+    (
+      set +e
+      set -x
+      eval "$test_group_function_name"
+    ) || true
+    printf 'run\t%s\t%s\t%s\tend\n' "$ab_run" "$ab_mode" "$(date +%s.%N)" >> "$AB_LOG"
+    if [ "$ab_mode" != warmup ]; then
+      python3 -I "$SCRIPT_DIR/c1-ab/collect_run.py" "$ab_dir/c1-ab-run$ab_run-$ab_mode"
+    fi
+    ab_run=$((ab_run + 1))
+  done
+  kill "$sampler_pid" || true
+  cat "$AB_LOG"
+  # fail the job if a test run failed
+  if awk -F'\t' '$1 == "gradle" && $2 > 0 && $6 != 0 { failed = 1 } END { exit !failed }' "$AB_LOG"; then
+    exit 1
+  fi
 else
   echo "INVALID TEST GROUP"
   echo "Available test groups:"

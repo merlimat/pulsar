@@ -178,6 +178,11 @@ shift
 echo "Test Group : $TEST_GROUP"
 test_group_function_name="test_group_$(echo "$TEST_GROUP" | tr '[:upper:]' '[:lower:]')"
 if [[ "$(LC_ALL=C type -t "${test_group_function_name}")" == "function" ]]; then
+  # TEMPORARY, fork-only C1 A/B (never to be merged): a CPU sample a second to test-reports/c1-ab-cpu.txt
+  mkdir -p "${GITHUB_WORKSPACE:-$PWD}/test-reports"
+  "$SCRIPT_DIR/c1-ab/sample_cpu.sh" "${GITHUB_WORKSPACE:-$PWD}/test-reports/c1-ab-cpu.txt" &
+  sampler_pid=$!
+  trap 'kill "$sampler_pid" 2> /dev/null || true' EXIT
   eval "$test_group_function_name" "$@"
 else
   echo "INVALID TEST GROUP"
